@@ -32,14 +32,14 @@
             <div class="bg-blue-600 p-2 rounded-lg text-white font-bold">📈</div>
             <div>
                 <h1 class="text-lg font-bold tracking-tight">Trading Operations Dashboard</h1>
-                <p class="text-xs text-gray-400">Diário de Operações & Setups Automatizados (Backup Dinâmico)</p>
+                <p class="text-xs text-gray-400">Diário de Operações & Setups Automatizados (Backup Automatizado)</p>
             </div>
         </div>
         <div class="flex items-center space-x-3">
             <button onclick="openModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center space-x-1">
                 <span>+ Novo Registo</span>
             </button>
-            <button onclick="exportData()" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-xs font-semibold transition" title="Baixar backup dos dados com data">
+            <button onclick="exportData()" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-xs font-semibold transition" title="Baixar backup automático com data">
                 📥 Exportar
             </button>
             <label class="bg-indigo-700 hover:bg-indigo-600 text-white px-3 py-2 rounded-lg text-xs font-semibold transition cursor-pointer" title="Restaurar backup de ficheiro JSON">
@@ -203,7 +203,7 @@
         </div>
     </div>
 
-    <!-- Script com Nomeação Dinâmica por Data -->
+    <!-- Script com Nomeação Forçada por Data -->
     <script>
         const defaultData = [
             { date: "27/10/2026", timeIn: "10:15", timeOut: "11:20", asset: "WINZ26", setup: "Pullback1015_Max3intervalo4barras", contracts: 1, type: "Gain", points: 250, result: 49.50 },
@@ -226,14 +226,11 @@
         }
 
         function exportData() {
-            // Gera a data atual no formato DDMMAAAA (ex: 05112026)
             const now = new Date();
             const day = String(now.getDate()).padStart(2, '0');
             const month = String(now.getMonth() + 1).padStart(2, '0');
             const year = now.getFullYear();
-            const dateStr = `${day}${month}${year}`;
-
-            const filename = `${dateStr}_diario_operacoes_backup.json`;
+            const filename = `${day}${month}${year}_diario_operacoes_backup.json`;
 
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(sheetData, null, 2));
             const downloadAnchor = document.createElement('a');
@@ -390,7 +387,7 @@
 
             sheetData.push({
                 date: formattedDate,
-                timeIn: document.getElementById('tTimeIn').value,
+                timeIn: document.getElementById('tTimeIn', '').value,
                 timeOut: document.getElementById('tTimeOut').value,
                 asset: document.getElementById('tAsset').value,
                 setup: document.getElementById('tSetup').value,
