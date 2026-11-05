@@ -32,7 +32,7 @@
             <div class="bg-blue-600 p-2 rounded-lg text-white font-bold">📈</div>
             <div>
                 <h1 class="text-lg font-bold tracking-tight">Trading Operations Dashboard</h1>
-                <p class="text-xs text-gray-400">Diário de Operações & Setups Automatizados (Persistência Avançada)</p>
+                <p class="text-xs text-gray-400">Diário de Operações & Setups Automatizados (Backup & Restauração)</p>
             </div>
         </div>
         <div class="flex items-center space-x-3">
@@ -42,6 +42,10 @@
             <button onclick="exportData()" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-xs font-semibold transition" title="Baixar backup dos dados">
                 📥 Exportar
             </button>
+            <label class="bg-indigo-700 hover:bg-indigo-600 text-white px-3 py-2 rounded-lg text-xs font-semibold transition cursor-pointer" title="Restaurar backup de ficheiro JSON">
+                📤 Importar
+                <input type="file" id="importFile" accept=".json" onchange="importData(event)" class="hidden">
+            </label>
         </div>
     </header>
 
@@ -199,7 +203,7 @@
         </div>
     </div>
 
-    <!-- Script Robusto com SessionStorage e Backup -->
+    <!-- Script com Funções de Exportar e Importar Ficheiros -->
     <script>
         const defaultData = [
             { date: "27/10/2026", timeIn: "10:15", timeOut: "11:20", asset: "WINZ26", setup: "Pullback1015_Max3intervalo4barras", contracts: 1, type: "Gain", points: 250, result: 49.50 },
@@ -214,7 +218,6 @@
             { date: "05/11/2026", timeIn: "12:00", timeOut: "12:10", asset: "WINZ26", setup: "Pullback1015_Max3", contracts: 1, type: "Gain", points: 500, result: 100.00 }
         ];
 
-        // Usa sessionStorage combinado com localStorage para resistir ao iframe do Google Sites
         let sheetData = JSON.parse(localStorage.getItem('dg_trading_journal') || sessionStorage.getItem('dg_trading_journal')) || defaultData;
 
         function saveData() {
@@ -223,13 +226,38 @@
         }
 
         function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(sheetData));
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(sheetData, null, 2));
             const downloadAnchor = document.createElement('a');
             downloadAnchor.setAttribute("href", dataStr);
             downloadAnchor.setAttribute("download", "diario_operacoes_backup.json");
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        sheetData = imported;
+                        saveData();
+                        processAndRender();
+                        alert("Backup importado com sucesso, mano! Dados atualizados.");
+                    } else {
+                        alert("O arquivo selecionado não tem um formato válido de diário.");
+                    }
+                } catch (err) {
+                    alert("Erro ao ler o ficheiro de backup.");
+                }
+            };
+            reader.readAsText(file);
+            // Limpa o input para permitir importar o mesmo ficheiro novamente se necessário
+            event.target.value = '';
         }
 
         function calculateDuration(timeIn, timeOut) {
