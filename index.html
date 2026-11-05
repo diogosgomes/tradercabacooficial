@@ -26,108 +26,135 @@
 </head>
 <body class="bg-darkBg text-gray-100 font-sans min-h-screen flex flex-col">
 
-    <!-- Top Navbar -->
-    <header class="bg-cardBg border-b border-gray-800 px-6 py-4 flex justify-between items-center">
-        <div class="flex items-center space-x-3">
-            <div class="bg-blue-600 p-2 rounded-lg text-white font-bold">📈</div>
+    <!-- Tela de Login com Utilizador e Senha -->
+    <div id="loginScreen" class="fixed inset-0 bg-darkBg z-50 flex items-center justify-center p-4">
+        <div class="bg-cardBg border border-gray-800 rounded-2xl max-w-sm w-full p-8 shadow-2xl space-y-6 text-center">
+            <div class="inline-block bg-blue-600/20 text-blue-400 p-3 rounded-2xl text-2xl font-bold mb-2">🔐</div>
             <div>
-                <h1 class="text-lg font-bold tracking-tight">Trading Operations Dashboard</h1>
-                <p class="text-xs text-gray-400">Diário de Operações & Setups Automatizados (Backup Otimizado)</p>
+                <h2 class="text-xl font-bold text-gray-100">Acesso Restrito</h2>
+                <p class="text-xs text-gray-400 mt-1">Insira as suas credenciais para aceder ao Dashboard</p>
             </div>
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <input type="text" id="loginUser" placeholder="Utilizador" required class="w-full bg-darkBg border border-gray-700 rounded-xl px-4 py-3 text-sm text-center text-gray-200 focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <input type="password" id="loginPassword" placeholder="Palavra-passe" required class="w-full bg-darkBg border border-gray-700 rounded-xl px-4 py-3 text-sm text-center text-gray-200 tracking-widest focus:outline-none focus:border-blue-500">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl text-sm transition shadow-lg">Desbloquear Acesso</button>
+            </form>
+            <p id="loginError" class="text-xs text-red-400 hidden">Utilizador ou senha incorretos, mano!</p>
         </div>
-        <div class="flex items-center space-x-3">
-            <button onclick="openModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center space-x-1">
-                <span>+ Novo Registo</span>
-            </button>
-            <button onclick="exportData()" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-xs font-semibold transition" title="Baixar backup automático com data">
-                📥 Exportar
-            </button>
-            <label class="bg-indigo-700 hover:bg-indigo-600 text-white px-3 py-2 rounded-lg text-xs font-semibold transition cursor-pointer" title="Restaurar backup de ficheiro JSON">
-                📤 Importar
-                <input type="file" id="importFile" accept=".json" onchange="importData(event)" class="hidden">
-            </label>
-        </div>
-    </header>
+    </div>
 
-    <!-- Main Container -->
-    <main class="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
+    <!-- Aplicação Principal (Oculta até efetuar login) -->
+    <div id="mainApp" class="hidden flex-1 flex flex-col min-h-screen">
+        <!-- Top Navbar -->
+        <header class="bg-cardBg border-b border-gray-800 px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-600 p-2 rounded-lg text-white font-bold">📈</div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight">Trading Operations Dashboard</h1>
+                    <p class="text-xs text-gray-400">Diário de Operações & Setups Automatizados (Protegido por Credenciais)</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button onclick="openModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center space-x-1">
+                    <span>+ Novo Registo</span>
+                </button>
+                <button onclick="exportData()" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-xs font-semibold transition" title="Baixar backup automático com data">
+                    📥 Exportar
+                </button>
+                <label class="bg-indigo-700 hover:bg-indigo-600 text-white px-3 py-2 rounded-lg text-xs font-semibold transition cursor-pointer" title="Restaurar backup de ficheiro JSON">
+                    📤 Importar
+                    <input type="file" id="importFile" accept=".json" onchange="importData(event)" class="hidden">
+                </label>
+                <button onclick="lockApp()" class="bg-red-950/80 hover:bg-red-900 text-red-300 px-3 py-2 rounded-lg text-xs font-semibold transition border border-red-800" title="Bloquear sistema">
+                    🔒 Sair
+                </button>
+            </div>
+        </header>
 
-        <!-- Metrics Cards Dinâmicos -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div class="bg-cardBg border border-gray-800 p-5 rounded-xl shadow-lg">
-                <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Total Gain / Loss</p>
-                <div class="mt-2 flex items-baseline justify-between">
-                    <span id="metricGainLoss" class="text-2xl font-bold text-emerald-400">Gain: 0 | Loss: 0</span>
+        <!-- Main Container -->
+        <main class="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
+
+            <!-- Metrics Cards Dinâmicos -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-cardBg border border-gray-800 p-5 rounded-xl shadow-lg">
+                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Total Gain / Loss</p>
+                    <div class="mt-2 flex items-baseline justify-between">
+                        <span id="metricGainLoss" class="text-2xl font-bold text-emerald-400">Gain: 0 | Loss: 0</span>
+                    </div>
+                </div>
+
+                <div class="bg-cardBg border border-gray-800 p-5 rounded-xl shadow-lg">
+                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Win Rate</p>
+                    <div class="mt-2">
+                        <span id="metricWinRate" class="text-3xl font-extrabold text-blue-400">0,0%</span>
+                    </div>
+                </div>
+
+                <div class="bg-cardBg border border-gray-800 p-5 rounded-xl shadow-lg">
+                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Total Net Profit</p>
+                    <div class="mt-2">
+                        <span id="metricNetProfit" class="text-3xl font-extrabold text-emerald-400">R$ 0,00</span>
+                    </div>
+                </div>
+
+                <div class="bg-cardBg border border-gray-800 p-5 rounded-xl shadow-lg flex flex-col justify-between">
+                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Best Setup</p>
+                    <div class="mt-2">
+                        <span id="metricBestSetup" class="text-xs font-bold text-indigo-300 block truncate" title="Calculando...">
+                            Calculando...
+                        </span>
+                    </div>
                 </div>
             </div>
 
-            <div class="bg-cardBg border border-gray-800 p-5 rounded-xl shadow-lg">
-                <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Win Rate</p>
-                <div class="mt-2">
-                    <span id="metricWinRate" class="text-3xl font-extrabold text-blue-400">0,0%</span>
+            <!-- Capital Curve Chart Section -->
+            <div class="bg-cardBg border border-gray-800 p-6 rounded-xl shadow-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-base font-bold text-gray-200">Capital Curve (Evolução Patrimonial Dinâmica)</h2>
+                    <span class="text-xs text-gray-400">WIN - Mini-Índice</span>
+                </div>
+                <div class="h-72 w-full">
+                    <canvas id="capitalCurveChart"></canvas>
                 </div>
             </div>
 
-            <div class="bg-cardBg border border-gray-800 p-5 rounded-xl shadow-lg">
-                <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Total Net Profit</p>
-                <div class="mt-2">
-                    <span id="metricNetProfit" class="text-3xl font-extrabold text-emerald-400">R$ 0,00</span>
+            <!-- Histórico de Operações -->
+            <div class="bg-cardBg border border-gray-800 rounded-xl shadow-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
+                    <h3 class="font-bold text-gray-200">Histórico de Operações (Aba Diário)</h3>
+                    <span class="text-xs text-gray-400">Gerenciamento Completo</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-gray-900/50 text-gray-400 border-b border-gray-800 uppercase tracking-wider">
+                                <th class="py-3 px-3">Data</th>
+                                <th class="py-3 px-3">H. Entrada</th>
+                                <th class="py-3 px-3">H. Saída</th>
+                                <th class="py-3 px-3 text-center">T. Trader</th>
+                                <th class="py-3 px-3">Ativo</th>
+                                <th class="py-3 px-3">Setup Utilizado</th>
+                                <th class="py-3 px-3 text-center">Contratos</th>
+                                <th class="py-3 px-3 text-center">Tipo</th>
+                                <th class="py-3 px-3 text-right">Pontos</th>
+                                <th class="py-3 px-3 text-right">Resultado (R$)</th>
+                                <th class="py-3 px-3 text-right">Saldo Acum.</th>
+                                <th class="py-3 px-3 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="operationsTableBody" class="divide-y divide-gray-800 text-gray-300">
+                            <!-- Dados injetados via script -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            <div class="bg-cardBg border border-gray-800 p-5 rounded-xl shadow-lg flex flex-col justify-between">
-                <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Best Setup</p>
-                <div class="mt-2">
-                    <span id="metricBestSetup" class="text-xs font-bold text-indigo-300 block truncate" title="Calculando...">
-                        Calculando...
-                    </span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Capital Curve Chart Section -->
-        <div class="bg-cardBg border border-gray-800 p-6 rounded-xl shadow-lg">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-base font-bold text-gray-200">Capital Curve (Evolução Patrimonial Dinâmica)</h2>
-                <span class="text-xs text-gray-400">WIN - Mini-Índice</span>
-            </div>
-            <div class="h-72 w-full">
-                <canvas id="capitalCurveChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Histórico de Operações -->
-        <div class="bg-cardBg border border-gray-800 rounded-xl shadow-lg overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
-                <h3 class="font-bold text-gray-200">Histórico de Operações (Aba Diário)</h3>
-                <span class="text-xs text-gray-400">Gerenciamento Completo</span>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-xs">
-                    <thead>
-                        <tr class="bg-gray-900/50 text-gray-400 border-b border-gray-800 uppercase tracking-wider">
-                            <th class="py-3 px-3">Data</th>
-                            <th class="py-3 px-3">H. Entrada</th>
-                            <th class="py-3 px-3">H. Saída</th>
-                            <th class="py-3 px-3 text-center">T. Trader</th>
-                            <th class="py-3 px-3">Ativo</th>
-                            <th class="py-3 px-3">Setup Utilizado</th>
-                            <th class="py-3 px-3 text-center">Contratos</th>
-                            <th class="py-3 px-3 text-center">Tipo</th>
-                            <th class="py-3 px-3 text-right">Pontos</th>
-                            <th class="py-3 px-3 text-right">Resultado (R$)</th>
-                            <th class="py-3 px-3 text-right">Saldo Acum.</th>
-                            <th class="py-3 px-3 text-center">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="operationsTableBody" class="divide-y divide-gray-800 text-gray-300">
-                        <!-- Dados injetados via script -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-    </main>
+        </main>
+    </div>
 
     <!-- Modal de Registo -->
     <div id="tradeModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
@@ -203,8 +230,44 @@
         </div>
     </div>
 
-    <!-- Script com Forçamento de Download por Blob -->
+    <!-- Script de Autenticação com Utilizador e Senha -->
     <script>
+        // Altere aqui o utilizador e a palavra-passe que desejar
+        const MASTER_USER = "diogo";
+        const MASTER_PASSWORD = "1234";
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const user = document.getElementById('loginUser').value.trim();
+            const pass = document.getElementById('loginPassword').value;
+
+            if (user === MASTER_USER && pass === MASTER_PASSWORD) {
+                sessionStorage.setItem('dg_authenticated', 'true');
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                processAndRender();
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+                document.getElementById('loginPassword').value = '';
+            }
+        }
+
+        function lockApp() {
+            sessionStorage.removeItem('dg_authenticated');
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('loginUser').value = '';
+            document.getElementById('loginPassword').value = '';
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (sessionStorage.getItem('dg_authenticated') === 'true') {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                processAndRender();
+            }
+        });
+
         const defaultData = [
             { date: "27/10/2026", timeIn: "10:15", timeOut: "11:20", asset: "WINZ26", setup: "Pullback1015_Max3intervalo4barras", contracts: 1, type: "Gain", points: 250, result: 49.50 },
             { date: "29/10/2026", timeIn: "10:20", timeOut: "11:30", asset: "WINZ26", setup: "Pullback1015_Max3COM2contratos", contracts: 2, type: "Loss", points: -325, result: -130.00 },
@@ -405,44 +468,44 @@
             closeModal();
         });
 
-        const ctx = document.getElementById('capitalCurveChart').getContext('2d');
-        capitalCurveChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: [{
-                    label: 'Saldo Acumulado (R$)',
-                    data: [],
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    borderWidth: 2.5,
-                    fill: true,
-                    tension: 0.1,
-                    pointBackgroundColor: '#3b82f6',
-                    pointRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af', font: { size: 10 } } },
-                    y: {
-                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                        ticks: { color: '#9ca3af', font: { size: 10 }, callback: function(value) { return 'R$ ' + value; } }
-                    }
-                }
-            }
-        });
-
+        let ctx;
         function updateChart() {
+            if (!capitalCurveChart) {
+                ctx = document.getElementById('capitalCurveChart').getContext('2d');
+                capitalCurveChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Saldo Acumulado (R$)',
+                            data: [],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 2.5,
+                            fill: true,
+                            tension: 0.1,
+                            pointBackgroundColor: '#3b82f6',
+                            pointRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af', font: { size: 10 } } },
+                            y: {
+                                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                                ticks: { color: '#9ca3af', font: { size: 10 }, callback: function(value) { return 'R$ ' + value; } }
+                            }
+                        }
+                    }
+                });
+            }
             capitalCurveChart.data.labels = sheetData.map((d, i) => `${d.date} (${i+1})`);
             capitalCurveChart.data.datasets[0].data = sheetData.map(d => d.accum);
             capitalCurveChart.update();
         }
-
-        processAndRender();
     </script>
 </body>
 </html>
