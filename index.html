@@ -32,7 +32,7 @@
             <div class="bg-blue-600 p-2 rounded-lg text-white font-bold">📈</div>
             <div>
                 <h1 class="text-lg font-bold tracking-tight">Trading Operations Dashboard</h1>
-                <p class="text-xs text-gray-400">Diário de Operações & Setups Automatizados (Backup Automatizado)</p>
+                <p class="text-xs text-gray-400">Diário de Operações & Setups Automatizados (Backup Otimizado)</p>
             </div>
         </div>
         <div class="flex items-center space-x-3">
@@ -203,7 +203,7 @@
         </div>
     </div>
 
-    <!-- Script com Nomeação Forçada por Data -->
+    <!-- Script com Forçamento de Download por Blob -->
     <script>
         const defaultData = [
             { date: "27/10/2026", timeIn: "10:15", timeOut: "11:20", asset: "WINZ26", setup: "Pullback1015_Max3intervalo4barras", contracts: 1, type: "Gain", points: 250, result: 49.50 },
@@ -232,13 +232,17 @@
             const year = now.getFullYear();
             const filename = `${day}${month}${year}_diario_operacoes_backup.json`;
 
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(sheetData, null, 2));
+            const jsonStr = JSON.stringify(sheetData, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
             const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", filename);
+            downloadAnchor.href = url;
+            downloadAnchor.download = filename;
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
-            downloadAnchor.remove();
+            document.body.removeChild(downloadAnchor);
+            URL.revokeObjectURL(url);
         }
 
         function importData(event) {
@@ -387,7 +391,7 @@
 
             sheetData.push({
                 date: formattedDate,
-                timeIn: document.getElementById('tTimeIn', '').value,
+                timeIn: document.getElementById('tTimeIn').value,
                 timeOut: document.getElementById('tTimeOut').value,
                 asset: document.getElementById('tAsset').value,
                 setup: document.getElementById('tSetup').value,
