@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="robots" content="noindex,nofollow,noarchive">
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, viewport-fit=cover">
     <title>My Trade Dash</title>
     <meta name="color-scheme" content="dark">
     
@@ -239,11 +239,11 @@
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-400 mb-1">H. Entrada</label>
-                        <input type="text" id="tTimeIn" value="12:00" placeholder="HH:MM" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200">
+                        <input type="text" id="tTimeIn" inputmode="numeric" maxlength="5" autocomplete="off" value="12:00" placeholder="HH:MM" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200">
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-400 mb-1">H. Saída</label>
-                        <input type="text" id="tTimeOut" value="12:10" placeholder="HH:MM" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200">
+                        <input type="text" id="tTimeOut" inputmode="numeric" maxlength="5" autocomplete="off" value="12:10" placeholder="HH:MM" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200">
                     </div>
                 </div>
 
@@ -713,6 +713,26 @@
             m.classList.remove('flex'); m.classList.add('hidden');
         }
 
+        // Máscara de horário: digita 1200 e vira 12:00
+        function maskTime(el, ev) {
+            const del = !!(ev && ev.inputType && ev.inputType.startsWith('delete'));
+            let d = el.value.replace(/\D/g, '').slice(0, 4);
+            if (d.length && d[0] > '2') d = '0' + d.slice(0, 3);
+            if (d.length >= 2 && +d.slice(0, 2) > 23) d = '23' + d.slice(2);
+            if (d.length === 4 && +d.slice(2) > 59) d = d.slice(0, 2) + '59';
+            el.value = d.length > 2 ? d.slice(0, 2) + ':' + d.slice(2) : (d.length === 2 && !del ? d + ':' : d);
+        }
+        function normTime(v) {
+            const m = String(v).trim().match(/^(\d{1,2}):?(\d{2})$/);
+            if (!m) return null;
+            const h = +m[1], mi = +m[2];
+            return (h > 23 || mi > 59) ? null : `${String(h).padStart(2, '0')}:${String(mi).padStart(2, '0')}`;
+        }
+        ['tTimeIn', 'tTimeOut'].forEach(id => {
+            const el = document.getElementById(id);
+            el.addEventListener('input', ev => maskTime(el, ev));
+        });
+
         document.getElementById('tradeForm').addEventListener('submit', async function (e) {
             e.preventDefault();
             const tradeType = document.getElementById('tType').value;
@@ -726,7 +746,12 @@
                 return;
             }
             const date = rawDate.split('-').reverse().join('/');
-            const timeIn = document.getElementById('tTimeIn').value;
+            const timeIn = normTime(document.getElementById('tTimeIn').value);
+            const timeOut = normTime(document.getElementById('tTimeOut').value);
+            if (!timeIn || !timeOut) {
+                showToast('Horário inválido. Use HH:MM, por exemplo 12:00.', 'err');
+                return;
+            }
 
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
@@ -734,7 +759,7 @@
                 const payload = {
                     date,
                     timeIn,
-                    timeOut: document.getElementById('tTimeOut').value,
+                    timeOut,
                     asset: document.getElementById('tAsset').value,
                     setup: document.getElementById('tSetup').value,
                     contracts: parseInt(document.getElementById('tContracts').value) || 1,
