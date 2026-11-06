@@ -176,6 +176,14 @@
             <p id="emptyMsg" class="hidden px-6 py-8 text-center text-xs text-gray-500">Nenhum registro ainda. Clique em “+ Novo Registro” para começar.</p>
         </div>
 
+        <div id="flowExtras" class="hidden space-y-4">
+            <div id="flowCards" class="grid grid-cols-2 lg:grid-cols-3 gap-3"></div>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div id="flowBanks"></div>
+                <div id="flowChart"></div>
+            </div>
+        </div>
+
         <div id="panelFlow" class="hidden bg-cardBg border border-gray-800 rounded-xl shadow-lg overflow-hidden">
             <div class="px-4 sm:px-6 py-4 border-b border-gray-800 flex flex-wrap gap-2 justify-between items-center">
                 <h3 class="font-bold text-gray-200 text-sm sm:text-base">Histórico de movimentação financeira</h3>
@@ -290,7 +298,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-400 mb-1">Resultado (R$)</label>
-                        <input type="number" step="0.01" id="tMoney" value="60.00" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200" placeholder="Sem sinal">
+                        <input type="text" inputmode="decimal" autocomplete="off" id="tMoney" value="60,00" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200" placeholder="Sem sinal">
                     </div>
                 </div>
 
@@ -317,16 +325,17 @@
                     <div><label class="block text-xs font-medium text-gray-400 mb-1">Data</label>
                         <input type="date" id="fDate" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div>
                     <div><label class="block text-xs font-medium text-gray-400 mb-1">Valor (R$)</label>
-                        <input type="number" step="0.01" min="0.01" id="fAmount" placeholder="0,00" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div>
+                        <input type="text" inputmode="decimal" autocomplete="off" id="fAmount" placeholder="0,00" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
-                    <div><label class="block text-xs font-medium text-gray-400 mb-1">Origem (débito)</label>
-                        <input type="text" id="fFrom" list="bankList" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div>
-                    <div><label class="block text-xs font-medium text-gray-400 mb-1">Destino (crédito)</label>
-                        <input type="text" id="fTo" list="bankList" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div>
+                    <div class="relative"><label class="block text-xs font-medium text-gray-400 mb-1">Origem (débito)</label>
+                        <input type="text" id="fFrom" autocomplete="off" placeholder="Escolha ou digite" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200">
+                        <div id="menuFrom" class="hidden absolute z-20 left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-darkBg border border-gray-700 rounded-lg shadow-2xl"></div></div>
+                    <div class="relative"><label class="block text-xs font-medium text-gray-400 mb-1">Destino (crédito)</label>
+                        <input type="text" id="fTo" autocomplete="off" placeholder="Escolha ou digite" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200">
+                        <div id="menuTo" class="hidden absolute z-20 left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-darkBg border border-gray-700 rounded-lg shadow-2xl"></div></div>
                 </div>
-                <datalist id="bankList"></datalist>
-                <p class="text-[11px] text-gray-500">No depósito, o destino já vem como Corretora. No saque, é a origem.</p>
+                <p class="text-[11px] text-gray-500">No depósito, o destino já vem como Corretora. No saque, é a origem. Escolha um banco na lista ou digite outro nome.</p>
                 <p id="fError" class="text-xs text-red-400 min-h-[1rem]"></p>
                 <div class="flex justify-end space-x-3 pt-3 border-t border-gray-800">
                     <button type="button" onclick="closeFlowModal()" class="px-4 py-2 rounded-lg text-xs font-medium text-gray-400">Cancelar</button>
@@ -341,7 +350,9 @@
             { user: 'diogo',    pass: '1234',        nome: 'Diogo' },
             { user: 'usuario2', pass: 'trocar1234',  nome: 'Usuário 2' }
         ];
-        const AUTO_LOGOUT_MIN = 15;   
+        const AUTO_LOGOUT_MIN = 15;
+        // Bancos e corretoras sugeridos nos campos Origem/Destino (edite à vontade; dá para digitar outros nomes)
+        const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
 
         const LOCAL_KEY = 'dg_trading_journal_v2';
         const COLLECTION = 'trades';
@@ -532,6 +543,7 @@
                         !['Depósito', 'Saque'].includes(f.type) || !(Number(f.amount) > 0)) { invalid++; continue; }
                     const m = { date: f.date, type: f.type, amount: Math.round(Number(f.amount) * 100) / 100, from: String(f.from || ''), to: String(f.to || '') };
                     m.ts = computeTs(m.date, '00:00');
+                    if (Number(f.createdAt) > 0) m.createdAt = Number(f.createdAt);
                     const k = [m.date, m.type, m.amount, m.from, m.to].join('|');
                     if (flowKeys.has(k)) { fSkipped++; continue; }
                     flowKeys.add(k);
@@ -687,7 +699,7 @@
                 setField('tContracts', row.contracts);
                 setField('tType', row.type);
                 setField('tPoints', Math.abs(Number(row.points) || 0));
-                setField('tMoney', Math.abs(Number(row.result) || 0).toFixed(2));
+                setField('tMoney', fmtMoneyBR(Math.abs(Number(row.result) || 0)));
                 const sel = document.getElementById('tSetup');
                 if (![...sel.options].some(o => o.value === row.setup)) {
                     const opt = document.createElement('option');
@@ -703,7 +715,7 @@
                 setField('tContracts', 1);
                 setField('tType', 'Gain');
                 setField('tPoints', 300);
-                setField('tMoney', '60.00');
+                setField('tMoney', '60,00');
             }
             const m = document.getElementById('tradeModal');
             m.classList.remove('hidden'); m.classList.add('flex');
@@ -712,6 +724,30 @@
             const m = document.getElementById('tradeModal');
             m.classList.remove('flex'); m.classList.add('hidden');
         }
+
+        // Valor em reais: 1238 vira 1.238 e, ao sair do campo, 1.238,00 (vírgula digitada vira decimal)
+        function fmtInt(d) { return d.replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+        function fmtMoneyBR(n) { const [i, d] = (Number(n) || 0).toFixed(2).split('.'); return fmtInt(i) + ',' + d; }
+        function parseMoney(v) { return parseFloat(String(v).replace(/\./g, '').replace(',', '.')) || 0; }
+        function maskMoney(el, ev) {
+            let raw = el.value;
+            if (ev && ev.data === '.') raw = raw.slice(0, -1) + ',';
+            const hasComma = raw.includes(',');
+            const [ip, ...rest] = raw.split(',');
+            const intDigits = ip.replace(/\D/g, '').replace(/^0+(?=\d)/, '');
+            const dec = rest.join('').replace(/\D/g, '').slice(0, 2);
+            el.value = fmtInt(intDigits || (hasComma ? '0' : '')) + (hasComma ? ',' + dec : '');
+        }
+        ['tMoney', 'fAmount'].forEach(id => {
+            const el = document.getElementById(id);
+            el.addEventListener('input', ev => maskMoney(el, ev));
+            el.addEventListener('blur', () => { if (el.value.trim() !== '') el.value = fmtMoneyBR(parseMoney(el.value)); });
+        });
+        // Datas: clicar no campo abre o calendário
+        ['tDate', 'fDate', 'repFrom', 'repTo'].forEach(id => {
+            const el = document.getElementById(id);
+            el.addEventListener('click', () => { try { if (el.showPicker) el.showPicker(); } catch (e) {} });
+        });
 
         // Máscara de horário: digita 1200 e vira 12:00
         function maskTime(el, ev) {
@@ -736,7 +772,7 @@
         document.getElementById('tradeForm').addEventListener('submit', async function (e) {
             e.preventDefault();
             const tradeType = document.getElementById('tType').value;
-            let money = Math.abs(parseFloat(document.getElementById('tMoney').value) || 0);
+            let money = Math.abs(parseMoney(document.getElementById('tMoney').value));
             let points = Math.abs(parseInt(document.getElementById('tPoints').value) || 0);
             if (tradeType === 'Loss') { money = -money; points = -points; }
 
@@ -924,6 +960,7 @@
         function switchTab(w) {
             const m = { ops: ['panelOps', 'tabOps'], flow: ['panelFlow', 'tabFlow'], report: ['panelReport', 'tabReport'] };
             Object.entries(m).forEach(([k, [pn, tb]]) => { $(pn).classList.toggle('hidden', k !== w); $(tb).className = k === w ? TAB_ON : TAB_OFF; });
+            $('flowExtras').classList.toggle('hidden', w !== 'flow');
             if (w === 'report') renderReports();
         }
         function setChartMode(m) {
@@ -948,11 +985,10 @@
             $('fSubmit').textContent = f ? 'Salvar alterações' : 'Salvar movimentação';
             $('fDate').max = todayLocalISO();
             $('fError').textContent = '';
-            const banks = [...new Set(['Corretora', ...flows.flatMap(x => [x.from, x.to])].filter(Boolean))];
-            $('bankList').innerHTML = banks.map(b => `<option value="${esc(b)}"></option>`).join('');
+            ['menuFrom', 'menuTo'].forEach(id => $(id).classList.add('hidden'));
             if (f) {
                 $('fDate').value = String(f.date).split('/').reverse().join('-');
-                $('fAmount').value = Number(f.amount).toFixed(2);
+                $('fAmount').value = fmtMoneyBR(Number(f.amount));
                 $('fFrom').value = f.from; $('fTo').value = f.to;
                 setFlowType(f.type, true);
             } else {
@@ -967,7 +1003,7 @@
         $('flowForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const err = $('fError'); err.textContent = '';
-            const amount = parseFloat($('fAmount').value);
+            const amount = parseMoney($('fAmount').value);
             const iso = $('fDate').value || todayLocalISO();
             const from = $('fFrom').value.trim(), to = $('fTo').value.trim();
             if (!(amount > 0)) { err.textContent = 'Informe um valor maior que zero.'; return; }
@@ -975,6 +1011,7 @@
             if (!from || !to) { err.textContent = 'Informe origem e destino.'; return; }
             const date = iso.split('-').reverse().join('/');
             const data = { date, type: flowType, amount: Math.round(amount * 100) / 100, from, to, ts: computeTs(date, '00:00') };
+            if (!editingFlowId) data.createdAt = Date.now();
             const btn = $('fSubmit'); btn.disabled = true;
             try {
                 expandedFlow = monthKey(date);
@@ -999,17 +1036,118 @@
             }
         });
 
+        /* ---------- Razão financeira (ordem cronológica dos depósitos e saques) ---------- */
+        // Regra: cada saque recupera primeiro o capital investido; o que passar disso é lucro sacado.
+        const round2 = n => { const r = Math.round((Number(n) || 0) * 100) / 100; return r === 0 ? 0 : r; };
+        function ledger(list) {
+            const ord = list.map((f, i) => ({ f, i }))
+                .sort((a, b) => (a.f.ts || 0) - (b.f.ts || 0) || (a.f.createdAt || 0) - (b.f.createdAt || 0) || a.i - b.i)
+                .map(x => x.f);
+            let dep = 0, saq = 0, inv = 0, out = 0;   // em centavos
+            ord.forEach(f => {
+                const v = Math.round((Number(f.amount) || 0) * 100);
+                if (f.type === 'Saque') { saq += v; const fromInv = Math.min(v, inv); inv -= fromInv; out += v - fromInv; }
+                else { dep += v; inv += v; }
+            });
+            return { dep: dep / 100, saq: saq / 100, inv: inv / 100, out: out / 100 };
+        }
+        // Posição do lançamento no gráfico: hora do cadastro (se foi no mesmo dia); senão depósito no início e saque no fim do dia
+        function flowChartTs(f) {
+            const base = f.ts || 0;
+            if (f.createdAt) {
+                const c = new Date(f.createdAt);
+                if (isoOf(f.date) === `${c.getFullYear()}-${pad2(c.getMonth() + 1)}-${pad2(c.getDate())}`)
+                    return base + ((c.getHours() * 60 + c.getMinutes()) * 60 + c.getSeconds()) * 1000;
+            }
+            return f.type === 'Saque' ? base + 86340000 : base;
+        }
+
+        /* ---------- Lista pesquisável de bancos/corretoras ---------- */
+        const normTxt = t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        function bankOptions() {
+            return [...new Set(['Corretora', ...flows.flatMap(x => [x.from, x.to]).filter(Boolean), ...BANKS_TOP])];
+        }
+        function setupBankCombo(inputId, menuId) {
+            const inp = $(inputId), menu = $(menuId);
+            const render = () => {
+                const q = normTxt(inp.value.trim());
+                const list = bankOptions().filter(b => !q || normTxt(b).includes(q));
+                if (!list.length) { menu.classList.add('hidden'); return; }
+                menu.innerHTML = list.map(b => `<button type="button" tabindex="-1" data-v="${esc(b)}" class="block w-full text-left whitespace-normal px-3 py-2 text-xs text-gray-200 hover:bg-gray-700">${esc(b)}</button>`).join('');
+                menu.classList.remove('hidden');
+            };
+            inp.addEventListener('focus', render);
+            inp.addEventListener('input', render);
+            inp.addEventListener('keydown', e => { if (e.key === 'Escape') menu.classList.add('hidden'); });
+            inp.addEventListener('blur', () => setTimeout(() => menu.classList.add('hidden'), 250));
+            menu.addEventListener('mousedown', e => e.preventDefault());
+            menu.addEventListener('click', e => {
+                const b = e.target.closest('button[data-v]');
+                if (!b) return;
+                inp.value = b.dataset.v;
+                menu.classList.add('hidden');
+            });
+        }
+        setupBankCombo('fFrom', 'menuFrom');
+        setupBankCombo('fTo', 'menuTo');
+
+        /* ---------- Resumo da aba Gestão financeira ---------- */
+        function renderFlowSummary(net, list) {
+            let dep = 0, saq = 0, nDep = 0, nSaq = 0;
+            const banks = {}, months = {};
+            list.forEach(f => {
+                const v = Number(f.amount) || 0, isS = f.type === 'Saque';
+                if (isS) { saq += v; nSaq++; } else { dep += v; nDep++; }
+                const b = (isS ? f.to : f.from) || '—';
+                banks[b] = banks[b] || { d: 0, s: 0 }; if (isS) banks[b].s += v; else banks[b].d += v;
+                const k = isoOf(f.date).slice(0, 7);
+                months[k] = months[k] || { d: 0, s: 0 }; if (isS) months[k].s += v; else months[k].d += v;
+            });
+            const L = ledger(list), inv = L.inv, out = L.out, cap = round2(dep - saq + net), ret = dep > 0 ? net / dep * 100 : null;
+            const card = (t, v, sub, hl) => `<div class="bg-cardBg ${hl ? 'border-2 border-blue-500/60' : 'border border-gray-800'} rounded-xl p-3 sm:p-4 shadow-lg"><p class="text-[10px] sm:text-[11px] text-gray-400 uppercase tracking-wider">${t}</p><p class="mt-1 text-lg sm:text-xl font-bold text-gray-100">${v}</p><p class="text-[10px] text-gray-500">${sub}</p></div>`;
+            $('flowCards').innerHTML =
+                card('↓ Total depositado', 'R$ ' + brl(dep), `${nDep} depósito${nDep === 1 ? '' : 's'}`) +
+                card('↑ Total sacado', 'R$ ' + brl(saq), `${nSaq} saque${nSaq === 1 ? '' : 's'}`) +
+                card('Valor investido', 'R$ ' + brl(inv), (inv === 0 && dep > 0) ? 'capital recuperado' : 'capital ainda na corretora', true) +
+                card('Lucro já sacado', 'R$ ' + brl(out), out > 0 ? 'saques além do capital' : 'nenhum, só capital') +
+                card('Capital atual', 'R$ ' + brl(cap), 'depositado − sacado + lucro', true) +
+                card('Retorno s/ depositado', ret === null ? '—' : (ret >= 0 ? '+' : '−') + ' ' + pct(Math.abs(ret)), ret === null ? 'sem depósitos' : `lucro ${brl(net)} ÷ ${brl(dep)}`);
+
+            const bk = Object.entries(banks).sort((a, b) => (b[1].d - b[1].s) - (a[1].d - a[1].s));
+            const rowsB = bk.map(([n, x]) => `<tr class="hover:bg-cardHover">${lbl(n, true)}${td(brl(x.d), 'text-blue-300')}${td(brl(x.s), 'text-amber-300')}${td(brl(x.d - x.s))}</tr>`).join('')
+                || '<tr><td colspan="4" class="py-6 px-3 text-center text-gray-500">Sem movimentações.</td></tr>';
+            const totB = bk.length ? `<tr class="bg-gray-900/60 font-bold">${lbl('Total')}${td(brl(dep))}${td(brl(saq))}${td(brl(dep - saq))}</tr>` : '';
+            $('flowBanks').innerHTML = rcard('Por banco (R$)', rtable(['Banco', 'Depositado', 'Sacado', 'Saldo'], rowsB + totB), 'Depósito conta pela origem; saque, pelo destino.');
+
+            const mk = Object.keys(months).sort().slice(-8);
+            let chart;
+            if (!mk.length) chart = '<p class="p-6 text-center text-xs text-gray-500">Sem dados.</p>';
+            else {
+                const max = Math.max(1, ...mk.flatMap(k => [months[k].d, months[k].s])), gw = 84, H = 90, W = Math.max(300, mk.length * gw + 20);
+                let g = '';
+                mk.forEach((k, i) => {
+                    const x0 = 10 + i * gw, d = months[k].d, sv = months[k].s, hd = Math.round(d / max * H), hs = Math.round(sv / max * H);
+                    if (d > 0) g += `<rect x="${x0 + 6}" y="${115 - hd}" width="30" height="${Math.max(hd, 1)}" rx="3" fill="#3b82f6"/><text x="${x0 + 21}" y="${109 - hd}" text-anchor="middle" font-size="10" fill="#e5e7eb">↓${Math.round(d)}</text>`;
+                    if (sv > 0) g += `<rect x="${x0 + 42}" y="${115 - hs}" width="30" height="${Math.max(hs, 1)}" rx="3" fill="#f59e0b"/><text x="${x0 + 57}" y="${109 - hs}" text-anchor="middle" font-size="10" fill="#e5e7eb">↑${Math.round(sv)}</text>`;
+                    g += `<text x="${x0 + 39}" y="132" text-anchor="middle" font-size="10" fill="#9ca3af">${k.slice(5)}/${k.slice(0, 4)}</text>`;
+                });
+                chart = `<div class="overflow-x-auto p-3"><svg viewBox="0 0 ${W} 140" width="${W}" height="140" role="img" aria-label="Depósitos e saques por mês"><title>Depósitos e saques por mês</title><line x1="0" y1="115" x2="${W}" y2="115" stroke="#374151" stroke-width="1"/>${g}</svg><p class="text-[10px] text-gray-500">Azul = depósito (↓) · Âmbar = saque (↑) · valores arredondados</p></div>`;
+            }
+            $('flowChart').innerHTML = rcard('Depósitos x saques por mês (R$)', chart);
+        }
+
         function renderFinance(view, net) {
             const sorted = flows.slice().sort((a, b) => (a.ts || 0) - (b.ts || 0));
             let dep = 0, saq = 0;
             sorted.forEach(f => { const v = Number(f.amount) || 0; if (f.type === 'Saque') saq += v; else dep += v; });
-            const invested = dep - saq, capital = invested + net;
+            const L = ledger(flows), invested = L.inv, profitOut = L.out;
+            const capital = round2(dep - saq + net), avail = round2(net - profitOut);
             $('metricInvested').innerText = `R$ ${brl(invested)}`;
-            $('metricInvestedSub').innerText = `${brl(dep)} depositados − ${brl(saq)} sacados`;
+            $('metricInvestedSub').innerText = (invested === 0 && dep > 0) ? 'Capital recuperado: operando com o lucro' : `${brl(dep)} depositados − ${brl(saq - profitOut)} já recuperados`;
             const capEl = $('metricCapital');
             capEl.innerText = `R$ ${brl(capital)}`;
-            capEl.className = 'text-2xl sm:text-3xl font-extrabold ' + (capital >= invested ? 'text-emerald-400' : 'text-red-400');
-            $('metricCapitalSub').innerText = `${brl(invested)} investido ${net >= 0 ? '+' : '−'} ${brl(Math.abs(net))} de ${net >= 0 ? 'lucro' : 'prejuízo'}`;
+            capEl.className = 'text-2xl sm:text-3xl font-extrabold ' + (avail >= 0 ? 'text-emerald-400' : 'text-red-400');
+            $('metricCapitalSub').innerText = `${brl(invested)} investido ${avail >= 0 ? '+' : '−'} ${brl(Math.abs(avail))} de ${avail >= 0 ? 'lucro' : 'prejuízo'}` + (profitOut > 0 ? ` (lucro ${brl(net)} − ${brl(profitOut)} já sacado)` : '');
 
             const tb = $('flowTableBody');
             tb.innerHTML = '';
@@ -1044,6 +1182,7 @@
                 tb.appendChild(tr);
             });
             updateChart(view, sorted);
+            renderFlowSummary(net, sorted);
             if (!$('panelReport').classList.contains('hidden')) renderReports();
         }
 
@@ -1056,7 +1195,7 @@
             } else {
                 const ev = [
                     ...view.map(d => ({ ts: d.ts || 0, v: Number(d.result) || 0, t: d.date + ' · Op' })),
-                    ...flowList.map(f => ({ ts: f.ts || 0, v: (f.type === 'Saque' ? -1 : 1) * (Number(f.amount) || 0), t: f.date + ' · ' + f.type }))
+                    ...flowList.map(f => ({ ts: flowChartTs(f), v: (f.type === 'Saque' ? -1 : 1) * (Number(f.amount) || 0), t: f.date + ' · ' + f.type }))
                 ].sort((a, b) => a.ts - b.ts);
                 let c = 0;
                 labels = ev.map(e => e.t);
@@ -1175,11 +1314,20 @@
                 let dep = 0, saq = 0;
                 fl.filter(f => isoOf(f.date).slice(0, 7) === k).forEach(f => { if (f.type === 'Saque') saq += num(f.amount); else dep += num(f.amount); });
                 const profit = opsP.filter(r => isoOf(r.date).slice(0, 7) === k).reduce((t, r) => t + num(r.result), 0);
-                const inv = flows.filter(f => isoOf(f.date).slice(0, 7) <= k).reduce((t, f) => t + (f.type === 'Saque' ? -1 : 1) * num(f.amount), 0);
+                const inv = ledger(flows.filter(f => isoOf(f.date).slice(0, 7) <= k)).inv;
                 const rent = inv > 0 ? profit / inv * 100 : null;
                 return `<tr class="hover:bg-cardHover">${lbl(`${k.slice(5)}/${k.slice(0, 4)}`)}${td('+ ' + brl(dep), 'text-blue-300')}${td('− ' + brl(saq), 'text-amber-300')}${tdm(dep - saq)}${tdm(profit)}${td('R$ ' + brl(inv))}${td(rent === null ? '—' : (rent >= 0 ? '+' : '−') + pct(Math.abs(rent)), rent === null ? '' : mcls(rent))}</tr>`;
             }).join('') || `<tr><td colspan="7" class="py-6 px-3 text-center text-gray-500">Sem lançamentos.</td></tr>`;
-            return rcard('7. Financeiro: fluxo e rentabilidade', rtable(['Mês', 'Dep.', 'Saques', 'Fluxo', 'Lucro op.', 'Investido', 'Rent.'], body));
+            const totRow = (() => {
+                if (!keys.length) return '';
+                const dep = fl.filter(f => f.type !== 'Saque').reduce((t, f) => t + num(f.amount), 0);
+                const saq = fl.filter(f => f.type === 'Saque').reduce((t, f) => t + num(f.amount), 0);
+                const profit = opsP.reduce((t, r) => t + num(r.result), 0);
+                const inv = ledger(flows.filter(f => isoOf(f.date).slice(0, 7) <= keys[0])).inv;
+                const rent = inv > 0 ? profit / inv * 100 : null;
+                return `<tr class="bg-gray-900/60 font-bold">${lbl('Total do período')}${td('+ ' + brl(dep), 'text-blue-300')}${td('− ' + brl(saq), 'text-amber-300')}${tdm(dep - saq)}${tdm(profit)}${td('R$ ' + brl(inv))}${td(rent === null ? '—' : (rent >= 0 ? '+' : '−') + pct(Math.abs(rent)), rent === null ? '' : mcls(rent))}</tr>`;
+            })();
+            return rcard('7. Financeiro: fluxo e rentabilidade', rtable(['Mês', 'Dep.', 'Saques', 'Fluxo', 'Lucro op.', 'Investido', 'Rent.'], body + totRow));
         }
         function setGran(g) { repGran = g; renderReports(); }
         function calNav(d) { const [y, m] = calMonth.split('-').map(Number), dt = new Date(y, m - 1 + d, 1); calMonth = `${dt.getFullYear()}-${pad2(dt.getMonth() + 1)}`; renderReports(); }
