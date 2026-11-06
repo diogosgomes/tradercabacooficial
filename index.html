@@ -135,6 +135,7 @@
         <div class="flex gap-1 border-b border-gray-800" role="tablist">
             <button id="tabOps" onclick="switchTab('ops')" class="px-4 py-2 text-sm font-semibold text-gray-100 border-b-2 border-blue-500 -mb-px">Diário de operações</button>
             <button id="tabFlow" onclick="switchTab('flow')" class="px-4 py-2 text-sm text-gray-400 hover:text-gray-200 border-b-2 border-transparent -mb-px">Gestão financeira</button>
+            <button id="tabReport" onclick="switchTab('report')" class="px-4 py-2 text-sm text-gray-400 hover:text-gray-200 border-b-2 border-transparent -mb-px">Relatórios</button>
         </div>
 
         <!-- Histórico de Operações -->
@@ -186,6 +187,33 @@
                 </table>
             </div>
             <p id="emptyFlow" class="hidden px-6 py-8 text-center text-xs text-gray-500">Nenhuma movimentação ainda. Use “Gestão Financeira” para lançar um depósito ou saque.</p>
+        </div>
+
+        <div id="panelReport" class="hidden space-y-6">
+            <div class="bg-cardBg border border-gray-800 rounded-xl p-4 shadow-lg flex flex-wrap gap-3 items-end">
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1">Período</label>
+                    <select id="repPeriod" onchange="renderReports()" class="bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200">
+                        <option value="all">Tudo</option><option value="month">Este mês</option><option value="last">Mês passado</option>
+                        <option value="30d">Últimos 30 dias</option><option value="year">Este ano</option><option value="custom">Personalizado</option>
+                    </select>
+                </div>
+                <div id="repCustom" class="hidden flex gap-2 items-end">
+                    <div><label class="block text-xs font-medium text-gray-400 mb-1">De</label><input type="date" id="repFrom" onchange="renderReports()" class="bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div>
+                    <div><label class="block text-xs font-medium text-gray-400 mb-1">Até</label><input type="date" id="repTo" onchange="renderReports()" class="bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1">Setup</label>
+                    <select id="repSetup" onchange="renderReports()" class="max-w-[16rem] bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"><option value="">Todos</option></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1">Ativo</label>
+                    <select id="repAsset" onchange="renderReports()" class="bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"><option value="">Todos</option></select>
+                </div>
+                <button onclick="exportReportCsv()" class="bg-violet-700 hover:bg-violet-600 text-white px-3 py-2 rounded-lg text-xs font-semibold transition" title="Baixar as operações do filtro em CSV">📥 Exportar CSV</button>
+            </div>
+            <p id="repNote" class="text-xs text-gray-400"></p>
+            <div id="repBody" class="space-y-6"></div>
         </div>
 
     </main>
@@ -908,11 +936,9 @@
         }
 
         function switchTab(w) {
-            const ops = w === 'ops';
-            $('panelOps').classList.toggle('hidden', !ops);
-            $('panelFlow').classList.toggle('hidden', ops);
-            $('tabOps').className = ops ? TAB_ON : TAB_OFF;
-            $('tabFlow').className = ops ? TAB_OFF : TAB_ON;
+            const m = { ops: ['panelOps', 'tabOps'], flow: ['panelFlow', 'tabFlow'], report: ['panelReport', 'tabReport'] };
+            Object.entries(m).forEach(([k, [pn, tb]]) => { $(pn).classList.toggle('hidden', k !== w); $(tb).className = k === w ? TAB_ON : TAB_OFF; });
+            if (w === 'report') renderReports();
         }
         function setChartMode(m) {
             chartMode = m;
@@ -1032,6 +1058,7 @@
                 tb.appendChild(tr);
             });
             updateChart(view, sorted);
+            if (!$('panelReport').classList.contains('hidden')) renderReports();
         }
 
         function updateChart(view, flowList) {
@@ -1054,6 +1081,166 @@
             capitalCurveChart.data.datasets[0].data = data;
             capitalCurveChart.data.datasets[0].label = label;
             capitalCurveChart.update();
+        }
+
+        /* ---------- Relatórios ---------- */
+        let repGran = 'month', calMonth = null;
+        const num = v => Number(v) || 0;
+        const pad2 = n => String(n).padStart(2, '0');
+        const isoOf = d => { const [dd, mm, yy] = String(d).split('/'); return `${yy}-${mm}-${dd}`; };
+        const pct = v => v.toFixed(1).replace('.', ',') + '%';
+        const fx = v => (v === null || v === undefined || !isFinite(v)) ? '—' : v.toFixed(2).replace('.', ',');
+        const money = v => `${v >= 0 ? '+' : '−'} R$ ${brl(Math.abs(v))}`;
+        const mcls = v => v >= 0 ? 'text-emerald-400' : 'text-red-400';
+        const td = (v, c = '') => `<td class="py-2 px-3 text-right font-mono ${c}">${v}</td>`;
+        const tdm = v => td(money(v), mcls(v));
+
+        function group(list, fn) { const m = new Map(); list.forEach(r => { const k = fn(r); if (!m.has(k)) m.set(k, []); m.get(k).push(r); }); return m; }
+        function stats(list) {
+            let n = list.length, net = 0, gp = 0, gl = 0, np = 0, nl = 0, pts = 0, wins = 0, eq = 0, peak = 0, dd = 0, sw = 0, sl = 0, cw = 0, cl = 0;
+            list.forEach(r => {
+                const v = num(r.result); net += v;
+                if (v > 0) { gp += v; np++; } else if (v < 0) { gl -= v; nl++; }
+                pts += (r.type === 'Loss' ? -1 : 1) * Math.abs(num(r.points));
+                eq += v; peak = Math.max(peak, eq); dd = Math.max(dd, peak - eq);
+                if (r.type === 'Gain') { wins++; cw++; cl = 0; sw = Math.max(sw, cw); } else { cl++; cw = 0; sl = Math.max(sl, cl); }
+            });
+            return { n, net, gp, gl, pts, dd, sw, sl, wr: n ? wins / n * 100 : 0, avgGain: np ? gp / np : 0, avgLoss: nl ? gl / nl : 0,
+                     payoff: (np && nl) ? (gp / np) / (gl / nl) : null, pf: gl ? gp / gl : null, exp: n ? net / n : 0 };
+        }
+        function periodRange() {
+            const v = $('repPeriod').value, t = todayLocalISO(), Y = +t.slice(0, 4), M = +t.slice(5, 7);
+            if (v === 'month') return [`${Y}-${pad2(M)}-01`, '9999'];
+            if (v === 'last') { const y = M === 1 ? Y - 1 : Y, m = M === 1 ? 12 : M - 1; return [`${y}-${pad2(m)}-01`, `${y}-${pad2(m)}-${pad2(new Date(y, m, 0).getDate())}`]; }
+            if (v === '30d') { const d = new Date(); d.setDate(d.getDate() - 29); return [`${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`, '9999']; }
+            if (v === 'year') return [`${Y}-01-01`, '9999'];
+            if (v === 'custom') return [$('repFrom').value || '0000', $('repTo').value || '9999'];
+            return ['0000', '9999'];
+        }
+        function filteredOps(sa, per) {
+            const [from, to] = periodRange(), su = $('repSetup').value, as = $('repAsset').value;
+            return rows.slice().sort((a, b) => (a.ts || 0) - (b.ts || 0)).filter(r => {
+                const iso = isoOf(r.date);
+                if (per && (iso < from || iso > to)) return false;
+                if (sa && ((su && r.setup !== su) || (as && r.asset !== as))) return false;
+                return true;
+            });
+        }
+        function fillSel(id, vals) {
+            const sel = $(id), cur = sel.value, sig = vals.join('|');
+            if (sel.dataset.sig === sig) return;
+            sel.dataset.sig = sig;
+            sel.innerHTML = '<option value="">Todos</option>' + vals.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+            sel.value = vals.includes(cur) ? cur : '';
+        }
+
+        const rcard = (t, h, note, extra) => `<div class="bg-cardBg border border-gray-800 rounded-xl shadow-lg overflow-hidden"><div class="px-6 py-3 border-b border-gray-800 flex flex-wrap gap-2 justify-between items-center"><div><h3 class="font-bold text-gray-200 text-sm">${t}</h3>${note ? `<p class="text-[11px] text-gray-500 mt-0.5">${note}</p>` : ''}</div>${extra || ''}</div><div class="overflow-x-auto">${h}</div></div>`;
+        const rtable = (head, body) => `<table class="w-full text-left text-xs"><thead><tr class="bg-gray-900/50 text-gray-400 border-b border-gray-800 uppercase tracking-wider">${head.map((h, i) => `<th class="py-2 px-3 ${i ? 'text-right' : ''}">${h}</th>`).join('')}</tr></thead><tbody class="divide-y divide-gray-800 text-gray-300">${body}</tbody></table>`;
+        const lbl = (t, w) => `<td class="py-2 px-3 ${w ? 'max-w-xs truncate' : ''}" title="${esc(t)}">${esc(t)}</td>`;
+        const nOps = s => `${s.n}${s.n < 30 ? ' ⚠' : ''}`;
+        function simpleRows(groups, withPts) {
+            return groups.map(([k, l]) => { const s = stats(l); return `<tr class="hover:bg-cardHover">${lbl(k, true)}${td(nOps(s))}${td(pct(s.wr))}${tdm(s.net)}${withPts ? td((s.pts > 0 ? '+' : '') + s.pts) : ''}${tdm(s.exp)}</tr>`; }).join('');
+        }
+
+        function secSetup(ops) {
+            const g = [...group(ops, r => r.setup)].sort((a, b) => stats(b[1]).net - stats(a[1]).net);
+            return rcard('1. Desempenho por setup', rtable(['Setup', 'Operações', 'Win rate', 'Resultado', 'Pontos', 'Média/op.'], simpleRows(g, true)), '⚠ = menos de 30 operações (amostra pequena).');
+        }
+        function secRisk(s) {
+            const c = (t, v, sub) => `<div class="bg-darkBg border border-gray-800 rounded-lg p-3"><p class="text-[11px] text-gray-400 uppercase tracking-wider">${t}</p><p class="mt-1 text-lg font-bold text-gray-100">${v}</p>${sub ? `<p class="text-[10px] text-gray-500">${sub}</p>` : ''}</div>`;
+            const h = `<div class="p-4 grid grid-cols-2 md:grid-cols-4 gap-3">${c('Payoff', fx(s.payoff), 'ganho médio ÷ perda média')}${c('Profit factor', fx(s.pf), 'lucro bruto ÷ prejuízo bruto')}${c('Expectativa/op.', money(s.exp))}${c('Drawdown máximo', 'R$ ' + brl(s.dd), 'maior queda desde um pico')}${c('Ganho médio', 'R$ ' + brl(s.avgGain))}${c('Perda média', 'R$ ' + brl(s.avgLoss))}${c('Maior seq. de ganhos', s.sw + ' op.')}${c('Maior seq. de perdas', s.sl + ' op.')}</div>`;
+            return rcard('2. Métricas de risco', h);
+        }
+        function secInOut(ops) {
+            const OUT = 'Outras - Fora do Setup', a = ops.filter(r => r.setup !== OUT), b = ops.filter(r => r.setup === OUT);
+            return rcard('3. Dentro x fora do setup', rtable(['Grupo', 'Operações', 'Win rate', 'Resultado', 'Média/op.'], simpleRows([['Dentro dos setups', a], ['Fora do setup', b]].filter(x => x[1].length), false)));
+        }
+        function weekKey(iso) { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; }
+        function secPeriod(ops) {
+            const keyFn = r => { const i = isoOf(r.date); return repGran === 'month' ? i.slice(0, 7) : weekKey(i); };
+            const g = [...group(ops, keyFn)].sort((a, b) => b[0].localeCompare(a[0]));
+            const body = g.map(([k, l]) => {
+                const s = stats(l), days = [...group(l, r => r.date)].map(([, d]) => d.reduce((t, r) => t + num(r.result), 0));
+                const label = repGran === 'month' ? `${k.slice(5)}/${k.slice(0, 4)}` : `Sem. ${k.slice(8)}/${k.slice(5, 7)}/${k.slice(0, 4)}`;
+                return `<tr class="hover:bg-cardHover">${lbl(label)}${td(nOps(s))}${td(pct(s.wr))}${tdm(s.net)}${td((s.pts > 0 ? '+' : '') + s.pts)}${tdm(Math.max(...days))}${tdm(Math.min(...days))}</tr>`;
+            }).join('');
+            const on = 'px-3 py-1.5 bg-gray-700 text-white font-semibold', off = 'px-3 py-1.5 text-gray-400 hover:text-gray-200';
+            const tog = `<div class="flex rounded-lg border border-gray-700 overflow-hidden text-xs"><button onclick="setGran('month')" class="${repGran === 'month' ? on : off}">Mensal</button><button onclick="setGran('week')" class="${repGran === 'week' ? on : off}">Semanal</button></div>`;
+            return rcard('4. Resumo mensal e semanal', rtable(['Período', 'Operações', 'Win rate', 'Resultado', 'Pontos', 'Melhor dia', 'Pior dia'], body), null, tog);
+        }
+        function secTime(ops) {
+            const slot = r => { const [h, m] = String(r.timeIn).split(':').map(Number); return `${pad2(h)}:${m < 30 ? '00' : '30'}`; };
+            const g = [...group(ops, slot)].sort((a, b) => a[0].localeCompare(b[0])).map(([k, l]) => { const e = k.endsWith('00') ? '29' : '59'; return [`${k}–${k.slice(0, 2)}:${e}`, l]; });
+            return rcard('5. Por horário de entrada', rtable(['Faixa', 'Operações', 'Win rate', 'Resultado', 'Média/op.'], simpleRows(g, false)));
+        }
+        function secWeekday(ops) {
+            const names = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'], order = [1, 2, 3, 4, 5, 6, 0];
+            const m = group(ops, r => new Date(isoOf(r.date) + 'T12:00:00').getDay());
+            const g = order.filter(d => m.has(d)).map(d => [names[d], m.get(d)]);
+            return rcard('6a. Por dia da semana', rtable(['Dia', 'Operações', 'Win rate', 'Resultado', 'Média/op.'], simpleRows(g, false)));
+        }
+        function secAsset(ops) {
+            const g = [...group(ops, r => r.asset)].sort((a, b) => stats(b[1]).net - stats(a[1]).net);
+            return rcard('6b. Por ativo', rtable(['Ativo', 'Operações', 'Win rate', 'Resultado', 'Média/op.'], simpleRows(g, false)));
+        }
+        function secFinance(opsP, from, to) {
+            const fl = flows.filter(f => { const i = isoOf(f.date); return i >= from && i <= to; });
+            const keys = [...new Set([...fl.map(f => isoOf(f.date).slice(0, 7)), ...opsP.map(r => isoOf(r.date).slice(0, 7))])].sort().reverse();
+            const body = keys.map(k => {
+                let dep = 0, saq = 0;
+                fl.filter(f => isoOf(f.date).slice(0, 7) === k).forEach(f => { if (f.type === 'Saque') saq += num(f.amount); else dep += num(f.amount); });
+                const profit = opsP.filter(r => isoOf(r.date).slice(0, 7) === k).reduce((t, r) => t + num(r.result), 0);
+                const inv = flows.filter(f => isoOf(f.date).slice(0, 7) <= k).reduce((t, f) => t + (f.type === 'Saque' ? -1 : 1) * num(f.amount), 0);
+                const rent = inv > 0 ? profit / inv * 100 : null;
+                return `<tr class="hover:bg-cardHover">${lbl(`${k.slice(5)}/${k.slice(0, 4)}`)}${td('+ R$ ' + brl(dep), 'text-blue-300')}${td('− R$ ' + brl(saq), 'text-amber-300')}${tdm(dep - saq)}${tdm(profit)}${td('R$ ' + brl(inv))}${td(rent === null ? '—' : (rent >= 0 ? '+' : '−') + pct(Math.abs(rent)), rent === null ? '' : mcls(rent))}</tr>`;
+            }).join('') || `<tr><td colspan="7" class="py-6 px-3 text-center text-gray-500">Sem lançamentos no período.</td></tr>`;
+            return rcard('7. Financeiro: fluxo de caixa e rentabilidade mensal', rtable(['Mês', 'Depósitos', 'Saques', 'Fluxo líquido', 'Resultado das operações', 'Investido (fim do mês)', 'Rentabilidade'], body),
+                'Rentabilidade = resultado das operações do mês ÷ valor investido no fim do mês. Usa só o filtro de período.');
+        }
+        function setGran(g) { repGran = g; renderReports(); }
+        function calNav(d) { const [y, m] = calMonth.split('-').map(Number), dt = new Date(y, m - 1 + d, 1); calMonth = `${dt.getFullYear()}-${pad2(dt.getMonth() + 1)}`; renderReports(); }
+        function secCalendar() {
+            const ops = filteredOps(true, false);
+            if (!calMonth) { const t = todayLocalISO().slice(0, 7); calMonth = ops.length ? isoOf(ops[ops.length - 1].date).slice(0, 7) : t; }
+            const [y, m] = calMonth.split('-').map(Number), days = new Date(y, m, 0).getDate(), first = new Date(y, m - 1, 1).getDay();
+            const sums = {}; let total = 0, cnt = 0;
+            ops.filter(r => isoOf(r.date).slice(0, 7) === calMonth).forEach(r => { const d = +isoOf(r.date).slice(8); (sums[d] = sums[d] || { net: 0, n: 0 }); sums[d].net += num(r.result); sums[d].n++; total += num(r.result); cnt++; });
+            const maxAbs = Math.max(1, ...Object.values(sums).map(x => Math.abs(x.net)));
+            let cells = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(n => `<div class="text-[10px] text-gray-500 text-center uppercase">${n}</div>`).join('');
+            for (let i = 0; i < first; i++) cells += '<div></div>';
+            for (let d = 1; d <= days; d++) {
+                const x = sums[d]; let st = '', inner = '';
+                if (x) { const a = (0.15 + 0.45 * Math.abs(x.net) / maxAbs).toFixed(2); st = `background:${x.net >= 0 ? `rgba(59,130,246,${a})` : `rgba(245,158,11,${a})`}`; inner = `<div class="font-mono font-semibold text-gray-100">${x.net >= 0 ? '+' : '−'}${brl(Math.abs(x.net))}</div><div class="text-gray-400">${x.n} op.</div>`; }
+                cells += `<div class="rounded-lg p-1.5 min-h-[60px] border border-gray-800 text-[11px] text-gray-300" style="${st}"><div class="text-gray-400">${d}</div>${inner}</div>`;
+            }
+            const nav = `<div class="flex items-center gap-2 text-xs"><button onclick="calNav(-1)" class="px-2 py-1 rounded border border-gray-700 hover:bg-gray-700" title="Mês anterior">◀</button><span class="font-semibold text-gray-200">${pad2(m)}/${y}</span><button onclick="calNav(1)" class="px-2 py-1 rounded border border-gray-700 hover:bg-gray-700" title="Próximo mês">▶</button></div>`;
+            const h = `<div class="p-4"><div class="grid grid-cols-7 gap-1">${cells}</div><p class="mt-3 text-xs text-gray-400">Total do mês: <span class="font-mono font-bold ${mcls(total)}">${money(total)}</span> em ${cnt} operação(ões). Azul = ganho, âmbar = perda (sempre com sinal + ou −).</p></div>`;
+            return rcard('8. Calendário de resultados', h, 'Usa os filtros de setup e ativo.', nav);
+        }
+
+        function renderReports() {
+            fillSel('repSetup', [...new Set(rows.map(r => r.setup))].sort());
+            fillSel('repAsset', [...new Set(rows.map(r => r.asset))].sort());
+            $('repCustom').classList.toggle('hidden', $('repPeriod').value !== 'custom');
+            const [from, to] = periodRange(), ops = filteredOps(true, true), opsP = filteredOps(false, true);
+            $('repNote').textContent = `${ops.length} operação(ões) no filtro.` + (ops.length && ops.length < 30 ? ' Amostra pequena: com menos de 30 operações, médias e win rate oscilam muito.' : '');
+            let h = '';
+            if (ops.length) h += secSetup(ops) + secRisk(stats(ops)) + secInOut(ops) + secPeriod(ops) + secTime(ops) + `<div class="grid md:grid-cols-2 gap-6">${secWeekday(ops)}${secAsset(ops)}</div>`;
+            else h += '<p class="bg-cardBg border border-gray-800 rounded-xl p-6 text-center text-xs text-gray-500">Nenhuma operação para os filtros selecionados.</p>';
+            $('repBody').innerHTML = h + secFinance(opsP, from, to) + secCalendar();
+        }
+
+        async function saveText(name, data, mime) {
+            try { const dl = await window.claude.use('downloads'); if (dl) { await dl.save({ filename: name, data }); return; } } catch (e) { if (e && e.code === 'declined') return; }
+            const a = document.createElement('a');
+            a.href = 'data:' + mime + ';charset=utf-8,' + encodeURIComponent(data); a.download = name;
+            document.body.appendChild(a); a.click(); a.remove();
+        }
+        function exportReportCsv() {
+            const q = v => `"${String(v).replace(/"/g, '""')}"`;
+            const head = ['Data', 'Entrada', 'Saída', 'Ativo', 'Setup', 'Contratos', 'Tipo', 'Pontos', 'Resultado (R$)'];
+            const lines = filteredOps(true, true).map(r => [r.date, r.timeIn, r.timeOut, r.asset, r.setup, r.contracts, r.type, num(r.points), brl(num(r.result))].map(q).join(';'));
+            saveText(backupName().replace('diario_operacoes_backup.json', 'relatorio_operacoes.csv'), '\ufeff' + [head.map(q).join(';'), ...lines].join('\r\n'), 'text/csv');
         }
 
         initLock();
