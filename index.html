@@ -68,6 +68,7 @@
             </div>
         </div>
         <div class="flex items-center space-x-3">
+            <span id="userBadge" class="text-[11px] text-gray-400"></span>
             <span id="syncStatus" class="text-[11px] px-2 py-1 rounded-full bg-gray-800 text-gray-400">Conectando…</span>
             <button onclick="openFlowModal()" class="border border-blue-500 text-blue-300 hover:bg-blue-950 px-3 py-2 rounded-lg text-xs font-semibold transition">🏦 Gestão Financeira</button>
             <button onclick="openModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center space-x-1">
@@ -303,8 +304,12 @@
 
     <script>
         /* ============ CONFIGURAÇÕES DE ACESSO (edite aqui) ============ */
-        const AUTH_USER = 'diogo';    // nome de utilizador
-        const AUTH_PASS = '1234';     // senha
+        // Um item por pessoa. O PRIMEIRO da lista é o titular e mantém os dados já existentes.
+        // Cada utilizador tem os próprios dados, guardados separadamente neste navegador.
+        const USERS = [
+            { user: 'diogo',    pass: '1234',        nome: 'Diogo' },
+            { user: 'usuario2', pass: 'trocar1234',  nome: 'Usuário 2' }
+        ];
         const AUTO_LOGOUT_MIN = 15;   // sai sozinho após X minutos sem uso (0 = desligado)
         /* =============================================================== */
 
@@ -368,13 +373,13 @@
         /* ---------- Persistência (online com fallback local) ---------- */
         function loadLocal() {
             try {
-                const raw = localStorage.getItem(LOCAL_KEY);
+                const raw = localStorage.getItem(userKey(LOCAL_KEY));
                 if (raw) return JSON.parse(raw);
             } catch (e) {}
-            return defaultData.slice();
+            return (!currentUser || currentUser === USERS[0].user) ? defaultData.slice() : [];
         }
         function saveLocal() {
-            try { localStorage.setItem(LOCAL_KEY, JSON.stringify(rows)); } catch (e) {}
+            try { localStorage.setItem(userKey(LOCAL_KEY), JSON.stringify(rows)); } catch (e) {}
         }
 
         async function addTrade(trade) {
@@ -411,8 +416,7 @@
             let db = null;
             try { db = await window.claude.use('db'); } catch (e) {}
             if (!db) {
-                rows = loadLocal();
-                flows = loadFlowsLocal();
+                if (currentUser) loadUserData();
                 setStatus('Modo local (neste navegador)', 'warn');
                 processAndRender();
                 initLock(null);
@@ -763,7 +767,10 @@
         // Atenção: é uma barreira de interface. Utilizador e senha ficam no código e podem ser lidos por quem tiver o arquivo.
         const SESSION_KEY = 'dg_unlocked';
         const $ = id => document.getElementById(id);
-        let lockInit = false, failCount = 0, blockedUntil = 0, idleTimer = null;
+        let currentUser = null, lockInit = false, failCount = 0, blockedUntil = 0, idleTimer = null;
+
+        function userKey(base) { return (!currentUser || currentUser === USERS[0].user) ? base : base + ':' + currentUser; }
+        function loadUserData() { if (dbCol) return; rows = loadLocal(); flows = loadFlowsLocal(); processAndRender(); }
 
         function isUnlocked() { return $('lockScreen').classList.contains('hidden'); }
         function showLock() {
@@ -772,13 +779,19 @@
             clearTimeout(idleTimer);
             setTimeout(() => $('lockUser').focus(), 50);
         }
-        function unlock() {
-            try { sessionStorage.setItem(SESSION_KEY, '1'); } catch (e) {}
+        function unlock(u) {
+            currentUser = u.user;
+            try { sessionStorage.setItem(SESSION_KEY, u.user); } catch (e) {}
+            $('userBadge').textContent = '👤 ' + u.nome;
             $('lockScreen').classList.add('hidden');
+            loadUserData();
             resetIdle();
         }
         function lockNow() {
             try { sessionStorage.removeItem(SESSION_KEY); } catch (e) {}
+            currentUser = null;
+            $('userBadge').textContent = '';
+            if (!dbCol) { rows = []; flows = []; processAndRender(); }
             showLock();
         }
         function resetIdle() {
@@ -788,9 +801,10 @@
         function initLock() {
             if (lockInit) return;
             lockInit = true;
-            let ok = false;
-            try { ok = sessionStorage.getItem(SESSION_KEY) === '1'; } catch (e) {}
-            if (ok) unlock(); else showLock();
+            let saved = null;
+            try { saved = sessionStorage.getItem(SESSION_KEY); } catch (e) {}
+            const found = USERS.find(x => x.user === saved);
+            if (found) unlock(found); else showLock();
         }
         ['mousemove', 'keydown', 'click', 'touchstart', 'scroll'].forEach(ev => document.addEventListener(ev, resetIdle, { passive: true }));
 
@@ -800,7 +814,11 @@
             const now = Date.now();
             if (now < blockedUntil) { err.textContent = `Muitas tentativas. Aguarde ${Math.ceil((blockedUntil - now) / 1000)} s.`; return; }
             const u = $('lockUser').value.trim(), p = $('lockPass').value;
-            if (u === AUTH_USER && p === AUTH_PASS) { failCount = 0; unlock(); return; }
+            const match = USERS.find(x => x.user === u && x.pass === p);
+            if (match) {
+                if (dbCol && match.user !== USERS[0].user) { err.textContent = 'Este endereço é exclusivo do titular.'; $('lockPass').value = ''; return; }
+                failCount = 0; unlock(match); return;
+            }
             failCount++;
             $('lockPass').value = '';
             if (failCount >= 5) { blockedUntil = now + 30000; failCount = 0; err.textContent = 'Muitas tentativas. Aguarde 30 segundos.'; }
@@ -874,8 +892,8 @@
         const TAB_ON = 'px-4 py-2 text-sm font-semibold text-gray-100 border-b-2 border-blue-500 -mb-px';
         const TAB_OFF = 'px-4 py-2 text-sm text-gray-400 hover:text-gray-200 border-b-2 border-transparent -mb-px';
 
-        function loadFlowsLocal() { try { const r = localStorage.getItem(FLOW_KEY); if (r) return JSON.parse(r); } catch (e) {} return []; }
-        function saveFlowsLocal() { try { localStorage.setItem(FLOW_KEY, JSON.stringify(flows)); } catch (e) {} }
+        function loadFlowsLocal() { try { const r = localStorage.getItem(userKey(FLOW_KEY)); if (r) return JSON.parse(r); } catch (e) {} return []; }
+        function saveFlowsLocal() { try { localStorage.setItem(userKey(FLOW_KEY), JSON.stringify(flows)); } catch (e) {} }
         async function addFlow(d) {
             if (flowCol) await flowCol.add(d);
             else { flows.push({ ...d, id: 'f' + Date.now() + Math.random().toString(36).slice(2, 6) }); saveFlowsLocal(); processAndRender(); }
