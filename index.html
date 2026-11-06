@@ -2,10 +2,12 @@
 <html lang="pt-BR" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diário de Operações & Setups</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta name="robots" content="noindex,nofollow,noarchive">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>My Trade Dash</title>
+    <meta name="color-scheme" content="dark">
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -23,144 +25,175 @@
             }
         }
     </script>
+    <style>
+        :root { color-scheme: dark; box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+        html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+        body { background: #0b0f19; }
+        img, a { -webkit-user-drag: none; }
+        @media print { body * { display: none !important; } body::before { content: "Impressão desativada"; display: block; color: #000; } }
+    </style>
 </head>
 <body class="bg-darkBg text-gray-100 font-sans min-h-screen flex flex-col">
 
-    <!-- Tela de Login com Utilizador e Senha -->
-    <div id="loginScreen" class="fixed inset-0 bg-darkBg z-50 flex items-center justify-center p-4">
-        <div class="bg-cardBg border border-gray-800 rounded-2xl max-w-sm w-full p-8 shadow-2xl space-y-6 text-center">
-            <div class="inline-block bg-blue-600/20 text-blue-400 p-3 rounded-2xl text-2xl font-bold mb-2">🔐</div>
-            <div>
-                <h2 class="text-xl font-bold text-gray-100">Acesso Restrito</h2>
-                <p class="text-xs text-gray-400 mt-1">Insira as suas credenciais para aceder ao Dashboard</p>
+    <!-- Tela de acesso -->
+    <div id="lockScreen" class="fixed inset-0 z-[100] bg-darkBg flex items-center justify-center p-4">
+        <div class="bg-cardBg border border-gray-800 rounded-2xl max-w-sm w-full p-8 shadow-2xl space-y-5">
+            <div class="text-center">
+                <div class="inline-flex bg-blue-600 p-3 rounded-xl text-2xl mb-3">📈</div>
+                <h2 class="text-xl font-bold text-gray-100">My Trade Dash</h2>
+                <p class="text-xs text-gray-400 mt-1">Acesso restrito. Entre com suas credenciais.</p>
             </div>
-            <form onsubmit="handleLogin(event)" class="space-y-4">
+            <form id="lockForm" class="space-y-3" autocomplete="off">
                 <div>
-                    <input type="text" id="loginUser" placeholder="Utilizador" required class="w-full bg-darkBg border border-gray-700 rounded-xl px-4 py-3 text-sm text-center text-gray-200 focus:outline-none focus:border-blue-500">
+                    <label for="lockUser" class="block text-xs font-medium text-gray-400 mb-1">Utilizador</label>
+                    <input type="text" id="lockUser" autocomplete="off" autocapitalize="none" spellcheck="false" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200">
                 </div>
                 <div>
-                    <input type="password" id="loginPassword" placeholder="Palavra-passe" required class="w-full bg-darkBg border border-gray-700 rounded-xl px-4 py-3 text-sm text-center text-gray-200 tracking-widest focus:outline-none focus:border-blue-500">
+                    <label for="lockPass" class="block text-xs font-medium text-gray-400 mb-1">Senha</label>
+                    <input type="password" id="lockPass" autocomplete="off" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200">
                 </div>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl text-sm transition shadow-lg">Desbloquear Acesso</button>
+                <p id="lockError" class="text-xs text-red-400 min-h-[1rem]"></p>
+                <button type="submit" id="lockBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">Entrar</button>
             </form>
-            <p id="loginError" class="text-xs text-red-400 hidden">Utilizador ou senha incorretos, mano!</p>
         </div>
     </div>
 
-    <!-- Aplicação Principal (Oculta até efetuar login) -->
-    <div id="mainApp" class="hidden flex-1 flex flex-col min-h-screen">
-        <!-- Top Navbar -->
-        <header class="bg-cardBg border-b border-gray-800 px-6 py-4 flex justify-between items-center">
-            <div class="flex items-center space-x-3">
-                <div class="bg-blue-600 p-2 rounded-lg text-white font-bold">📈</div>
-                <div>
-                    <h1 class="text-lg font-bold tracking-tight">Trading Operations Dashboard</h1>
-                    <p class="text-xs text-gray-400">Diário de Operações & Setups Automatizados (Protegido por Credenciais)</p>
+    <!-- Top Navbar -->
+    <header class="bg-cardBg border-b border-gray-800 px-4 sm:px-6 py-4 flex flex-wrap gap-3 justify-between items-center">
+        <div class="flex items-center space-x-3">
+            <div class="bg-blue-600 p-2 rounded-lg text-white font-bold">📈</div>
+            <div>
+                <h1 class="text-lg font-bold tracking-tight">My Trade Dash</h1>
+                <p class="text-xs text-gray-400">Diário de Operações & Setups Automatizados</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3">
+            <span id="syncStatus" class="text-[11px] px-2 py-1 rounded-full bg-gray-800 text-gray-400">Conectando…</span>
+            <button onclick="openFlowModal()" class="border border-blue-500 text-blue-300 hover:bg-blue-950 px-3 py-2 rounded-lg text-xs font-semibold transition">🏦 Gestão Financeira</button>
+            <button onclick="openModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center space-x-1">
+                <span>+ Novo Registro</span>
+            </button>
+            <button onclick="lockNow()" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-xs font-semibold transition" title="Sair">🚪 Sair</button>
+            <button onclick="exportData()" class="bg-amber-500 hover:bg-amber-400 text-gray-900 px-3 py-2 rounded-lg text-xs font-semibold transition" title="Baixar backup dos dados">
+                📥 Exportar
+            </button>
+            <button onclick="document.getElementById('importFile').click()" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-lg text-xs font-semibold transition" title="Importar backup (.json)">📤 Importar</button>
+            <input type="file" id="importFile" accept=".json,application/json" class="hidden" onchange="importData(this.files[0])">
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 p-4 sm:p-6 max-w-7xl mx-auto w-full space-y-6">
+
+        <!-- Metrics Cards Dinâmicos -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-cardBg border-2 border-blue-500/60 p-5 rounded-xl shadow-lg">
+                <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Valor Investido</p>
+                <div class="mt-2"><span id="metricInvested" class="text-3xl font-extrabold text-gray-100">R$ 0,00</span></div>
+                <p id="metricInvestedSub" class="mt-1 text-[11px] text-gray-500">0,00 depositados − 0,00 sacados</p>
+            </div>
+            <div class="bg-cardBg border border-gray-800 p-5 rounded-xl shadow-lg">
+                <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Total Net Profit</p>
+                <div class="mt-2"><span id="metricNetProfit" class="text-3xl font-extrabold text-emerald-400">R$ 0,00</span></div>
+                <p class="mt-1 text-[11px] text-gray-500">Ganhos líquidos das operações</p>
+            </div>
+            <div class="bg-cardBg border-2 border-blue-500/60 p-5 rounded-xl shadow-lg">
+                <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Capital Atual</p>
+                <div class="mt-2"><span id="metricCapital" class="text-3xl font-extrabold text-emerald-400">R$ 0,00</span></div>
+                <p id="metricCapitalSub" class="mt-1 text-[11px] text-gray-500">0,00 investido + 0,00 de lucro</p>
+            </div>
+            <div class="bg-cardBg border border-gray-800 p-5 rounded-xl shadow-lg">
+                <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Total Gain / Loss</p>
+                <div class="mt-2"><span id="metricGainLoss" class="text-2xl font-bold text-emerald-400">Gain: 0 | Loss: 0</span></div>
+            </div>
+            <div class="bg-cardBg border border-gray-800 p-5 rounded-xl shadow-lg">
+                <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Win Rate</p>
+                <div class="mt-2"><span id="metricWinRate" class="text-3xl font-extrabold text-blue-400">0,0%</span></div>
+            </div>
+            <div class="bg-cardBg border border-gray-800 p-5 rounded-xl shadow-lg">
+                <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Best Setup</p>
+                <div class="mt-2"><span id="metricBestSetup" class="text-xs font-bold text-indigo-300 block truncate" title="N/A">N/A</span></div>
+            </div>
+        </div>
+
+        <!-- Capital Curve Chart Section -->
+        <div class="bg-cardBg border border-gray-800 p-6 rounded-xl shadow-lg">
+            <div class="flex flex-wrap gap-2 justify-between items-center mb-4">
+                <h2 class="text-base font-bold text-gray-200">Capital Curve (Evolução Patrimonial Dinâmica)</h2>
+                <div class="flex rounded-lg border border-gray-700 overflow-hidden text-xs">
+                    <button id="modeCap" onclick="setChartMode('capital')" class="px-3 py-1.5 bg-gray-700 text-white font-semibold">Capital atual</button>
+                    <button id="modeOps" onclick="setChartMode('ops')" class="px-3 py-1.5 text-gray-400 hover:text-gray-200">Só operações</button>
                 </div>
             </div>
-            <div class="flex items-center space-x-3">
-                <button onclick="openModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center space-x-1">
-                    <span>+ Novo Registo</span>
-                </button>
-                <button onclick="exportData()" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-xs font-semibold transition" title="Baixar backup automático com data">
-                    📥 Exportar
-                </button>
-                <label class="bg-indigo-700 hover:bg-indigo-600 text-white px-3 py-2 rounded-lg text-xs font-semibold transition cursor-pointer" title="Restaurar backup de ficheiro JSON">
-                    📤 Importar
-                    <input type="file" id="importFile" accept=".json" onchange="importData(event)" class="hidden">
-                </label>
-                <button onclick="lockApp()" class="bg-red-950/80 hover:bg-red-900 text-red-300 px-3 py-2 rounded-lg text-xs font-semibold transition border border-red-800" title="Bloquear sistema">
-                    🔒 Sair
-                </button>
+            <div class="h-72 w-full">
+                <canvas id="capitalCurveChart"></canvas>
             </div>
-        </header>
+        </div>
 
-        <!-- Main Container -->
-        <main class="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
+        <!-- Abas -->
+        <div class="flex gap-1 border-b border-gray-800" role="tablist">
+            <button id="tabOps" onclick="switchTab('ops')" class="px-4 py-2 text-sm font-semibold text-gray-100 border-b-2 border-blue-500 -mb-px">Diário de operações</button>
+            <button id="tabFlow" onclick="switchTab('flow')" class="px-4 py-2 text-sm text-gray-400 hover:text-gray-200 border-b-2 border-transparent -mb-px">Gestão financeira</button>
+        </div>
 
-            <!-- Metrics Cards Dinâmicos -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="bg-cardBg border border-gray-800 p-5 rounded-xl shadow-lg">
-                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Total Gain / Loss</p>
-                    <div class="mt-2 flex items-baseline justify-between">
-                        <span id="metricGainLoss" class="text-2xl font-bold text-emerald-400">Gain: 0 | Loss: 0</span>
-                    </div>
-                </div>
-
-                <div class="bg-cardBg border border-gray-800 p-5 rounded-xl shadow-lg">
-                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Win Rate</p>
-                    <div class="mt-2">
-                        <span id="metricWinRate" class="text-3xl font-extrabold text-blue-400">0,0%</span>
-                    </div>
-                </div>
-
-                <div class="bg-cardBg border border-gray-800 p-5 rounded-xl shadow-lg">
-                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Total Net Profit</p>
-                    <div class="mt-2">
-                        <span id="metricNetProfit" class="text-3xl font-extrabold text-emerald-400">R$ 0,00</span>
-                    </div>
-                </div>
-
-                <div class="bg-cardBg border border-gray-800 p-5 rounded-xl shadow-lg flex flex-col justify-between">
-                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Best Setup</p>
-                    <div class="mt-2">
-                        <span id="metricBestSetup" class="text-xs font-bold text-indigo-300 block truncate" title="Calculando...">
-                            Calculando...
-                        </span>
-                    </div>
+        <!-- Histórico de Operações -->
+        <div id="panelOps" class="bg-cardBg border border-gray-800 rounded-xl shadow-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-800 flex flex-wrap gap-2 justify-between items-center">
+                <h3 class="font-bold text-gray-200">Histórico de Operações</h3>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="openModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-semibold transition">+ Novo Registro</button>
                 </div>
             </div>
-
-            <!-- Capital Curve Chart Section -->
-            <div class="bg-cardBg border border-gray-800 p-6 rounded-xl shadow-lg">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-base font-bold text-gray-200">Capital Curve (Evolução Patrimonial Dinâmica)</h2>
-                    <span class="text-xs text-gray-400">WIN - Mini-Índice</span>
-                </div>
-                <div class="h-72 w-full">
-                    <canvas id="capitalCurveChart"></canvas>
-                </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-gray-900/50 text-gray-400 border-b border-gray-800 uppercase tracking-wider">
+                            <th class="py-3 px-3">Data</th>
+                            <th class="py-3 px-3">H. Entrada</th>
+                            <th class="py-3 px-3">H. Saída</th>
+                            <th class="py-3 px-3 text-center">T. Trader</th>
+                            <th class="py-3 px-3">Ativo</th>
+                            <th class="py-3 px-3">Setup Utilizado</th>
+                            <th class="py-3 px-3 text-center">Contratos</th>
+                            <th class="py-3 px-3 text-center">Tipo</th>
+                            <th class="py-3 px-3 text-right">Pontos</th>
+                            <th class="py-3 px-3 text-right">Resultado (R$)</th>
+                            <th class="py-3 px-3 text-right">Saldo Acum.</th>
+                            <th class="py-3 px-3 text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="operationsTableBody" class="divide-y divide-gray-800 text-gray-300"></tbody>
+                </table>
             </div>
+            <p id="emptyMsg" class="hidden px-6 py-8 text-center text-xs text-gray-500">Nenhum registro ainda. Clique em “+ Novo Registro” para começar.</p>
+        </div>
 
-            <!-- Histórico de Operações -->
-            <div class="bg-cardBg border border-gray-800 rounded-xl shadow-lg overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
-                    <h3 class="font-bold text-gray-200">Histórico de Operações (Aba Diário)</h3>
-                    <span class="text-xs text-gray-400">Gerenciamento Completo</span>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-xs">
-                        <thead>
-                            <tr class="bg-gray-900/50 text-gray-400 border-b border-gray-800 uppercase tracking-wider">
-                                <th class="py-3 px-3">Data</th>
-                                <th class="py-3 px-3">H. Entrada</th>
-                                <th class="py-3 px-3">H. Saída</th>
-                                <th class="py-3 px-3 text-center">T. Trader</th>
-                                <th class="py-3 px-3">Ativo</th>
-                                <th class="py-3 px-3">Setup Utilizado</th>
-                                <th class="py-3 px-3 text-center">Contratos</th>
-                                <th class="py-3 px-3 text-center">Tipo</th>
-                                <th class="py-3 px-3 text-right">Pontos</th>
-                                <th class="py-3 px-3 text-right">Resultado (R$)</th>
-                                <th class="py-3 px-3 text-right">Saldo Acum.</th>
-                                <th class="py-3 px-3 text-center">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="operationsTableBody" class="divide-y divide-gray-800 text-gray-300">
-                            <!-- Dados injetados via script -->
-                        </tbody>
-                    </table>
-                </div>
+        <div id="panelFlow" class="hidden bg-cardBg border border-gray-800 rounded-xl shadow-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
+                <h3 class="font-bold text-gray-200">Histórico de movimentação financeira</h3>
+                <button onclick="openFlowModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-lg text-xs font-semibold transition">+ Nova movimentação financeira</button>
             </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-gray-900/50 text-gray-400 border-b border-gray-800 uppercase tracking-wider">
+                            <th class="py-3 px-3">Data</th><th class="py-3 px-3">Tipo</th><th class="py-3 px-3 text-right">Valor (R$)</th>
+                            <th class="py-3 px-3">Origem (débito)</th><th class="py-3 px-3">Destino (crédito)</th><th class="py-3 px-3 text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="flowTableBody" class="divide-y divide-gray-800 text-gray-300"></tbody>
+                </table>
+            </div>
+            <p id="emptyFlow" class="hidden px-6 py-8 text-center text-xs text-gray-500">Nenhuma movimentação ainda. Use “Gestão Financeira” para lançar um depósito ou saque.</p>
+        </div>
 
-        </main>
-    </div>
+    </main>
 
-    <!-- Modal de Registo -->
+    <!-- Modal de Registro -->
     <div id="tradeModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-cardBg border border-gray-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+        <div class="bg-cardBg border border-gray-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-full overflow-y-auto">
             <div class="flex justify-between items-center border-b border-gray-800 pb-3">
-                <h3 class="text-lg font-bold text-gray-100">Registar Nova Operação na Planilha</h3>
+                <h3 id="modalTitle" class="text-lg font-bold text-gray-100">Registrar Nova Operação</h3>
                 <button onclick="closeModal()" class="text-gray-400 hover:text-gray-200 text-xl font-bold">&times;</button>
             </div>
             <form id="tradeForm" class="space-y-4">
@@ -182,7 +215,10 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-medium text-gray-400 mb-1">Ativo</label>
-                        <input type="text" id="tAsset" value="WINZ26" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200">
+                        <select id="tAsset" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200">
+                            <option value="WIN - Mini Índice">WIN - Mini Índice</option>
+                            <option value="WDO - Mini Dólar">WDO - Mini Dólar</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-400 mb-1">Contratos</label>
@@ -200,6 +236,7 @@
                         <option value="SetupGemini_Pullback250pontosSEMprotecao1015">SetupGemini_Pullback250pontosSEMprotecao1015</option>
                         <option value="SetupGemini_SR_Max3">SetupGemini_SR_Max3</option>
                         <option value="Pullback250pontos0930_Max3intervalo3barras">Pullback250pontos0930_Max3intervalo3barras</option>
+                        <option value="Pullback1015_Max3intervalo4barras">Pullback1015_Max3intervalo4barras</option>
                         <option value="Outras - Fora do Setup">Outras - Fora do Setup</option>
                     </select>
                 </div>
@@ -224,288 +261,786 @@
 
                 <div class="flex justify-end space-x-3 pt-3 border-t border-gray-800">
                     <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-lg text-xs font-medium text-gray-400">Cancelar</button>
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-xs font-semibold">Adicionar à Tabela</button>
+                    <button type="submit" id="submitBtn" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-xs font-semibold">Adicionar à Tabela</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Script de Autenticação com Utilizador e Senha -->
+    <div id="flowModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-cardBg border border-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-full overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                <h3 id="flowTitle" class="text-lg font-bold text-gray-100">Nova movimentação financeira</h3>
+                <button onclick="closeFlowModal()" class="text-gray-400 hover:text-gray-200 text-xl font-bold">&times;</button>
+            </div>
+            <form id="flowForm" class="space-y-4">
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" id="fDep" onclick="setFlowType('Depósito')">↓ Depósito</button>
+                    <button type="button" id="fSaq" onclick="setFlowType('Saque')">↑ Saque</button>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="block text-xs font-medium text-gray-400 mb-1">Data</label>
+                        <input type="date" id="fDate" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div>
+                    <div><label class="block text-xs font-medium text-gray-400 mb-1">Valor (R$)</label>
+                        <input type="number" step="0.01" min="0.01" id="fAmount" placeholder="0,00" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="block text-xs font-medium text-gray-400 mb-1">Banco de origem (débito)</label>
+                        <input type="text" id="fFrom" list="bankList" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div>
+                    <div><label class="block text-xs font-medium text-gray-400 mb-1">Banco de destino (crédito)</label>
+                        <input type="text" id="fTo" list="bankList" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div>
+                </div>
+                <datalist id="bankList"></datalist>
+                <p class="text-[11px] text-gray-500">No depósito, o destino já vem como Corretora. No saque, é a origem.</p>
+                <p id="fError" class="text-xs text-red-400 min-h-[1rem]"></p>
+                <div class="flex justify-end space-x-3 pt-3 border-t border-gray-800">
+                    <button type="button" onclick="closeFlowModal()" class="px-4 py-2 rounded-lg text-xs font-medium text-gray-400">Cancelar</button>
+                    <button type="submit" id="fSubmit" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-xs font-semibold">Salvar movimentação</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
-        // Altere aqui o utilizador e a palavra-passe que desejar
-        const MASTER_USER = "diogo";
-        const MASTER_PASSWORD = "1234";
+        /* ============ CONFIGURAÇÕES DE ACESSO (edite aqui) ============ */
+        const AUTH_USER = 'diogo';    // nome de utilizador
+        const AUTH_PASS = '1234';     // senha
+        const AUTO_LOGOUT_MIN = 15;   // sai sozinho após X minutos sem uso (0 = desligado)
+        /* =============================================================== */
 
-        function handleLogin(event) {
-            event.preventDefault();
-            const user = document.getElementById('loginUser').value.trim();
-            const pass = document.getElementById('loginPassword').value;
+        const LOCAL_KEY = 'dg_trading_journal_v2';
+        const COLLECTION = 'trades';
 
-            if (user === MASTER_USER && pass === MASTER_PASSWORD) {
-                sessionStorage.setItem('dg_authenticated', 'true');
-                document.getElementById('loginScreen').classList.add('hidden');
-                document.getElementById('mainApp').classList.remove('hidden');
-                processAndRender();
-            } else {
-                document.getElementById('loginError').classList.remove('hidden');
-                document.getElementById('loginPassword').value = '';
-            }
-        }
-
-        function lockApp() {
-            sessionStorage.removeItem('dg_authenticated');
-            document.getElementById('mainApp').classList.add('hidden');
-            document.getElementById('loginScreen').classList.remove('hidden');
-            document.getElementById('loginUser').value = '';
-            document.getElementById('loginPassword').value = '';
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            if (sessionStorage.getItem('dg_authenticated') === 'true') {
-                document.getElementById('loginScreen').classList.add('hidden');
-                document.getElementById('mainApp').classList.remove('hidden');
-                processAndRender();
-            }
-        });
-
+        // Registros iniciais usados apenas no modo local (sem banco online)
         const defaultData = [
             { date: "27/10/2026", timeIn: "10:15", timeOut: "11:20", asset: "WINZ26", setup: "Pullback1015_Max3intervalo4barras", contracts: 1, type: "Gain", points: 250, result: 49.50 },
             { date: "29/10/2026", timeIn: "10:20", timeOut: "11:30", asset: "WINZ26", setup: "Pullback1015_Max3COM2contratos", contracts: 2, type: "Loss", points: -325, result: -130.00 },
-            { date: "30/10/2026", timeIn: "11:30", timeOut: "11:32", asset: "WINZ26", setup: "Pullback1005_Max3intervalo4barras", contracts: 1, type: "Loss", points: 300, result: -60.00 },
-            { date: "03/11/2026", timeIn: "09:30", timeOut: "09:32", asset: "WINZ26", setup: "Pullback0930_Max3int4b_PriceAction...", contracts: 1, type: "Gain", points: 250, result: 49.50 },
+            { date: "30/10/2026", timeIn: "11:30", timeOut: "11:32", asset: "WINZ26", setup: "Pullback1005_Max3intervalo4barras", contracts: 1, type: "Loss", points: -300, result: -60.00 },
+            { date: "03/11/2026", timeIn: "09:30", timeOut: "09:32", asset: "WINZ26", setup: "Pullback0930_Max3int4b_PriceAction_Cpernas_operacoesCondicionadasde250e200pontos", contracts: 1, type: "Gain", points: 250, result: 49.50 },
             { date: "03/11/2026", timeIn: "11:19", timeOut: "11:22", asset: "WINZ26", setup: "Outras - Fora do Setup", contracts: 1, type: "Gain", points: 100, result: 19.50 },
-            { date: "04/11/2026", timeIn: "09:31", timeOut: "10:06", asset: "WINZ26", setup: "Pullback0930_Max3int4b_PriceAction...", contracts: 1, type: "Gain", points: 250, result: 49.50 },
+            { date: "04/11/2026", timeIn: "09:31", timeOut: "10:06", asset: "WINZ26", setup: "Pullback0930_Max3int4b_PriceAction_Cpernas_operacoesCondicionadasde250e200pontos", contracts: 1, type: "Gain", points: 250, result: 49.50 },
             { date: "04/11/2026", timeIn: "11:35", timeOut: "11:36", asset: "WINZ26", setup: "Outras - Fora do Setup", contracts: 1, type: "Gain", points: 200, result: 39.50 },
-            { date: "05/11/2026", timeIn: "09:30", timeOut: "09:41", asset: "WINZ26", setup: "Pullback0930_Max3int4b_PriceAction...", contracts: 1, type: "Gain", points: 250, result: 49.50 },
+            { date: "05/11/2026", timeIn: "09:30", timeOut: "09:41", asset: "WINZ26", setup: "Pullback0930_Max3int4b_PriceAction_Cpernas_operacoesCondicionadasde250e200pontos", contracts: 1, type: "Gain", points: 250, result: 49.50 },
             { date: "05/11/2026", timeIn: "10:49", timeOut: "10:51", asset: "WINZ26", setup: "Outras - Fora do Setup", contracts: 1, type: "Gain", points: 130, result: 25.50 },
             { date: "05/11/2026", timeIn: "12:00", timeOut: "12:10", asset: "WINZ26", setup: "Pullback1015_Max3", contracts: 1, type: "Gain", points: 500, result: 100.00 }
-        ];
+        ].map((r, i) => ({ ...r, id: 'seed' + i, ts: computeTs(r.date, r.timeIn) }));
 
-        let sheetData = JSON.parse(localStorage.getItem('dg_trading_journal') || sessionStorage.getItem('dg_trading_journal')) || defaultData;
+        let rows = [];          // registros atuais (cada um com id)
+        let dbCol = null;       // coleção online (null = modo local)
+        let pendingDeleteId = null;
+        let capitalCurveChart;
 
-        function saveData() {
-            localStorage.setItem('dg_trading_journal', JSON.stringify(sheetData));
-            sessionStorage.setItem('dg_trading_journal', JSON.stringify(sheetData));
+        /* ---------- Utilidades ---------- */
+        function esc(s) {
+            return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         }
-
-        function exportData() {
-            const now = new Date();
-            const day = String(now.getDate()).padStart(2, '0');
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const year = now.getFullYear();
-            const filename = `${day}${month}${year}_diario_operacoes_backup.json`;
-
-            const jsonStr = JSON.stringify(sheetData, null, 2);
-            const blob = new Blob([jsonStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.href = url;
-            downloadAnchor.download = filename;
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            document.body.removeChild(downloadAnchor);
-            URL.revokeObjectURL(url);
+        function computeTs(date, time) {
+            const [d, m, y] = String(date).split('/').map(Number);
+            const [h, mi] = String(time).split(':').map(Number);
+            return Date.UTC(y || 1970, (m || 1) - 1, d || 1, h || 0, mi || 0);
         }
-
-        function importData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const imported = JSON.parse(e.target.result);
-                    if (Array.isArray(imported)) {
-                        sheetData = imported;
-                        saveData();
-                        processAndRender();
-                        alert("Backup importado com sucesso, mano! Dados atualizados.");
-                    } else {
-                        alert("O arquivo selecionado não tem um formato válido de diário.");
-                    }
-                } catch (err) {
-                    alert("Erro ao ler o ficheiro de backup.");
-                }
-            };
-            reader.readAsText(file);
-            event.target.value = '';
+        function brl(v) { return v.toFixed(2).replace('.', ','); }
+        function setStatus(text, kind) {
+            const el = document.getElementById('syncStatus');
+            el.textContent = text;
+            el.className = 'text-[11px] px-2 py-1 rounded-full ' + ({
+                ok: 'bg-emerald-950 text-emerald-400',
+                warn: 'bg-amber-950 text-amber-400',
+                err: 'bg-red-950 text-red-400'
+            }[kind] || 'bg-gray-800 text-gray-400');
         }
 
         function calculateDuration(timeIn, timeOut) {
             try {
                 const [inH, inM] = timeIn.split(':').map(Number);
                 const [outH, outM] = timeOut.split(':').map(Number);
-                const totalInMinutes = (inH * 60) + inM;
-                const totalOutMinutes = (outH * 60) + outM;
-                let diffMinutes = totalOutMinutes - totalInMinutes;
-                if (diffMinutes < 0) diffMinutes += 24 * 60;
-                const hrs = Math.floor(diffMinutes / 60);
-                const mins = diffMinutes % 60;
+                let diff = (outH * 60 + outM) - (inH * 60 + inM);
+                if (diff < 0) diff += 24 * 60;
+                const hrs = Math.floor(diff / 60);
+                const mins = diff % 60;
                 if (hrs > 0) return `${hrs}h ${mins < 10 ? '0' : ''}${mins}m`;
                 return `${mins < 10 ? '0' : ''}${mins}:00 min`;
             } catch (e) {
-                return "02:00 min";
+                return "—";
             }
         }
 
-        let capitalCurveChart;
+        /* ---------- Persistência (online com fallback local) ---------- */
+        function loadLocal() {
+            try {
+                const raw = localStorage.getItem(LOCAL_KEY);
+                if (raw) return JSON.parse(raw);
+            } catch (e) {}
+            return defaultData.slice();
+        }
+        function saveLocal() {
+            try { localStorage.setItem(LOCAL_KEY, JSON.stringify(rows)); } catch (e) {}
+        }
 
+        async function addTrade(trade) {
+            if (dbCol) {
+                await dbCol.add(trade);              // o onSnapshot atualiza a tela
+            } else {
+                rows.push({ ...trade, id: 'l' + Date.now() + Math.random().toString(36).slice(2, 6) });
+                saveLocal();
+                processAndRender();
+            }
+        }
+
+        async function removeTrade(id) {
+            if (dbCol) {
+                await dbCol.doc(id).delete();
+            } else {
+                rows = rows.filter(r => r.id !== id);
+                saveLocal();
+                processAndRender();
+            }
+        }
+
+        async function updateTrade(id, data) {
+            if (dbCol) {
+                await dbCol.doc(id).update(data);    // o onSnapshot atualiza a tela
+            } else {
+                rows = rows.map(r => r.id === id ? { ...r, ...data } : r);
+                saveLocal();
+                processAndRender();
+            }
+        }
+
+        async function initStorage() {
+            let db = null;
+            try { db = await window.claude.use('db'); } catch (e) {}
+            if (!db) {
+                rows = loadLocal();
+                flows = loadFlowsLocal();
+                setStatus('Modo local (neste navegador)', 'warn');
+                processAndRender();
+                initLock(null);
+                return;
+            }
+            dbCol = db.collection(COLLECTION);
+            flowCol = db.collection('cashflow');
+            flowCol.orderBy('ts', 'asc').onSnapshot(snap => {
+                flows = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+                processAndRender();
+            }, () => {});
+            initLock(db);
+            const timer = setTimeout(() => setStatus('Sem resposta do servidor… dados podem estar desatualizados', 'warn'), 10000);
+            dbCol.orderBy('ts', 'asc').onSnapshot(snap => {
+                if (!snap.metadata.fromCache) { clearTimeout(timer); setStatus('Salvo online ✓', 'ok'); }
+                rows = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+                processAndRender();
+            }, err => {
+                clearTimeout(timer);
+                setStatus('Erro de sincronização (' + (err && err.code || 'desconhecido') + ')', 'err');
+            });
+        }
+
+        function backupName() {
+            const d = new Date();
+            const p = n => String(n).padStart(2, '0');
+            return `${p(d.getDate())}${p(d.getMonth() + 1)}${d.getFullYear()}_diario_operacoes_backup.json`;
+        }
+
+        function showToast(msg, kind) {
+            let t = document.getElementById('toast');
+            if (!t) {
+                t = document.createElement('div');
+                t.id = 'toast';
+                t.className = 'fixed left-1/2 -translate-x-1/2 bottom-6 z-[90] px-4 py-2 rounded-lg text-xs font-semibold shadow-2xl border';
+                document.body.appendChild(t);
+            }
+            t.className = t.className.replace(/bg-\S+|text-\S+|border-\S+/g, '').trim() + (kind === 'err'
+                ? ' bg-red-950 text-red-300 border-red-800'
+                : ' bg-emerald-950 text-emerald-300 border-emerald-800');
+            t.textContent = msg;
+            t.style.display = 'block';
+            clearTimeout(showToast._t);
+            showToast._t = setTimeout(() => { t.style.display = 'none'; }, 6000);
+        }
+
+        function tradeKey(r) {
+            return [r.date, r.timeIn, r.timeOut, r.asset, r.setup, r.contracts, r.type, r.points, r.result].join('|');
+        }
+
+        async function importData(file) {
+            const input = document.getElementById('importFile');
+            if (!file) return;
+            try {
+                const raw = JSON.parse(await file.text());
+                const parsed = Array.isArray(raw) ? raw : raw.operacoes;
+                if (!Array.isArray(parsed)) throw new Error('formato');
+                const parsedFlows = (!Array.isArray(raw) && Array.isArray(raw.movimentacoes)) ? raw.movimentacoes : [];
+                const existing = new Set(rows.map(tradeKey));
+                let added = 0, skipped = 0, invalid = 0;
+                for (const r of parsed) {
+                    if (!r || typeof r !== 'object' || !/^\d{2}\/\d{2}\/\d{4}$/.test(r.date || '') ||
+                        !/^\d{1,2}:\d{2}$/.test(r.timeIn || '') || !['Gain', 'Loss'].includes(r.type)) { invalid++; continue; }
+                    const t = {
+                        date: r.date,
+                        timeIn: r.timeIn,
+                        timeOut: String(r.timeOut || r.timeIn),
+                        asset: String(r.asset || ''),
+                        setup: String(r.setup || ''),
+                        contracts: parseInt(r.contracts) || 1,
+                        type: r.type,
+                        points: Number(r.points) || 0,
+                        result: Number(r.result) || 0
+                    };
+                    t.ts = computeTs(t.date, t.timeIn);
+                    const k = tradeKey(t);
+                    if (existing.has(k)) { skipped++; continue; }
+                    existing.add(k);
+                    await addTrade(t);
+                    added++;
+                }
+                const flowKeys = new Set(flows.map(f => [f.date, f.type, f.amount, f.from, f.to].join('|')));
+                let fAdded = 0, fSkipped = 0;
+                for (const f of parsedFlows) {
+                    if (!f || typeof f !== 'object' || !/^\d{2}\/\d{2}\/\d{4}$/.test(f.date || '') ||
+                        !['Depósito', 'Saque'].includes(f.type) || !(Number(f.amount) > 0)) { invalid++; continue; }
+                    const m = { date: f.date, type: f.type, amount: Math.round(Number(f.amount) * 100) / 100, from: String(f.from || ''), to: String(f.to || '') };
+                    m.ts = computeTs(m.date, '00:00');
+                    const k = [m.date, m.type, m.amount, m.from, m.to].join('|');
+                    if (flowKeys.has(k)) { fSkipped++; continue; }
+                    flowKeys.add(k);
+                    await addFlow(m);
+                    fAdded++;
+                }
+                showToast(`Importação concluída: ${added} operação(ões) e ${fAdded} movimentação(ões) novas, ${skipped + fSkipped} duplicada(s) ignorada(s)` + (invalid ? `, ${invalid} inválida(s)` : ''), 'ok');
+            } catch (e) {
+                showToast('Não foi possível importar: arquivo inválido ou erro ao salvar.', 'err');
+            } finally {
+                input.value = '';
+            }
+        }
+
+        async function exportData() {
+            const strip = arr => arr.map(({ id, ...rest }) => rest);
+            const data = JSON.stringify({ versao: 2, operacoes: strip(rows), movimentacoes: strip(flows) }, null, 2);
+            try {
+                const dl = await window.claude.use('downloads');
+                if (dl) { await dl.save({ filename: backupName(), data }); return; }
+            } catch (e) { if (e && e.code === 'declined') return; }
+            const a = document.createElement('a');
+            a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(data);
+            a.download = backupName();
+            document.body.appendChild(a); a.click(); a.remove();
+        }
+
+        /* ---------- Renderização ---------- */
         function processAndRender() {
-            let accum = 0;
-            let gains = 0;
-            let losses = 0;
-            let setupProfits = {};
-
-            sheetData.forEach((row) => {
+            const sorted = rows.slice().sort((a, b) => (a.ts || 0) - (b.ts || 0));
+            let accum = 0, gains = 0, losses = 0;
+            const setupProfits = {};
+            const view = sorted.map(r => {
+                const row = { ...r };
+                row.result = Number(row.result) || 0;
                 accum += row.result;
                 row.accum = accum;
-
-                if (row.type === 'Gain') gains++;
-                else losses++;
-
-                if (!setupProfits[row.setup]) setupProfits[row.setup] = 0;
-                setupProfits[row.setup] += row.result;
+                if (row.type === 'Gain') gains++; else losses++;
+                setupProfits[row.setup] = (setupProfits[row.setup] || 0) + row.result;
+                return row;
             });
 
-            const totalTrades = gains + losses;
-            const winRate = totalTrades > 0 ? ((gains / totalTrades) * 100).toFixed(1) : 0;
-            
+            const total = gains + losses;
+            const winRate = total > 0 ? ((gains / total) * 100).toFixed(1) : '0.0';
             document.getElementById('metricGainLoss').innerText = `Gain: ${gains} | Loss: ${losses}`;
-            document.getElementById('metricWinRate').innerText = `${winRate.toString().replace('.', ',')}%`;
-            
-            const netProfitEl = document.getElementById('metricNetProfit');
-            netProfitEl.innerText = `R$ ${accum.toFixed(2).replace('.', ',')}`;
-            netProfitEl.className = accum >= 0 ? "text-3xl font-extrabold text-emerald-400" : "text-3xl font-extrabold text-red-400";
+            document.getElementById('metricWinRate').innerText = `${winRate.replace('.', ',')}%`;
 
-            let bestSetup = "N/A";
-            let maxProfit = -Infinity;
-            for (let s in setupProfits) {
-                if (setupProfits[s] > maxProfit) {
-                    maxProfit = setupProfits[s];
-                    bestSetup = s;
-                }
+            const net = document.getElementById('metricNetProfit');
+            net.innerText = `R$ ${brl(accum)}`;
+            net.className = accum >= 0 ? 'text-3xl font-extrabold text-emerald-400' : 'text-3xl font-extrabold text-red-400';
+
+            let bestSetup = 'N/A', maxProfit = -Infinity;
+            for (const s in setupProfits) {
+                if (setupProfits[s] > maxProfit) { maxProfit = setupProfits[s]; bestSetup = s; }
             }
-            const bestSetupEl = document.getElementById('metricBestSetup');
-            bestSetupEl.innerText = bestSetup;
-            bestSetupEl.title = bestSetup;
+            const best = document.getElementById('metricBestSetup');
+            best.innerText = bestSetup;
+            best.title = bestSetup;
 
             const tbody = document.getElementById('operationsTableBody');
             tbody.innerHTML = '';
-            sheetData.forEach((row, index) => {
+            document.getElementById('emptyMsg').classList.toggle('hidden', view.length > 0);
+
+            const opsCount = {};
+            view.forEach(r => { const k = monthKey(r.date); opsCount[k] = (opsCount[k] || 0) + 1; });
+            const opKeys = Object.keys(opsCount);
+            if (expandedOps === undefined || (expandedOps !== null && !opsCount[expandedOps])) expandedOps = opKeys.length ? opKeys[opKeys.length - 1] : null;
+            let lastMk = null;
+            view.forEach(row => {
+                const mk = monthKey(row.date);
+                if (mk !== lastMk) { lastMk = mk; tbody.appendChild(monthRow('ops', mk, opsCount[mk], expandedOps === mk)); }
+                if (mk !== expandedOps) return;
                 const isGain = row.result >= 0;
-                const duration = calculateDuration(row.timeIn, row.timeOut);
+                const points = Number(row.points) || 0;
+                const confirming = pendingDeleteId === row.id;
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-cardHover transition';
                 tr.innerHTML = `
-                    <td class="py-3 px-3 font-medium text-gray-200">${row.date}</td>
-                    <td class="py-3 px-3 text-gray-400">${row.timeIn}</td>
-                    <td class="py-3 px-3 text-gray-400">${row.timeOut}</td>
-                    <td class="py-3 px-3 text-center font-mono text-indigo-300 bg-indigo-950/30 rounded">${duration}</td>
-                    <td class="py-3 px-3 font-mono text-blue-400">${row.asset}</td>
-                    <td class="py-3 px-3 truncate max-w-xs" title="${row.setup}">${row.setup}</td>
-                    <td class="py-3 px-3 text-center font-mono">${row.contracts}</td>
+                    <td class="py-3 px-3 font-medium text-gray-200">${esc(row.date)}</td>
+                    <td class="py-3 px-3 text-gray-400">${esc(row.timeIn)}</td>
+                    <td class="py-3 px-3 text-gray-400">${esc(row.timeOut)}</td>
+                    <td class="py-3 px-3 text-center font-mono text-indigo-300 bg-indigo-950/30 rounded">${calculateDuration(row.timeIn, row.timeOut)}</td>
+                    <td class="py-3 px-3 font-mono text-blue-400">${esc(row.asset)}</td>
+                    <td class="py-3 px-3 truncate max-w-xs" title="${esc(row.setup)}">${esc(row.setup)}</td>
+                    <td class="py-3 px-3 text-center font-mono">${esc(row.contracts)}</td>
                     <td class="py-3 px-3 text-center">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${row.type === 'Gain' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-red-950 text-red-400 border border-red-800'}">${row.type}</span>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${row.type === 'Gain' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-red-950 text-red-400 border border-red-800'}">${esc(row.type)}</span>
                     </td>
-                    <td class="py-3 px-3 text-right font-mono ${isGain ? 'text-emerald-400' : 'text-red-400'}">${row.points > 0 ? '+' + row.points : row.points} pts</td>
-                    <td class="py-3 px-3 text-right font-mono font-bold ${isGain ? 'text-emerald-400' : 'text-red-400'}">${isGain ? '+R$ ' + row.result.toFixed(2).replace('.', ',') : '-R$ ' + Math.abs(row.result).toFixed(2).replace('.', ',')}</td>
-                    <td class="py-3 px-3 text-right font-mono font-semibold ${row.accum >= 0 ? 'text-emerald-300' : 'text-red-300'}">R$ ${row.accum.toFixed(2).replace('.', ',')}</td>
-                    <td class="py-3 px-3 text-center">
-                        <button onclick="deleteTrade(${index})" class="text-red-400 hover:text-red-300 p-1 font-bold transition" title="Remover registo">🗑️</button>
+                    <td class="py-3 px-3 text-right font-mono ${isGain ? 'text-emerald-400' : 'text-red-400'}">${points > 0 ? '+' + points : points} pts</td>
+                    <td class="py-3 px-3 text-right font-mono font-bold ${isGain ? 'text-emerald-400' : 'text-red-400'}">${isGain ? '+R$ ' + brl(row.result) : '-R$ ' + brl(Math.abs(row.result))}</td>
+                    <td class="py-3 px-3 text-right font-mono font-semibold ${row.accum >= 0 ? 'text-emerald-300' : 'text-red-300'}">R$ ${brl(row.accum)}</td>
+                    <td class="py-3 px-3 text-center whitespace-nowrap">
+                        ${confirming
+                            ? `<span class="text-[10px] text-gray-400 mr-1">Excluir?</span>
+                               <button data-act="confirm" data-id="${esc(row.id)}" class="text-emerald-400 hover:text-emerald-300 px-1 font-bold" title="Confirmar exclusão">✓</button>
+                               <button data-act="cancel" class="text-gray-400 hover:text-gray-200 px-1 font-bold" title="Cancelar">✕</button>`
+                            : `<button data-act="edit" data-id="${esc(row.id)}" class="text-blue-400 hover:text-blue-300 p-1 font-bold transition" title="Editar registro">✏️</button>
+                               <button data-act="ask" data-id="${esc(row.id)}" class="text-red-400 hover:text-red-300 p-1 font-bold transition" title="Remover registro">🗑️</button>`}
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
 
-            saveData();
-            updateChart();
+            renderFinance(view, accum);
         }
 
-        function deleteTrade(index) {
-            if (confirm("Tens a certeza que queres remover este registo de operação?")) {
-                sheetData.splice(index, 1);
-                processAndRender();
+        document.getElementById('operationsTableBody').addEventListener('click', async (e) => {
+            const btn = e.target.closest('button[data-act]');
+            if (!btn) return;
+            const act = btn.dataset.act;
+            if (act === 'month') { toggleMonth('ops', btn.dataset.month); return; }
+            if (act === 'edit') { pendingDeleteId = null; openModal(btn.dataset.id); }
+            else if (act === 'ask') { pendingDeleteId = btn.dataset.id; processAndRender(); }
+            else if (act === 'cancel') { pendingDeleteId = null; processAndRender(); }
+            else if (act === 'confirm') {
+                const id = btn.dataset.id;
+                pendingDeleteId = null;
+                try { await removeTrade(id); }
+                catch (err) { setStatus('Não foi possível excluir (' + (err && err.code || 'erro') + ')', 'err'); processAndRender(); }
             }
-        }
-
-        function openModal() {
-            document.getElementById('tDate').valueAsDate = new Date();
-            document.getElementById('tradeModal').classList.remove('hidden');
-            document.getElementById('tradeModal').classList.add('flex');
-        }
-
-        function closeModal() {
-            document.getElementById('tradeModal').classList.remove('flex');
-            document.getElementById('tradeModal').classList.add('hidden');
-        }
-
-        document.getElementById('tradeForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            let nRes = parseFloat(document.getElementById('tMoney').value) || 0;
-            const tradeType = document.getElementById('tType').value;
-
-            if (tradeType === 'Loss' && nRes > 0) {
-                nRes = -nRes;
-            }
-
-            const rawDate = document.getElementById('tDate').value;
-            const formattedDate = rawDate ? rawDate.split('-').reverse().join('/') : "05/11/2026";
-
-            sheetData.push({
-                date: formattedDate,
-                timeIn: document.getElementById('tTimeIn').value,
-                timeOut: document.getElementById('tTimeOut').value,
-                asset: document.getElementById('tAsset').value,
-                setup: document.getElementById('tSetup').value,
-                contracts: parseInt(document.getElementById('tContracts').value) || 1,
-                type: tradeType,
-                points: parseInt(document.getElementById('tPoints').value) || 0,
-                result: nRes
-            });
-
-            processAndRender();
-            closeModal();
         });
 
-        let ctx;
-        function updateChart() {
-            if (!capitalCurveChart) {
-                ctx = document.getElementById('capitalCurveChart').getContext('2d');
-                capitalCurveChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: [],
-                        datasets: [{
-                            label: 'Saldo Acumulado (R$)',
-                            data: [],
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            borderWidth: 2.5,
-                            fill: true,
-                            tension: 0.1,
-                            pointBackgroundColor: '#3b82f6',
-                            pointRadius: 4
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af', font: { size: 10 } } },
-                            y: {
-                                grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                                ticks: { color: '#9ca3af', font: { size: 10 }, callback: function(value) { return 'R$ ' + value; } }
-                            }
-                        }
-                    }
-                });
+        /* ---------- Modal e formulário ---------- */
+        function todayLocalISO() {
+            const d = new Date();
+            const p = n => String(n).padStart(2, '0');
+            return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+        }
+        let editingId = null;
+
+        function setField(id, v) { document.getElementById(id).value = v; }
+
+        // Garante que valores antigos (ex.: WINZ26) continuem disponíveis ao editar
+        function ensureOption(selectId, value) {
+            const sel = document.getElementById(selectId);
+            if (![...sel.options].some(o => o.value === value)) {
+                const opt = document.createElement('option');
+                opt.value = value; opt.textContent = value;
+                sel.appendChild(opt);
             }
-            capitalCurveChart.data.labels = sheetData.map((d, i) => `${d.date} (${i+1})`);
-            capitalCurveChart.data.datasets[0].data = sheetData.map(d => d.accum);
+        }
+
+        function openModal(editId) {
+            const row = typeof editId === 'string' ? rows.find(r => r.id === editId) : null;
+            editingId = row ? row.id : null;
+            document.getElementById('tDate').max = todayLocalISO();   // bloqueia datas futuras no calendário
+            document.getElementById('modalTitle').textContent = row ? 'Editar Operação' : 'Registrar Nova Operação';
+            document.getElementById('submitBtn').textContent = row ? 'Salvar Alterações' : 'Adicionar à Tabela';
+
+            if (row) {
+                setField('tDate', String(row.date).split('/').reverse().join('-'));
+                setField('tTimeIn', row.timeIn);
+                setField('tTimeOut', row.timeOut);
+                ensureOption('tAsset', row.asset);
+                setField('tAsset', row.asset);
+                setField('tContracts', row.contracts);
+                setField('tType', row.type);
+                setField('tPoints', Math.abs(Number(row.points) || 0));
+                setField('tMoney', Math.abs(Number(row.result) || 0).toFixed(2));
+                const sel = document.getElementById('tSetup');
+                if (![...sel.options].some(o => o.value === row.setup)) {
+                    const opt = document.createElement('option');
+                    opt.value = row.setup; opt.textContent = row.setup;
+                    sel.appendChild(opt);
+                }
+                sel.value = row.setup;
+            } else {
+                setField('tDate', todayLocalISO());
+                setField('tTimeIn', '12:00');
+                setField('tTimeOut', '12:10');
+                setField('tAsset', 'WIN - Mini Índice');
+                setField('tContracts', 1);
+                setField('tType', 'Gain');
+                setField('tPoints', 300);
+                setField('tMoney', '60.00');
+            }
+            const m = document.getElementById('tradeModal');
+            m.classList.remove('hidden'); m.classList.add('flex');
+        }
+        function closeModal() {
+            const m = document.getElementById('tradeModal');
+            m.classList.remove('flex'); m.classList.add('hidden');
+        }
+
+        document.getElementById('tradeForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const tradeType = document.getElementById('tType').value;
+            let money = Math.abs(parseFloat(document.getElementById('tMoney').value) || 0);
+            let points = Math.abs(parseInt(document.getElementById('tPoints').value) || 0);
+            if (tradeType === 'Loss') { money = -money; points = -points; }
+
+            const rawDate = document.getElementById('tDate').value || todayLocalISO();
+            if (rawDate > todayLocalISO()) {
+                showToast('A data não pode ser futura. Escolha hoje ou uma data anterior.', 'err');
+                return;
+            }
+            const date = rawDate.split('-').reverse().join('/');
+            const timeIn = document.getElementById('tTimeIn').value;
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            try {
+                const payload = {
+                    date,
+                    timeIn,
+                    timeOut: document.getElementById('tTimeOut').value,
+                    asset: document.getElementById('tAsset').value,
+                    setup: document.getElementById('tSetup').value,
+                    contracts: parseInt(document.getElementById('tContracts').value) || 1,
+                    type: tradeType,
+                    points,
+                    result: money,
+                    ts: computeTs(date, timeIn)
+                };
+                expandedOps = monthKey(date);
+                if (editingId) await updateTrade(editingId, payload);
+                else await addTrade(payload);
+                closeModal();
+            } catch (err) {
+                setStatus('Não foi possível salvar (' + (err && err.code || 'erro') + ')', 'err');
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        /* ---------- Gráfico ---------- */
+        capitalCurveChart = new Chart(document.getElementById('capitalCurveChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Saldo Acumulado (R$)',
+                    data: [],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 2.5,
+                    fill: true,
+                    tension: 0.1,
+                    pointBackgroundColor: '#3b82f6',
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af', font: { size: 10 } } },
+                    y: {
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#9ca3af', font: { size: 10 }, callback: v => 'R$ ' + v }
+                    }
+                }
+            }
+        });
+
+        
+
+        /* ---------- Acesso por utilizador e senha ---------- */
+        // Atenção: é uma barreira de interface. Utilizador e senha ficam no código e podem ser lidos por quem tiver o arquivo.
+        const SESSION_KEY = 'dg_unlocked';
+        const $ = id => document.getElementById(id);
+        let lockInit = false, failCount = 0, blockedUntil = 0, idleTimer = null;
+
+        function isUnlocked() { return $('lockScreen').classList.contains('hidden'); }
+        function showLock() {
+            $('lockScreen').classList.remove('hidden');
+            $('lockUser').value = ''; $('lockPass').value = ''; $('lockError').textContent = '';
+            clearTimeout(idleTimer);
+            setTimeout(() => $('lockUser').focus(), 50);
+        }
+        function unlock() {
+            try { sessionStorage.setItem(SESSION_KEY, '1'); } catch (e) {}
+            $('lockScreen').classList.add('hidden');
+            resetIdle();
+        }
+        function lockNow() {
+            try { sessionStorage.removeItem(SESSION_KEY); } catch (e) {}
+            showLock();
+        }
+        function resetIdle() {
+            clearTimeout(idleTimer);
+            if (AUTO_LOGOUT_MIN > 0 && isUnlocked()) idleTimer = setTimeout(lockNow, AUTO_LOGOUT_MIN * 60000);
+        }
+        function initLock() {
+            if (lockInit) return;
+            lockInit = true;
+            let ok = false;
+            try { ok = sessionStorage.getItem(SESSION_KEY) === '1'; } catch (e) {}
+            if (ok) unlock(); else showLock();
+        }
+        ['mousemove', 'keydown', 'click', 'touchstart', 'scroll'].forEach(ev => document.addEventListener(ev, resetIdle, { passive: true }));
+
+        $('lockForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const err = $('lockError');
+            const now = Date.now();
+            if (now < blockedUntil) { err.textContent = `Muitas tentativas. Aguarde ${Math.ceil((blockedUntil - now) / 1000)} s.`; return; }
+            const u = $('lockUser').value.trim(), p = $('lockPass').value;
+            if (u === AUTH_USER && p === AUTH_PASS) { failCount = 0; unlock(); return; }
+            failCount++;
+            $('lockPass').value = '';
+            if (failCount >= 5) { blockedUntil = now + 30000; failCount = 0; err.textContent = 'Muitas tentativas. Aguarde 30 segundos.'; }
+            else err.textContent = 'Utilizador ou senha incorretos.';
+        });
+
+        /* ---------- Proteção anti-cópia (dissuasão) ---------- */
+        (function () {
+            const editable = el => { const n = el && (el.nodeType === 3 ? el.parentElement : el); return !!n && (/^(INPUT|TEXTAREA|SELECT)$/.test(n.tagName) || n.isContentEditable); };
+            const stop = e => { e.preventDefault(); e.stopPropagation(); return false; };
+
+            // 1. Menu de contexto (botão direito)
+            document.addEventListener('contextmenu', stop, true);
+
+            // 2. Atalhos de inspeção, código-fonte, salvar e imprimir
+            document.addEventListener('keydown', (e) => {
+                const c = e.ctrlKey || e.metaKey;
+                const blocked =
+                    e.key === 'F12' || e.keyCode === 123 ||
+                    (c && ['KeyU', 'KeyS', 'KeyP'].includes(e.code)) ||
+                    (c && e.shiftKey && ['KeyI', 'KeyJ', 'KeyC', 'KeyK'].includes(e.code)) ||
+                    (e.metaKey && e.altKey && ['KeyI', 'KeyJ', 'KeyC', 'KeyU'].includes(e.code));
+                if (blocked) stop(e);
+            }, true);
+
+            // 3. Selecionar e copiar texto continuam liberados
+
+            // 4. Detecção de ferramentas de desenvolvedor abertas: esconde o painel enquanto estiverem abertas
+            const guard = document.createElement('div');
+            guard.className = 'fixed inset-0 z-[300] bg-darkBg text-gray-300 hidden items-center justify-center p-6 text-center text-sm';
+            guard.textContent = 'Ferramentas de desenvolvedor detectadas. Feche-as para continuar.';
+            document.body.appendChild(guard);
+            let seen = false;
+            const probe = new Image();
+            Object.defineProperty(probe, 'id', { get() { seen = true; return ''; } });
+            setInterval(() => {
+                seen = false;
+                console.debug(probe);
+                setTimeout(() => {
+                    guard.classList.toggle('hidden', !seen);
+                    guard.classList.toggle('flex', seen);
+                    if (seen) console.clear();
+                }, 150);
+            }, 1000);
+
+            // 5. Aviso no console
+            try { console.log('%cAcesso restrito', 'color:#ef4444;font-size:28px;font-weight:bold'); } catch (e) {}
+        })();
+
+        /* ---------- Gestão financeira ---------- */
+        const FLOW_KEY = 'dg_cashflow_v1';
+        let flows = [], flowCol = null, chartMode = 'capital';
+        let expandedOps, expandedFlow;   // mês aberto em cada lista (undefined = ainda não definido, null = todos fechados)
+        function monthKey(d) { const [dd, mm, yy] = String(d).split('/'); return `${yy}-${mm}`; }
+        function monthRow(kind, key, n, open) {
+            const [y, m] = key.split('-');
+            const noun = kind === 'ops' ? (n === 1 ? 'operação' : 'operações') : (n === 1 ? 'movimentação' : 'movimentações');
+            const tr = document.createElement('tr');
+            tr.className = 'bg-gray-900/60 hover:bg-cardHover transition';
+            tr.innerHTML = `<td colspan="${kind === 'ops' ? 12 : 6}" class="p-0"><button type="button" data-act="month" data-month="${key}" aria-expanded="${open}" class="w-full text-left px-4 py-3 text-xs font-semibold text-gray-200 flex items-center gap-2"><span class="inline-block w-4 text-center font-mono">${open ? '−' : '+'}</span>${m}/${y} – ${n} ${noun}</button></td>`;
+            return tr;
+        }
+        function toggleMonth(kind, key) {
+            if (kind === 'ops') expandedOps = (expandedOps === key) ? null : key;
+            else expandedFlow = (expandedFlow === key) ? null : key;
+            processAndRender();
+        }
+        let flowType = 'Depósito', editingFlowId = null, pendingFlowDeleteId = null;
+        const SEG_ON = 'py-2 rounded-lg text-xs border-2 border-blue-500 bg-blue-950 text-blue-200 font-semibold';
+        const SEG_OFF = 'py-2 rounded-lg text-xs border border-gray-700 text-gray-400 hover:text-gray-200';
+        const TAB_ON = 'px-4 py-2 text-sm font-semibold text-gray-100 border-b-2 border-blue-500 -mb-px';
+        const TAB_OFF = 'px-4 py-2 text-sm text-gray-400 hover:text-gray-200 border-b-2 border-transparent -mb-px';
+
+        function loadFlowsLocal() { try { const r = localStorage.getItem(FLOW_KEY); if (r) return JSON.parse(r); } catch (e) {} return []; }
+        function saveFlowsLocal() { try { localStorage.setItem(FLOW_KEY, JSON.stringify(flows)); } catch (e) {} }
+        async function addFlow(d) {
+            if (flowCol) await flowCol.add(d);
+            else { flows.push({ ...d, id: 'f' + Date.now() + Math.random().toString(36).slice(2, 6) }); saveFlowsLocal(); processAndRender(); }
+        }
+        async function updateFlow(id, d) {
+            if (flowCol) await flowCol.doc(id).update(d);
+            else { flows = flows.map(f => f.id === id ? { ...f, ...d } : f); saveFlowsLocal(); processAndRender(); }
+        }
+        async function removeFlow(id) {
+            if (flowCol) await flowCol.doc(id).delete();
+            else { flows = flows.filter(f => f.id !== id); saveFlowsLocal(); processAndRender(); }
+        }
+
+        function switchTab(w) {
+            const ops = w === 'ops';
+            $('panelOps').classList.toggle('hidden', !ops);
+            $('panelFlow').classList.toggle('hidden', ops);
+            $('tabOps').className = ops ? TAB_ON : TAB_OFF;
+            $('tabFlow').className = ops ? TAB_OFF : TAB_ON;
+        }
+        function setChartMode(m) {
+            chartMode = m;
+            $('modeCap').className = 'px-3 py-1.5 ' + (m === 'capital' ? 'bg-gray-700 text-white font-semibold' : 'text-gray-400 hover:text-gray-200');
+            $('modeOps').className = 'px-3 py-1.5 ' + (m === 'ops' ? 'bg-gray-700 text-white font-semibold' : 'text-gray-400 hover:text-gray-200');
+            processAndRender();
+        }
+
+        function setFlowType(t, keepBanks) {
+            flowType = t;
+            $('fDep').className = t === 'Depósito' ? SEG_ON : SEG_OFF;
+            $('fSaq').className = t === 'Saque' ? SEG_ON : SEG_OFF;
+            if (keepBanks) return;
+            if (t === 'Depósito') { $('fTo').value = 'Corretora'; if ($('fFrom').value === 'Corretora') $('fFrom').value = ''; }
+            else { $('fFrom').value = 'Corretora'; if ($('fTo').value === 'Corretora') $('fTo').value = ''; }
+        }
+        function openFlowModal(editId) {
+            const f = typeof editId === 'string' ? flows.find(x => x.id === editId) : null;
+            editingFlowId = f ? f.id : null;
+            $('flowTitle').textContent = f ? 'Editar movimentação' : 'Nova movimentação financeira';
+            $('fSubmit').textContent = f ? 'Salvar alterações' : 'Salvar movimentação';
+            $('fDate').max = todayLocalISO();
+            $('fError').textContent = '';
+            const banks = [...new Set(['Corretora', ...flows.flatMap(x => [x.from, x.to])].filter(Boolean))];
+            $('bankList').innerHTML = banks.map(b => `<option value="${esc(b)}"></option>`).join('');
+            if (f) {
+                $('fDate').value = String(f.date).split('/').reverse().join('-');
+                $('fAmount').value = Number(f.amount).toFixed(2);
+                $('fFrom').value = f.from; $('fTo').value = f.to;
+                setFlowType(f.type, true);
+            } else {
+                $('fDate').value = todayLocalISO(); $('fAmount').value = '';
+                $('fFrom').value = ''; $('fTo').value = '';
+                setFlowType('Depósito');
+            }
+            $('flowModal').classList.remove('hidden'); $('flowModal').classList.add('flex');
+        }
+        function closeFlowModal() { $('flowModal').classList.remove('flex'); $('flowModal').classList.add('hidden'); }
+
+        $('flowForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const err = $('fError'); err.textContent = '';
+            const amount = parseFloat($('fAmount').value);
+            const iso = $('fDate').value || todayLocalISO();
+            const from = $('fFrom').value.trim(), to = $('fTo').value.trim();
+            if (!(amount > 0)) { err.textContent = 'Informe um valor maior que zero.'; return; }
+            if (iso > todayLocalISO()) { err.textContent = 'A data não pode ser futura.'; return; }
+            if (!from || !to) { err.textContent = 'Informe o banco de origem e o de destino.'; return; }
+            const date = iso.split('-').reverse().join('/');
+            const data = { date, type: flowType, amount: Math.round(amount * 100) / 100, from, to, ts: computeTs(date, '00:00') };
+            const btn = $('fSubmit'); btn.disabled = true;
+            try {
+                expandedFlow = monthKey(date);
+                if (editingFlowId) await updateFlow(editingFlowId, data); else await addFlow(data);
+                closeFlowModal(); switchTab('flow');
+            } catch (ex) {
+                err.textContent = 'Não foi possível salvar (' + ((ex && ex.code) || 'erro') + ').';
+            } finally { btn.disabled = false; }
+        });
+
+        $('flowTableBody').addEventListener('click', async (e) => {
+            const b = e.target.closest('button[data-act]');
+            if (!b) return;
+            const a = b.dataset.act, id = b.dataset.id;
+            if (a === 'month') { toggleMonth('flow', b.dataset.month); return; }
+            if (a === 'edit') { pendingFlowDeleteId = null; openFlowModal(id); }
+            else if (a === 'ask') { pendingFlowDeleteId = id; processAndRender(); }
+            else if (a === 'cancel') { pendingFlowDeleteId = null; processAndRender(); }
+            else if (a === 'confirm') {
+                pendingFlowDeleteId = null;
+                try { await removeFlow(id); } catch (er) { showToast('Não foi possível excluir a movimentação.', 'err'); processAndRender(); }
+            }
+        });
+
+        function renderFinance(view, net) {
+            const sorted = flows.slice().sort((a, b) => (a.ts || 0) - (b.ts || 0));
+            let dep = 0, saq = 0;
+            sorted.forEach(f => { const v = Number(f.amount) || 0; if (f.type === 'Saque') saq += v; else dep += v; });
+            const invested = dep - saq, capital = invested + net;
+            $('metricInvested').innerText = `R$ ${brl(invested)}`;
+            $('metricInvestedSub').innerText = `${brl(dep)} depositados − ${brl(saq)} sacados`;
+            const capEl = $('metricCapital');
+            capEl.innerText = `R$ ${brl(capital)}`;
+            capEl.className = 'text-3xl font-extrabold ' + (capital >= invested ? 'text-emerald-400' : 'text-red-400');
+            $('metricCapitalSub').innerText = `${brl(invested)} investido ${net >= 0 ? '+' : '−'} ${brl(Math.abs(net))} de ${net >= 0 ? 'lucro' : 'prejuízo'}`;
+
+            const tb = $('flowTableBody');
+            tb.innerHTML = '';
+            $('emptyFlow').classList.toggle('hidden', sorted.length > 0);
+            const desc = sorted.slice().reverse();
+            const flowCount = {};
+            desc.forEach(f => { const k = monthKey(f.date); flowCount[k] = (flowCount[k] || 0) + 1; });
+            const flowKeys = Object.keys(flowCount);
+            if (expandedFlow === undefined || (expandedFlow !== null && !flowCount[expandedFlow])) expandedFlow = flowKeys.length ? flowKeys[0] : null;
+            let lastFk = null;
+            desc.forEach(f => {
+                const fk = monthKey(f.date);
+                if (fk !== lastFk) { lastFk = fk; tb.appendChild(monthRow('flow', fk, flowCount[fk], expandedFlow === fk)); }
+                if (fk !== expandedFlow) return;
+                const isDep = f.type !== 'Saque', v = Number(f.amount) || 0, conf = pendingFlowDeleteId === f.id;
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-cardHover transition';
+                tr.innerHTML = `
+                    <td class="py-3 px-3 font-medium text-gray-200">${esc(f.date)}</td>
+                    <td class="py-3 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold border ${isDep ? 'bg-blue-950 text-blue-300 border-blue-800' : 'bg-amber-950 text-amber-300 border-amber-800'}">${isDep ? '↓ Depósito' : '↑ Saque'}</span></td>
+                    <td class="py-3 px-3 text-right font-mono font-bold ${isDep ? 'text-blue-300' : 'text-amber-300'}">${isDep ? '+' : '−'} R$ ${brl(v)}</td>
+                    <td class="py-3 px-3">${esc(f.from)}</td>
+                    <td class="py-3 px-3">${esc(f.to)}</td>
+                    <td class="py-3 px-3 text-center whitespace-nowrap">
+                        ${conf
+                            ? `<span class="text-[10px] text-gray-400 mr-1">Excluir?</span>
+                               <button data-act="confirm" data-id="${esc(f.id)}" class="text-emerald-400 hover:text-emerald-300 px-1 font-bold" title="Confirmar exclusão">✓</button>
+                               <button data-act="cancel" class="text-gray-400 hover:text-gray-200 px-1 font-bold" title="Cancelar">✕</button>`
+                            : `<button data-act="edit" data-id="${esc(f.id)}" class="text-blue-400 hover:text-blue-300 p-1 font-bold transition" title="Editar movimentação">✏️</button>
+                               <button data-act="ask" data-id="${esc(f.id)}" class="text-red-400 hover:text-red-300 p-1 font-bold transition" title="Remover movimentação">🗑️</button>`}
+                    </td>`;
+                tb.appendChild(tr);
+            });
+            updateChart(view, sorted);
+        }
+
+        function updateChart(view, flowList) {
+            let labels, data, label;
+            if (chartMode === 'ops') {
+                labels = view.map((d, i) => `${d.date} (${i + 1})`);
+                data = view.map(d => d.accum);
+                label = 'Lucro acumulado (R$)';
+            } else {
+                const ev = [
+                    ...view.map(d => ({ ts: d.ts || 0, v: Number(d.result) || 0, t: d.date + ' · Op' })),
+                    ...flowList.map(f => ({ ts: f.ts || 0, v: (f.type === 'Saque' ? -1 : 1) * (Number(f.amount) || 0), t: f.date + ' · ' + f.type }))
+                ].sort((a, b) => a.ts - b.ts);
+                let c = 0;
+                labels = ev.map(e => e.t);
+                data = ev.map(e => { c += e.v; return Math.round(c * 100) / 100; });
+                label = 'Capital atual (R$)';
+            }
+            capitalCurveChart.data.labels = labels;
+            capitalCurveChart.data.datasets[0].data = data;
+            capitalCurveChart.data.datasets[0].label = label;
             capitalCurveChart.update();
         }
+
+        initLock();
+        processAndRender();
+        initStorage();
     </script>
 </body>
 </html>
