@@ -6,6 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>My Trade Dash</title>
     <meta name="color-scheme" content="dark">
+    
+    <!-- Configurações PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0b0f19">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="MyTradeDash">
+
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script>
@@ -332,19 +340,16 @@
 
     <script>
         /* ============ CONFIGURAÇÕES DE ACESSO (edite aqui) ============ */
-        // Um item por pessoa. O PRIMEIRO da lista é o titular e mantém os dados já existentes.
-        // Cada utilizador tem os próprios dados, guardados separadamente neste navegador.
         const USERS = [
             { user: 'diogo',    pass: '1234',        nome: 'Diogo' },
             { user: 'usuario2', pass: 'trocar1234',  nome: 'Usuário 2' }
         ];
-        const AUTO_LOGOUT_MIN = 15;   // sai sozinho após X minutos sem uso (0 = desligado)
+        const AUTO_LOGOUT_MIN = 15;   
         /* =============================================================== */
 
         const LOCAL_KEY = 'dg_trading_journal_v2';
         const COLLECTION = 'trades';
 
-        // Registros iniciais usados apenas no modo local (sem banco online)
         const defaultData = [
             { date: "27/10/2026", timeIn: "10:15", timeOut: "11:20", asset: "WINZ26", setup: "Pullback1015_Max3intervalo4barras", contracts: 1, type: "Gain", points: 250, result: 49.50 },
             { date: "29/10/2026", timeIn: "10:20", timeOut: "11:30", asset: "WINZ26", setup: "Pullback1015_Max3COM2contratos", contracts: 2, type: "Loss", points: -325, result: -130.00 },
@@ -358,12 +363,11 @@
             { date: "05/11/2026", timeIn: "12:00", timeOut: "12:10", asset: "WINZ26", setup: "Pullback1015_Max3", contracts: 1, type: "Gain", points: 500, result: 100.00 }
         ].map((r, i) => ({ ...r, id: 'seed' + i, ts: computeTs(r.date, r.timeIn) }));
 
-        let rows = [];          // registros atuais (cada um com id)
-        let dbCol = null;       // coleção online (null = modo local)
+        let rows = [];        
+        let dbCol = null;       
         let pendingDeleteId = null;
         let capitalCurveChart;
 
-        /* ---------- Utilidades ---------- */
         function esc(s) {
             return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         }
@@ -398,7 +402,6 @@
             }
         }
 
-        /* ---------- Persistência (online com fallback local) ---------- */
         function loadLocal() {
             try {
                 const raw = localStorage.getItem(userKey(LOCAL_KEY));
@@ -412,7 +415,7 @@
 
         async function addTrade(trade) {
             if (dbCol) {
-                await dbCol.add(trade);              // o onSnapshot atualiza a tela
+                await dbCol.add(trade);             
             } else {
                 rows.push({ ...trade, id: 'l' + Date.now() + Math.random().toString(36).slice(2, 6) });
                 saveLocal();
@@ -432,7 +435,7 @@
 
         async function updateTrade(id, data) {
             if (dbCol) {
-                await dbCol.doc(id).update(data);    // o onSnapshot atualiza a tela
+                await dbCol.doc(id).update(data);    
             } else {
                 rows = rows.map(r => r.id === id ? { ...r, ...data } : r);
                 saveLocal();
@@ -560,7 +563,6 @@
             document.body.appendChild(a); a.click(); a.remove();
         }
 
-        /* ---------- Renderização ---------- */
         function processAndRender() {
             const sorted = rows.slice().sort((a, b) => (a.ts || 0) - (b.ts || 0));
             let accum = 0, gains = 0, losses = 0;
@@ -655,7 +657,6 @@
             }
         });
 
-        /* ---------- Modal e formulário ---------- */
         function todayLocalISO() {
             const d = new Date();
             const p = n => String(n).padStart(2, '0');
@@ -665,7 +666,6 @@
 
         function setField(id, v) { document.getElementById(id).value = v; }
 
-        // Garante que valores antigos (ex.: WINZ26) continuem disponíveis ao editar
         function ensureOption(selectId, value) {
             const sel = document.getElementById(selectId);
             if (![...sel.options].some(o => o.value === value)) {
@@ -678,7 +678,7 @@
         function openModal(editId) {
             const row = typeof editId === 'string' ? rows.find(r => r.id === editId) : null;
             editingId = row ? row.id : null;
-            document.getElementById('tDate').max = todayLocalISO();   // bloqueia datas futuras no calendário
+            document.getElementById('tDate').max = todayLocalISO();   
             document.getElementById('modalTitle').textContent = row ? 'Editar Operação' : 'Registrar Nova Operação';
             document.getElementById('submitBtn').textContent = row ? 'Salvar Alterações' : 'Adicionar à Tabela';
 
@@ -758,7 +758,6 @@
             }
         });
 
-        /* ---------- Gráfico ---------- */
         capitalCurveChart = new Chart(document.getElementById('capitalCurveChart').getContext('2d'), {
             type: 'line',
             data: {
@@ -789,10 +788,6 @@
             }
         });
 
-        
-
-        /* ---------- Acesso por utilizador e senha ---------- */
-        // Atenção: é uma barreira de interface. Utilizador e senha ficam no código e podem ser lidos por quem tiver o arquivo.
         const SESSION_KEY = 'dg_unlocked';
         const $ = id => document.getElementById(id);
         let currentUser = null, lockInit = false, failCount = 0, blockedUntil = 0, idleTimer = null;
@@ -853,15 +848,9 @@
             else err.textContent = 'Utilizador ou senha incorretos.';
         });
 
-        /* ---------- Proteção anti-cópia (dissuasão) ---------- */
         (function () {
-            const editable = el => { const n = el && (el.nodeType === 3 ? el.parentElement : el); return !!n && (/^(INPUT|TEXTAREA|SELECT)$/.test(n.tagName) || n.isContentEditable); };
             const stop = e => { e.preventDefault(); e.stopPropagation(); return false; };
-
-            // 1. Menu de contexto (botão direito)
             document.addEventListener('contextmenu', stop, true);
-
-            // 2. Atalhos de inspeção, código-fonte, salvar e imprimir
             document.addEventListener('keydown', (e) => {
                 const c = e.ctrlKey || e.metaKey;
                 const blocked =
@@ -872,9 +861,6 @@
                 if (blocked) stop(e);
             }, true);
 
-            // 3. Selecionar e copiar texto continuam liberados
-
-            // 4. Detecção de ferramentas de desenvolvedor abertas: esconde o painel enquanto estiverem abertas
             const guard = document.createElement('div');
             guard.className = 'fixed inset-0 z-[300] bg-darkBg text-gray-300 hidden items-center justify-center p-6 text-center text-sm';
             guard.textContent = 'Ferramentas de desenvolvedor detectadas. Feche-as para continuar.';
@@ -891,15 +877,11 @@
                     if (seen) console.clear();
                 }, 150);
             }, 1000);
-
-            // 5. Aviso no console
-            try { console.log('%cAcesso restrito', 'color:#ef4444;font-size:28px;font-weight:bold'); } catch (e) {}
         })();
 
-        /* ---------- Gestão financeira ---------- */
         const FLOW_KEY = 'dg_cashflow_v1';
         let flows = [], flowCol = null, chartMode = 'capital';
-        let expandedOps, expandedFlow;   // mês aberto em cada lista (undefined = ainda não definido, null = todos fechados)
+        let expandedOps, expandedFlow;   
         function monthKey(d) { const [dd, mm, yy] = String(d).split('/'); return `${yy}-${mm}`; }
         function monthRow(kind, key, n, open) {
             const [y, m] = key.split('-');
@@ -1083,7 +1065,6 @@
             capitalCurveChart.update();
         }
 
-        /* ---------- Relatórios ---------- */
         let repGran = 'month', calMonth = null;
         const num = v => Number(v) || 0;
         const pad2 = n => String(n).padStart(2, '0');
@@ -1106,7 +1087,7 @@
                 if (r.type === 'Gain') { wins++; cw++; cl = 0; sw = Math.max(sw, cw); } else { cl++; cw = 0; sl = Math.max(sl, cl); }
             });
             return { n, net, gp, gl, pts, dd, sw, sl, wr: n ? wins / n * 100 : 0, avgGain: np ? gp / np : 0, avgLoss: nl ? gl / nl : 0,
-                     payoff: (np && nl) ? (gp / np) / (gl / nl) : null, pf: gl ? gp / gl : null, exp: n ? net / n : 0 };
+                    payoff: (np && nl) ? (gp / np) / (gl / nl) : null, pf: gl ? gp / gl : null, exp: n ? net / n : 0 };
         }
         function periodRange() {
             const v = $('repPeriod').value, t = todayLocalISO(), Y = +t.slice(0, 4), M = +t.slice(5, 7);
@@ -1241,6 +1222,15 @@
             const head = ['Data', 'Entrada', 'Saída', 'Ativo', 'Setup', 'Contratos', 'Tipo', 'Pontos', 'Resultado (R$)'];
             const lines = filteredOps(true, true).map(r => [r.date, r.timeIn, r.timeOut, r.asset, r.setup, r.contracts, r.type, num(r.points), brl(num(r.result))].map(q).join(';'));
             saveText(backupName().replace('diario_operacoes_backup.json', 'relatorio_operacoes.csv'), '\ufeff' + [head.map(q).join(';'), ...lines].join('\r\n'), 'text/csv');
+        }
+
+        // --- Registro do Service Worker para o PWA ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((reg) => console.log('Service Worker registrado com sucesso:', reg.scope))
+                    .catch((err) => console.log('Falha ao registrar o Service Worker:', err));
+            });
         }
 
         initLock();
