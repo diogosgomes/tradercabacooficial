@@ -28,10 +28,9 @@
     <style>
         :root { color-scheme: dark; box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
         html { scroll-padding-top: env(safe-area-inset-top, 0px); }
-        body { background: #0b0f19; user-select: none; -webkit-user-select: none; }
-        input, select, textarea { user-select: text; -webkit-user-select: text; }
+        body { background: #0b0f19; }
         img, a { -webkit-user-drag: none; }
-        @media print { body * { display: none !important; } body::before { content: "Impressão desativada"; display: block; color: #fff; text-align: center; padding-top: 50px; } }
+        @media print { body * { display: none !important; } body::before { content: "Impressão desativada"; display: block; color: #000; } }
     </style>
 </head>
 <body class="bg-darkBg text-gray-100 font-sans min-h-screen flex flex-col">
@@ -332,17 +331,20 @@
     </div>
 
     <script>
-        /* ============ CONFIGURAÇÕES DE ACESSO (múltiplos utilizadores) ============ */
+        /* ============ CONFIGURAÇÕES DE ACESSO (edite aqui) ============ */
+        // Um item por pessoa. O PRIMEIRO da lista é o titular e mantém os dados já existentes.
+        // Cada utilizador tem os próprios dados, guardados separadamente neste navegador.
         const USERS = [
-            { user: 'diogo', pass: '1234', nome: 'Diogo' },
-            { user: 'irmao', pass: 'trocar1234', nome: 'Irmão' }
+            { user: 'diogo',    pass: '1234',        nome: 'Diogo' },
+            { user: 'usuario2', pass: 'trocar1234',  nome: 'Usuário 2' }
         ];
         const AUTO_LOGOUT_MIN = 15;   // sai sozinho após X minutos sem uso (0 = desligado)
-        /* ========================================================================= */
+        /* =============================================================== */
 
         const LOCAL_KEY = 'dg_trading_journal_v2';
         const COLLECTION = 'trades';
 
+        // Registros iniciais usados apenas no modo local (sem banco online)
         const defaultData = [
             { date: "27/10/2026", timeIn: "10:15", timeOut: "11:20", asset: "WINZ26", setup: "Pullback1015_Max3intervalo4barras", contracts: 1, type: "Gain", points: 250, result: 49.50 },
             { date: "29/10/2026", timeIn: "10:20", timeOut: "11:30", asset: "WINZ26", setup: "Pullback1015_Max3COM2contratos", contracts: 2, type: "Loss", points: -325, result: -130.00 },
@@ -356,11 +358,12 @@
             { date: "05/11/2026", timeIn: "12:00", timeOut: "12:10", asset: "WINZ26", setup: "Pullback1015_Max3", contracts: 1, type: "Gain", points: 500, result: 100.00 }
         ].map((r, i) => ({ ...r, id: 'seed' + i, ts: computeTs(r.date, r.timeIn) }));
 
-        let rows = [];
-        let dbCol = null;
+        let rows = [];          // registros atuais (cada um com id)
+        let dbCol = null;       // coleção online (null = modo local)
         let pendingDeleteId = null;
         let capitalCurveChart;
 
+        /* ---------- Utilidades ---------- */
         function esc(s) {
             return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         }
@@ -395,11 +398,7 @@
             }
         }
 
-        /* ---------- Persistência com isolamento por Utilizador ---------- */
-        function userKey(base) {
-            return (!currentUser || currentUser === USERS[0].user) ? base : base + ':' + currentUser;
-        }
-
+        /* ---------- Persistência (online com fallback local) ---------- */
         function loadLocal() {
             try {
                 const raw = localStorage.getItem(userKey(LOCAL_KEY));
@@ -412,34 +411,67 @@
         }
 
         async function addTrade(trade) {
-            rows.push({ ...trade, id: 'l' + Date.now() + Math.random().toString(36).slice(2, 6) });
-            saveLocal();
-            processAndRender();
+            if (dbCol) {
+                await dbCol.add(trade);              // o onSnapshot atualiza a tela
+            } else {
+                rows.push({ ...trade, id: 'l' + Date.now() + Math.random().toString(36).slice(2, 6) });
+                saveLocal();
+                processAndRender();
+            }
         }
 
         async function removeTrade(id) {
-            rows = rows.filter(r => r.id !== id);
-            saveLocal();
-            processAndRender();
+            if (dbCol) {
+                await dbCol.doc(id).delete();
+            } else {
+                rows = rows.filter(r => r.id !== id);
+                saveLocal();
+                processAndRender();
+            }
         }
 
         async function updateTrade(id, data) {
-            rows = rows.map(r => r.id === id ? { ...r, ...data } : r);
-            saveLocal();
-            processAndRender();
+            if (dbCol) {
+                await dbCol.doc(id).update(data);    // o onSnapshot atualiza a tela
+            } else {
+                rows = rows.map(r => r.id === id ? { ...r, ...data } : r);
+                saveLocal();
+                processAndRender();
+            }
         }
 
-        function loadUserData() {
-            rows = loadLocal();
-            flows = loadFlowsLocal();
-            processAndRender();
-            setStatus('Modo local isolado ✓', 'ok');
+        async function initStorage() {
+            let db = null;
+            try { db = await window.claude.use('db'); } catch (e) {}
+            if (!db) {
+                if (currentUser) loadUserData();
+                setStatus('Modo local (neste navegador)', 'warn');
+                processAndRender();
+                initLock(null);
+                return;
+            }
+            dbCol = db.collection(COLLECTION);
+            flowCol = db.collection('cashflow');
+            flowCol.orderBy('ts', 'asc').onSnapshot(snap => {
+                flows = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+                processAndRender();
+            }, () => {});
+            initLock(db);
+            const timer = setTimeout(() => setStatus('Sem resposta do servidor… dados podem estar desatualizados', 'warn'), 10000);
+            dbCol.orderBy('ts', 'asc').onSnapshot(snap => {
+                if (!snap.metadata.fromCache) { clearTimeout(timer); setStatus('Salvo online ✓', 'ok'); }
+                rows = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+                processAndRender();
+            }, err => {
+                clearTimeout(timer);
+                setStatus('Erro de sincronização (' + (err && err.code || 'desconhecido') + ')', 'err');
+            });
         }
 
         function backupName() {
             const d = new Date();
             const p = n => String(n).padStart(2, '0');
-            return `${currentUser || 'diogo'}_${p(d.getDate())}${p(d.getMonth() + 1)}${d.getFullYear()}_diario_operacoes_backup.json`;
+            return `${p(d.getDate())}${p(d.getMonth() + 1)}${d.getFullYear()}_diario_operacoes_backup.json`;
         }
 
         function showToast(msg, kind) {
@@ -518,6 +550,10 @@
         async function exportData() {
             const strip = arr => arr.map(({ id, ...rest }) => rest);
             const data = JSON.stringify({ versao: 2, operacoes: strip(rows), movimentacoes: strip(flows) }, null, 2);
+            try {
+                const dl = await window.claude.use('downloads');
+                if (dl) { await dl.save({ filename: backupName(), data }); return; }
+            } catch (e) { if (e && e.code === 'declined') return; }
             const a = document.createElement('a');
             a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(data);
             a.download = backupName();
@@ -614,7 +650,8 @@
             else if (act === 'confirm') {
                 const id = btn.dataset.id;
                 pendingDeleteId = null;
-                await removeTrade(id);
+                try { await removeTrade(id); }
+                catch (err) { setStatus('Não foi possível excluir (' + (err && err.code || 'erro') + ')', 'err'); processAndRender(); }
             }
         });
 
@@ -628,6 +665,7 @@
 
         function setField(id, v) { document.getElementById(id).value = v; }
 
+        // Garante que valores antigos (ex.: WINZ26) continuem disponíveis ao editar
         function ensureOption(selectId, value) {
             const sel = document.getElementById(selectId);
             if (![...sel.options].some(o => o.value === value)) {
@@ -640,7 +678,7 @@
         function openModal(editId) {
             const row = typeof editId === 'string' ? rows.find(r => r.id === editId) : null;
             editingId = row ? row.id : null;
-            document.getElementById('tDate').max = todayLocalISO();
+            document.getElementById('tDate').max = todayLocalISO();   // bloqueia datas futuras no calendário
             document.getElementById('modalTitle').textContent = row ? 'Editar Operação' : 'Registrar Nova Operação';
             document.getElementById('submitBtn').textContent = row ? 'Salvar Alterações' : 'Adicionar à Tabela';
 
@@ -652,4 +690,562 @@
                 setField('tAsset', row.asset);
                 setField('tContracts', row.contracts);
                 setField('tType', row.type);
-                setField('tPoints', Math.abs(
+                setField('tPoints', Math.abs(Number(row.points) || 0));
+                setField('tMoney', Math.abs(Number(row.result) || 0).toFixed(2));
+                const sel = document.getElementById('tSetup');
+                if (![...sel.options].some(o => o.value === row.setup)) {
+                    const opt = document.createElement('option');
+                    opt.value = row.setup; opt.textContent = row.setup;
+                    sel.appendChild(opt);
+                }
+                sel.value = row.setup;
+            } else {
+                setField('tDate', todayLocalISO());
+                setField('tTimeIn', '12:00');
+                setField('tTimeOut', '12:10');
+                setField('tAsset', 'WIN - Mini Índice');
+                setField('tContracts', 1);
+                setField('tType', 'Gain');
+                setField('tPoints', 300);
+                setField('tMoney', '60.00');
+            }
+            const m = document.getElementById('tradeModal');
+            m.classList.remove('hidden'); m.classList.add('flex');
+        }
+        function closeModal() {
+            const m = document.getElementById('tradeModal');
+            m.classList.remove('flex'); m.classList.add('hidden');
+        }
+
+        document.getElementById('tradeForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const tradeType = document.getElementById('tType').value;
+            let money = Math.abs(parseFloat(document.getElementById('tMoney').value) || 0);
+            let points = Math.abs(parseInt(document.getElementById('tPoints').value) || 0);
+            if (tradeType === 'Loss') { money = -money; points = -points; }
+
+            const rawDate = document.getElementById('tDate').value || todayLocalISO();
+            if (rawDate > todayLocalISO()) {
+                showToast('A data não pode ser futura. Escolha hoje ou uma data anterior.', 'err');
+                return;
+            }
+            const date = rawDate.split('-').reverse().join('/');
+            const timeIn = document.getElementById('tTimeIn').value;
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            try {
+                const payload = {
+                    date,
+                    timeIn,
+                    timeOut: document.getElementById('tTimeOut').value,
+                    asset: document.getElementById('tAsset').value,
+                    setup: document.getElementById('tSetup').value,
+                    contracts: parseInt(document.getElementById('tContracts').value) || 1,
+                    type: tradeType,
+                    points,
+                    result: money,
+                    ts: computeTs(date, timeIn)
+                };
+                expandedOps = monthKey(date);
+                if (editingId) await updateTrade(editingId, payload);
+                else await addTrade(payload);
+                closeModal();
+            } catch (err) {
+                setStatus('Não foi possível salvar (' + (err && err.code || 'erro') + ')', 'err');
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        /* ---------- Gráfico ---------- */
+        capitalCurveChart = new Chart(document.getElementById('capitalCurveChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Saldo Acumulado (R$)',
+                    data: [],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 2.5,
+                    fill: true,
+                    tension: 0.1,
+                    pointBackgroundColor: '#3b82f6',
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#9ca3af', font: { size: 10 } } },
+                    y: {
+                        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                        ticks: { color: '#9ca3af', font: { size: 10 }, callback: v => 'R$ ' + v }
+                    }
+                }
+            }
+        });
+
+        
+
+        /* ---------- Acesso por utilizador e senha ---------- */
+        // Atenção: é uma barreira de interface. Utilizador e senha ficam no código e podem ser lidos por quem tiver o arquivo.
+        const SESSION_KEY = 'dg_unlocked';
+        const $ = id => document.getElementById(id);
+        let currentUser = null, lockInit = false, failCount = 0, blockedUntil = 0, idleTimer = null;
+
+        function userKey(base) { return (!currentUser || currentUser === USERS[0].user) ? base : base + ':' + currentUser; }
+        function loadUserData() { if (dbCol) return; rows = loadLocal(); flows = loadFlowsLocal(); processAndRender(); }
+
+        function isUnlocked() { return $('lockScreen').classList.contains('hidden'); }
+        function showLock() {
+            $('lockScreen').classList.remove('hidden');
+            $('lockUser').value = ''; $('lockPass').value = ''; $('lockError').textContent = '';
+            clearTimeout(idleTimer);
+            setTimeout(() => $('lockUser').focus(), 50);
+        }
+        function unlock(u) {
+            currentUser = u.user;
+            try { sessionStorage.setItem(SESSION_KEY, u.user); } catch (e) {}
+            $('userBadge').textContent = '👤 ' + u.nome;
+            $('lockScreen').classList.add('hidden');
+            loadUserData();
+            resetIdle();
+        }
+        function lockNow() {
+            try { sessionStorage.removeItem(SESSION_KEY); } catch (e) {}
+            currentUser = null;
+            $('userBadge').textContent = '';
+            if (!dbCol) { rows = []; flows = []; processAndRender(); }
+            showLock();
+        }
+        function resetIdle() {
+            clearTimeout(idleTimer);
+            if (AUTO_LOGOUT_MIN > 0 && isUnlocked()) idleTimer = setTimeout(lockNow, AUTO_LOGOUT_MIN * 60000);
+        }
+        function initLock() {
+            if (lockInit) return;
+            lockInit = true;
+            let saved = null;
+            try { saved = sessionStorage.getItem(SESSION_KEY); } catch (e) {}
+            const found = USERS.find(x => x.user === saved);
+            if (found) unlock(found); else showLock();
+        }
+        ['mousemove', 'keydown', 'click', 'touchstart', 'scroll'].forEach(ev => document.addEventListener(ev, resetIdle, { passive: true }));
+
+        $('lockForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const err = $('lockError');
+            const now = Date.now();
+            if (now < blockedUntil) { err.textContent = `Muitas tentativas. Aguarde ${Math.ceil((blockedUntil - now) / 1000)} s.`; return; }
+            const u = $('lockUser').value.trim(), p = $('lockPass').value;
+            const match = USERS.find(x => x.user === u && x.pass === p);
+            if (match) {
+                if (dbCol && match.user !== USERS[0].user) { err.textContent = 'Este endereço é exclusivo do titular.'; $('lockPass').value = ''; return; }
+                failCount = 0; unlock(match); return;
+            }
+            failCount++;
+            $('lockPass').value = '';
+            if (failCount >= 5) { blockedUntil = now + 30000; failCount = 0; err.textContent = 'Muitas tentativas. Aguarde 30 segundos.'; }
+            else err.textContent = 'Utilizador ou senha incorretos.';
+        });
+
+        /* ---------- Proteção anti-cópia (dissuasão) ---------- */
+        (function () {
+            const editable = el => { const n = el && (el.nodeType === 3 ? el.parentElement : el); return !!n && (/^(INPUT|TEXTAREA|SELECT)$/.test(n.tagName) || n.isContentEditable); };
+            const stop = e => { e.preventDefault(); e.stopPropagation(); return false; };
+
+            // 1. Menu de contexto (botão direito)
+            document.addEventListener('contextmenu', stop, true);
+
+            // 2. Atalhos de inspeção, código-fonte, salvar e imprimir
+            document.addEventListener('keydown', (e) => {
+                const c = e.ctrlKey || e.metaKey;
+                const blocked =
+                    e.key === 'F12' || e.keyCode === 123 ||
+                    (c && ['KeyU', 'KeyS', 'KeyP'].includes(e.code)) ||
+                    (c && e.shiftKey && ['KeyI', 'KeyJ', 'KeyC', 'KeyK'].includes(e.code)) ||
+                    (e.metaKey && e.altKey && ['KeyI', 'KeyJ', 'KeyC', 'KeyU'].includes(e.code));
+                if (blocked) stop(e);
+            }, true);
+
+            // 3. Selecionar e copiar texto continuam liberados
+
+            // 4. Detecção de ferramentas de desenvolvedor abertas: esconde o painel enquanto estiverem abertas
+            const guard = document.createElement('div');
+            guard.className = 'fixed inset-0 z-[300] bg-darkBg text-gray-300 hidden items-center justify-center p-6 text-center text-sm';
+            guard.textContent = 'Ferramentas de desenvolvedor detectadas. Feche-as para continuar.';
+            document.body.appendChild(guard);
+            let seen = false;
+            const probe = new Image();
+            Object.defineProperty(probe, 'id', { get() { seen = true; return ''; } });
+            setInterval(() => {
+                seen = false;
+                console.debug(probe);
+                setTimeout(() => {
+                    guard.classList.toggle('hidden', !seen);
+                    guard.classList.toggle('flex', seen);
+                    if (seen) console.clear();
+                }, 150);
+            }, 1000);
+
+            // 5. Aviso no console
+            try { console.log('%cAcesso restrito', 'color:#ef4444;font-size:28px;font-weight:bold'); } catch (e) {}
+        })();
+
+        /* ---------- Gestão financeira ---------- */
+        const FLOW_KEY = 'dg_cashflow_v1';
+        let flows = [], flowCol = null, chartMode = 'capital';
+        let expandedOps, expandedFlow;   // mês aberto em cada lista (undefined = ainda não definido, null = todos fechados)
+        function monthKey(d) { const [dd, mm, yy] = String(d).split('/'); return `${yy}-${mm}`; }
+        function monthRow(kind, key, n, open) {
+            const [y, m] = key.split('-');
+            const noun = kind === 'ops' ? (n === 1 ? 'operação' : 'operações') : (n === 1 ? 'movimentação' : 'movimentações');
+            const tr = document.createElement('tr');
+            tr.className = 'bg-gray-900/60 hover:bg-cardHover transition';
+            tr.innerHTML = `<td colspan="${kind === 'ops' ? 12 : 6}" class="p-0"><button type="button" data-act="month" data-month="${key}" aria-expanded="${open}" class="w-full text-left px-4 py-3 text-xs font-semibold text-gray-200 flex items-center gap-2"><span class="inline-block w-4 text-center font-mono">${open ? '−' : '+'}</span>${m}/${y} – ${n} ${noun}</button></td>`;
+            return tr;
+        }
+        function toggleMonth(kind, key) {
+            if (kind === 'ops') expandedOps = (expandedOps === key) ? null : key;
+            else expandedFlow = (expandedFlow === key) ? null : key;
+            processAndRender();
+        }
+        let flowType = 'Depósito', editingFlowId = null, pendingFlowDeleteId = null;
+        const SEG_ON = 'py-2 rounded-lg text-xs border-2 border-blue-500 bg-blue-950 text-blue-200 font-semibold';
+        const SEG_OFF = 'py-2 rounded-lg text-xs border border-gray-700 text-gray-400 hover:text-gray-200';
+        const TAB_ON = 'px-4 py-2 text-sm font-semibold text-gray-100 border-b-2 border-blue-500 -mb-px';
+        const TAB_OFF = 'px-4 py-2 text-sm text-gray-400 hover:text-gray-200 border-b-2 border-transparent -mb-px';
+
+        function loadFlowsLocal() { try { const r = localStorage.getItem(userKey(FLOW_KEY)); if (r) return JSON.parse(r); } catch (e) {} return []; }
+        function saveFlowsLocal() { try { localStorage.setItem(userKey(FLOW_KEY), JSON.stringify(flows)); } catch (e) {} }
+        async function addFlow(d) {
+            if (flowCol) await flowCol.add(d);
+            else { flows.push({ ...d, id: 'f' + Date.now() + Math.random().toString(36).slice(2, 6) }); saveFlowsLocal(); processAndRender(); }
+        }
+        async function updateFlow(id, d) {
+            if (flowCol) await flowCol.doc(id).update(d);
+            else { flows = flows.map(f => f.id === id ? { ...f, ...d } : f); saveFlowsLocal(); processAndRender(); }
+        }
+        async function removeFlow(id) {
+            if (flowCol) await flowCol.doc(id).delete();
+            else { flows = flows.filter(f => f.id !== id); saveFlowsLocal(); processAndRender(); }
+        }
+
+        function switchTab(w) {
+            const m = { ops: ['panelOps', 'tabOps'], flow: ['panelFlow', 'tabFlow'], report: ['panelReport', 'tabReport'] };
+            Object.entries(m).forEach(([k, [pn, tb]]) => { $(pn).classList.toggle('hidden', k !== w); $(tb).className = k === w ? TAB_ON : TAB_OFF; });
+            if (w === 'report') renderReports();
+        }
+        function setChartMode(m) {
+            chartMode = m;
+            $('modeCap').className = 'px-3 py-1.5 ' + (m === 'capital' ? 'bg-gray-700 text-white font-semibold' : 'text-gray-400 hover:text-gray-200');
+            $('modeOps').className = 'px-3 py-1.5 ' + (m === 'ops' ? 'bg-gray-700 text-white font-semibold' : 'text-gray-400 hover:text-gray-200');
+            processAndRender();
+        }
+
+        function setFlowType(t, keepBanks) {
+            flowType = t;
+            $('fDep').className = t === 'Depósito' ? SEG_ON : SEG_OFF;
+            $('fSaq').className = t === 'Saque' ? SEG_ON : SEG_OFF;
+            if (keepBanks) return;
+            if (t === 'Depósito') { $('fTo').value = 'Corretora'; if ($('fFrom').value === 'Corretora') $('fFrom').value = ''; }
+            else { $('fFrom').value = 'Corretora'; if ($('fTo').value === 'Corretora') $('fTo').value = ''; }
+        }
+        function openFlowModal(editId) {
+            const f = typeof editId === 'string' ? flows.find(x => x.id === editId) : null;
+            editingFlowId = f ? f.id : null;
+            $('flowTitle').textContent = f ? 'Editar movimentação' : 'Nova movimentação financeira';
+            $('fSubmit').textContent = f ? 'Salvar alterações' : 'Salvar movimentação';
+            $('fDate').max = todayLocalISO();
+            $('fError').textContent = '';
+            const banks = [...new Set(['Corretora', ...flows.flatMap(x => [x.from, x.to])].filter(Boolean))];
+            $('bankList').innerHTML = banks.map(b => `<option value="${esc(b)}"></option>`).join('');
+            if (f) {
+                $('fDate').value = String(f.date).split('/').reverse().join('-');
+                $('fAmount').value = Number(f.amount).toFixed(2);
+                $('fFrom').value = f.from; $('fTo').value = f.to;
+                setFlowType(f.type, true);
+            } else {
+                $('fDate').value = todayLocalISO(); $('fAmount').value = '';
+                $('fFrom').value = ''; $('fTo').value = '';
+                setFlowType('Depósito');
+            }
+            $('flowModal').classList.remove('hidden'); $('flowModal').classList.add('flex');
+        }
+        function closeFlowModal() { $('flowModal').classList.remove('flex'); $('flowModal').classList.add('hidden'); }
+
+        $('flowForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const err = $('fError'); err.textContent = '';
+            const amount = parseFloat($('fAmount').value);
+            const iso = $('fDate').value || todayLocalISO();
+            const from = $('fFrom').value.trim(), to = $('fTo').value.trim();
+            if (!(amount > 0)) { err.textContent = 'Informe um valor maior que zero.'; return; }
+            if (iso > todayLocalISO()) { err.textContent = 'A data não pode ser futura.'; return; }
+            if (!from || !to) { err.textContent = 'Informe o banco de origem e o de destino.'; return; }
+            const date = iso.split('-').reverse().join('/');
+            const data = { date, type: flowType, amount: Math.round(amount * 100) / 100, from, to, ts: computeTs(date, '00:00') };
+            const btn = $('fSubmit'); btn.disabled = true;
+            try {
+                expandedFlow = monthKey(date);
+                if (editingFlowId) await updateFlow(editingFlowId, data); else await addFlow(data);
+                closeFlowModal(); switchTab('flow');
+            } catch (ex) {
+                err.textContent = 'Não foi possível salvar (' + ((ex && ex.code) || 'erro') + ').';
+            } finally { btn.disabled = false; }
+        });
+
+        $('flowTableBody').addEventListener('click', async (e) => {
+            const b = e.target.closest('button[data-act]');
+            if (!b) return;
+            const a = b.dataset.act, id = b.dataset.id;
+            if (a === 'month') { toggleMonth('flow', b.dataset.month); return; }
+            if (a === 'edit') { pendingFlowDeleteId = null; openFlowModal(id); }
+            else if (a === 'ask') { pendingFlowDeleteId = id; processAndRender(); }
+            else if (a === 'cancel') { pendingFlowDeleteId = null; processAndRender(); }
+            else if (a === 'confirm') {
+                pendingFlowDeleteId = null;
+                try { await removeFlow(id); } catch (er) { showToast('Não foi possível excluir a movimentação.', 'err'); processAndRender(); }
+            }
+        });
+
+        function renderFinance(view, net) {
+            const sorted = flows.slice().sort((a, b) => (a.ts || 0) - (b.ts || 0));
+            let dep = 0, saq = 0;
+            sorted.forEach(f => { const v = Number(f.amount) || 0; if (f.type === 'Saque') saq += v; else dep += v; });
+            const invested = dep - saq, capital = invested + net;
+            $('metricInvested').innerText = `R$ ${brl(invested)}`;
+            $('metricInvestedSub').innerText = `${brl(dep)} depositados − ${brl(saq)} sacados`;
+            const capEl = $('metricCapital');
+            capEl.innerText = `R$ ${brl(capital)}`;
+            capEl.className = 'text-3xl font-extrabold ' + (capital >= invested ? 'text-emerald-400' : 'text-red-400');
+            $('metricCapitalSub').innerText = `${brl(invested)} investido ${net >= 0 ? '+' : '−'} ${brl(Math.abs(net))} de ${net >= 0 ? 'lucro' : 'prejuízo'}`;
+
+            const tb = $('flowTableBody');
+            tb.innerHTML = '';
+            $('emptyFlow').classList.toggle('hidden', sorted.length > 0);
+            const desc = sorted.slice().reverse();
+            const flowCount = {};
+            desc.forEach(f => { const k = monthKey(f.date); flowCount[k] = (flowCount[k] || 0) + 1; });
+            const flowKeys = Object.keys(flowCount);
+            if (expandedFlow === undefined || (expandedFlow !== null && !flowCount[expandedFlow])) expandedFlow = flowKeys.length ? flowKeys[0] : null;
+            let lastFk = null;
+            desc.forEach(f => {
+                const fk = monthKey(f.date);
+                if (fk !== lastFk) { lastFk = fk; tb.appendChild(monthRow('flow', fk, flowCount[fk], expandedFlow === fk)); }
+                if (fk !== expandedFlow) return;
+                const isDep = f.type !== 'Saque', v = Number(f.amount) || 0, conf = pendingFlowDeleteId === f.id;
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-cardHover transition';
+                tr.innerHTML = `
+                    <td class="py-3 px-3 font-medium text-gray-200">${esc(f.date)}</td>
+                    <td class="py-3 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold border ${isDep ? 'bg-blue-950 text-blue-300 border-blue-800' : 'bg-amber-950 text-amber-300 border-amber-800'}">${isDep ? '↓ Depósito' : '↑ Saque'}</span></td>
+                    <td class="py-3 px-3 text-right font-mono font-bold ${isDep ? 'text-blue-300' : 'text-amber-300'}">${isDep ? '+' : '−'} R$ ${brl(v)}</td>
+                    <td class="py-3 px-3">${esc(f.from)}</td>
+                    <td class="py-3 px-3">${esc(f.to)}</td>
+                    <td class="py-3 px-3 text-center whitespace-nowrap">
+                        ${conf
+                            ? `<span class="text-[10px] text-gray-400 mr-1">Excluir?</span>
+                               <button data-act="confirm" data-id="${esc(f.id)}" class="text-emerald-400 hover:text-emerald-300 px-1 font-bold" title="Confirmar exclusão">✓</button>
+                               <button data-act="cancel" class="text-gray-400 hover:text-gray-200 px-1 font-bold" title="Cancelar">✕</button>`
+                            : `<button data-act="edit" data-id="${esc(f.id)}" class="text-blue-400 hover:text-blue-300 p-1 font-bold transition" title="Editar movimentação">✏️</button>
+                               <button data-act="ask" data-id="${esc(f.id)}" class="text-red-400 hover:text-red-300 p-1 font-bold transition" title="Remover movimentação">🗑️</button>`}
+                    </td>`;
+                tb.appendChild(tr);
+            });
+            updateChart(view, sorted);
+            if (!$('panelReport').classList.contains('hidden')) renderReports();
+        }
+
+        function updateChart(view, flowList) {
+            let labels, data, label;
+            if (chartMode === 'ops') {
+                labels = view.map((d, i) => `${d.date} (${i + 1})`);
+                data = view.map(d => d.accum);
+                label = 'Lucro acumulado (R$)';
+            } else {
+                const ev = [
+                    ...view.map(d => ({ ts: d.ts || 0, v: Number(d.result) || 0, t: d.date + ' · Op' })),
+                    ...flowList.map(f => ({ ts: f.ts || 0, v: (f.type === 'Saque' ? -1 : 1) * (Number(f.amount) || 0), t: f.date + ' · ' + f.type }))
+                ].sort((a, b) => a.ts - b.ts);
+                let c = 0;
+                labels = ev.map(e => e.t);
+                data = ev.map(e => { c += e.v; return Math.round(c * 100) / 100; });
+                label = 'Capital atual (R$)';
+            }
+            capitalCurveChart.data.labels = labels;
+            capitalCurveChart.data.datasets[0].data = data;
+            capitalCurveChart.data.datasets[0].label = label;
+            capitalCurveChart.update();
+        }
+
+        /* ---------- Relatórios ---------- */
+        let repGran = 'month', calMonth = null;
+        const num = v => Number(v) || 0;
+        const pad2 = n => String(n).padStart(2, '0');
+        const isoOf = d => { const [dd, mm, yy] = String(d).split('/'); return `${yy}-${mm}-${dd}`; };
+        const pct = v => v.toFixed(1).replace('.', ',') + '%';
+        const fx = v => (v === null || v === undefined || !isFinite(v)) ? '—' : v.toFixed(2).replace('.', ',');
+        const money = v => `${v >= 0 ? '+' : '−'} R$ ${brl(Math.abs(v))}`;
+        const mcls = v => v >= 0 ? 'text-emerald-400' : 'text-red-400';
+        const td = (v, c = '') => `<td class="py-2 px-3 text-right font-mono ${c}">${v}</td>`;
+        const tdm = v => td(money(v), mcls(v));
+
+        function group(list, fn) { const m = new Map(); list.forEach(r => { const k = fn(r); if (!m.has(k)) m.set(k, []); m.get(k).push(r); }); return m; }
+        function stats(list) {
+            let n = list.length, net = 0, gp = 0, gl = 0, np = 0, nl = 0, pts = 0, wins = 0, eq = 0, peak = 0, dd = 0, sw = 0, sl = 0, cw = 0, cl = 0;
+            list.forEach(r => {
+                const v = num(r.result); net += v;
+                if (v > 0) { gp += v; np++; } else if (v < 0) { gl -= v; nl++; }
+                pts += (r.type === 'Loss' ? -1 : 1) * Math.abs(num(r.points));
+                eq += v; peak = Math.max(peak, eq); dd = Math.max(dd, peak - eq);
+                if (r.type === 'Gain') { wins++; cw++; cl = 0; sw = Math.max(sw, cw); } else { cl++; cw = 0; sl = Math.max(sl, cl); }
+            });
+            return { n, net, gp, gl, pts, dd, sw, sl, wr: n ? wins / n * 100 : 0, avgGain: np ? gp / np : 0, avgLoss: nl ? gl / nl : 0,
+                     payoff: (np && nl) ? (gp / np) / (gl / nl) : null, pf: gl ? gp / gl : null, exp: n ? net / n : 0 };
+        }
+        function periodRange() {
+            const v = $('repPeriod').value, t = todayLocalISO(), Y = +t.slice(0, 4), M = +t.slice(5, 7);
+            if (v === 'month') return [`${Y}-${pad2(M)}-01`, '9999'];
+            if (v === 'last') { const y = M === 1 ? Y - 1 : Y, m = M === 1 ? 12 : M - 1; return [`${y}-${pad2(m)}-01`, `${y}-${pad2(m)}-${pad2(new Date(y, m, 0).getDate())}`]; }
+            if (v === '30d') { const d = new Date(); d.setDate(d.getDate() - 29); return [`${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`, '9999']; }
+            if (v === 'year') return [`${Y}-01-01`, '9999'];
+            if (v === 'custom') return [$('repFrom').value || '0000', $('repTo').value || '9999'];
+            return ['0000', '9999'];
+        }
+        function filteredOps(sa, per) {
+            const [from, to] = periodRange(), su = $('repSetup').value, as = $('repAsset').value;
+            return rows.slice().sort((a, b) => (a.ts || 0) - (b.ts || 0)).filter(r => {
+                const iso = isoOf(r.date);
+                if (per && (iso < from || iso > to)) return false;
+                if (sa && ((su && r.setup !== su) || (as && r.asset !== as))) return false;
+                return true;
+            });
+        }
+        function fillSel(id, vals) {
+            const sel = $(id), cur = sel.value, sig = vals.join('|');
+            if (sel.dataset.sig === sig) return;
+            sel.dataset.sig = sig;
+            sel.innerHTML = '<option value="">Todos</option>' + vals.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+            sel.value = vals.includes(cur) ? cur : '';
+        }
+
+        const rcard = (t, h, note, extra) => `<div class="bg-cardBg border border-gray-800 rounded-xl shadow-lg overflow-hidden"><div class="px-6 py-3 border-b border-gray-800 flex flex-wrap gap-2 justify-between items-center"><div><h3 class="font-bold text-gray-200 text-sm">${t}</h3>${note ? `<p class="text-[11px] text-gray-500 mt-0.5">${note}</p>` : ''}</div>${extra || ''}</div><div class="overflow-x-auto">${h}</div></div>`;
+        const rtable = (head, body) => `<table class="w-full text-left text-xs"><thead><tr class="bg-gray-900/50 text-gray-400 border-b border-gray-800 uppercase tracking-wider">${head.map((h, i) => `<th class="py-2 px-3 ${i ? 'text-right' : ''}">${h}</th>`).join('')}</tr></thead><tbody class="divide-y divide-gray-800 text-gray-300">${body}</tbody></table>`;
+        const lbl = (t, w) => `<td class="py-2 px-3 ${w ? 'max-w-xs truncate' : ''}" title="${esc(t)}">${esc(t)}</td>`;
+        const nOps = s => `${s.n}${s.n < 30 ? ' ⚠' : ''}`;
+        function simpleRows(groups, withPts) {
+            return groups.map(([k, l]) => { const s = stats(l); return `<tr class="hover:bg-cardHover">${lbl(k, true)}${td(nOps(s))}${td(pct(s.wr))}${tdm(s.net)}${withPts ? td((s.pts > 0 ? '+' : '') + s.pts) : ''}${tdm(s.exp)}</tr>`; }).join('');
+        }
+
+        function secSetup(ops) {
+            const g = [...group(ops, r => r.setup)].sort((a, b) => stats(b[1]).net - stats(a[1]).net);
+            return rcard('1. Desempenho por setup', rtable(['Setup', 'Operações', 'Win rate', 'Resultado', 'Pontos', 'Média/op.'], simpleRows(g, true)), '⚠ = menos de 30 operações (amostra pequena).');
+        }
+        function secRisk(s) {
+            const c = (t, v, sub) => `<div class="bg-darkBg border border-gray-800 rounded-lg p-3"><p class="text-[11px] text-gray-400 uppercase tracking-wider">${t}</p><p class="mt-1 text-lg font-bold text-gray-100">${v}</p>${sub ? `<p class="text-[10px] text-gray-500">${sub}</p>` : ''}</div>`;
+            const h = `<div class="p-4 grid grid-cols-2 md:grid-cols-4 gap-3">${c('Payoff', fx(s.payoff), 'ganho médio ÷ perda média')}${c('Profit factor', fx(s.pf), 'lucro bruto ÷ prejuízo bruto')}${c('Expectativa/op.', money(s.exp))}${c('Drawdown máximo', 'R$ ' + brl(s.dd), 'maior queda desde um pico')}${c('Ganho médio', 'R$ ' + brl(s.avgGain))}${c('Perda média', 'R$ ' + brl(s.avgLoss))}${c('Maior seq. de ganhos', s.sw + ' op.')}${c('Maior seq. de perdas', s.sl + ' op.')}</div>`;
+            return rcard('2. Métricas de risco', h);
+        }
+        function secInOut(ops) {
+            const OUT = 'Outras - Fora do Setup', a = ops.filter(r => r.setup !== OUT), b = ops.filter(r => r.setup === OUT);
+            return rcard('3. Dentro x fora do setup', rtable(['Grupo', 'Operações', 'Win rate', 'Resultado', 'Média/op.'], simpleRows([['Dentro dos setups', a], ['Fora do setup', b]].filter(x => x[1].length), false)));
+        }
+        function weekKey(iso) { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; }
+        function secPeriod(ops) {
+            const keyFn = r => { const i = isoOf(r.date); return repGran === 'month' ? i.slice(0, 7) : weekKey(i); };
+            const g = [...group(ops, keyFn)].sort((a, b) => b[0].localeCompare(a[0]));
+            const body = g.map(([k, l]) => {
+                const s = stats(l), days = [...group(l, r => r.date)].map(([, d]) => d.reduce((t, r) => t + num(r.result), 0));
+                const label = repGran === 'month' ? `${k.slice(5)}/${k.slice(0, 4)}` : `Sem. ${k.slice(8)}/${k.slice(5, 7)}/${k.slice(0, 4)}`;
+                return `<tr class="hover:bg-cardHover">${lbl(label)}${td(nOps(s))}${td(pct(s.wr))}${tdm(s.net)}${td((s.pts > 0 ? '+' : '') + s.pts)}${tdm(Math.max(...days))}${tdm(Math.min(...days))}</tr>`;
+            }).join('');
+            const on = 'px-3 py-1.5 bg-gray-700 text-white font-semibold', off = 'px-3 py-1.5 text-gray-400 hover:text-gray-200';
+            const tog = `<div class="flex rounded-lg border border-gray-700 overflow-hidden text-xs"><button onclick="setGran('month')" class="${repGran === 'month' ? on : off}">Mensal</button><button onclick="setGran('week')" class="${repGran === 'week' ? on : off}">Semanal</button></div>`;
+            return rcard('4. Resumo mensal e semanal', rtable(['Período', 'Operações', 'Win rate', 'Resultado', 'Pontos', 'Melhor dia', 'Pior dia'], body), null, tog);
+        }
+        function secTime(ops) {
+            const slot = r => { const [h, m] = String(r.timeIn).split(':').map(Number); return `${pad2(h)}:${m < 30 ? '00' : '30'}`; };
+            const g = [...group(ops, slot)].sort((a, b) => a[0].localeCompare(b[0])).map(([k, l]) => { const e = k.endsWith('00') ? '29' : '59'; return [`${k}–${k.slice(0, 2)}:${e}`, l]; });
+            return rcard('5. Por horário de entrada', rtable(['Faixa', 'Operações', 'Win rate', 'Resultado', 'Média/op.'], simpleRows(g, false)));
+        }
+        function secWeekday(ops) {
+            const names = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'], order = [1, 2, 3, 4, 5, 6, 0];
+            const m = group(ops, r => new Date(isoOf(r.date) + 'T12:00:00').getDay());
+            const g = order.filter(d => m.has(d)).map(d => [names[d], m.get(d)]);
+            return rcard('6a. Por dia da semana', rtable(['Dia', 'Operações', 'Win rate', 'Resultado', 'Média/op.'], simpleRows(g, false)));
+        }
+        function secAsset(ops) {
+            const g = [...group(ops, r => r.asset)].sort((a, b) => stats(b[1]).net - stats(a[1]).net);
+            return rcard('6b. Por ativo', rtable(['Ativo', 'Operações', 'Win rate', 'Resultado', 'Média/op.'], simpleRows(g, false)));
+        }
+        function secFinance(opsP, from, to) {
+            const fl = flows.filter(f => { const i = isoOf(f.date); return i >= from && i <= to; });
+            const keys = [...new Set([...fl.map(f => isoOf(f.date).slice(0, 7)), ...opsP.map(r => isoOf(r.date).slice(0, 7))])].sort().reverse();
+            const body = keys.map(k => {
+                let dep = 0, saq = 0;
+                fl.filter(f => isoOf(f.date).slice(0, 7) === k).forEach(f => { if (f.type === 'Saque') saq += num(f.amount); else dep += num(f.amount); });
+                const profit = opsP.filter(r => isoOf(r.date).slice(0, 7) === k).reduce((t, r) => t + num(r.result), 0);
+                const inv = flows.filter(f => isoOf(f.date).slice(0, 7) <= k).reduce((t, f) => t + (f.type === 'Saque' ? -1 : 1) * num(f.amount), 0);
+                const rent = inv > 0 ? profit / inv * 100 : null;
+                return `<tr class="hover:bg-cardHover">${lbl(`${k.slice(5)}/${k.slice(0, 4)}`)}${td('+ R$ ' + brl(dep), 'text-blue-300')}${td('− R$ ' + brl(saq), 'text-amber-300')}${tdm(dep - saq)}${tdm(profit)}${td('R$ ' + brl(inv))}${td(rent === null ? '—' : (rent >= 0 ? '+' : '−') + pct(Math.abs(rent)), rent === null ? '' : mcls(rent))}</tr>`;
+            }).join('') || `<tr><td colspan="7" class="py-6 px-3 text-center text-gray-500">Sem lançamentos no período.</td></tr>`;
+            return rcard('7. Financeiro: fluxo de caixa e rentabilidade mensal', rtable(['Mês', 'Depósitos', 'Saques', 'Fluxo líquido', 'Resultado das operações', 'Investido (fim do mês)', 'Rentabilidade'], body),
+                'Rentabilidade = resultado das operações do mês ÷ valor investido no fim do mês. Usa só o filtro de período.');
+        }
+        function setGran(g) { repGran = g; renderReports(); }
+        function calNav(d) { const [y, m] = calMonth.split('-').map(Number), dt = new Date(y, m - 1 + d, 1); calMonth = `${dt.getFullYear()}-${pad2(dt.getMonth() + 1)}`; renderReports(); }
+        function secCalendar() {
+            const ops = filteredOps(true, false);
+            if (!calMonth) { const t = todayLocalISO().slice(0, 7); calMonth = ops.length ? isoOf(ops[ops.length - 1].date).slice(0, 7) : t; }
+            const [y, m] = calMonth.split('-').map(Number), days = new Date(y, m, 0).getDate(), first = new Date(y, m - 1, 1).getDay();
+            const sums = {}; let total = 0, cnt = 0;
+            ops.filter(r => isoOf(r.date).slice(0, 7) === calMonth).forEach(r => { const d = +isoOf(r.date).slice(8); (sums[d] = sums[d] || { net: 0, n: 0 }); sums[d].net += num(r.result); sums[d].n++; total += num(r.result); cnt++; });
+            const maxAbs = Math.max(1, ...Object.values(sums).map(x => Math.abs(x.net)));
+            let cells = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(n => `<div class="text-[10px] text-gray-500 text-center uppercase">${n}</div>`).join('');
+            for (let i = 0; i < first; i++) cells += '<div></div>';
+            for (let d = 1; d <= days; d++) {
+                const x = sums[d]; let st = '', inner = '';
+                if (x) { const a = (0.15 + 0.45 * Math.abs(x.net) / maxAbs).toFixed(2); st = `background:${x.net >= 0 ? `rgba(59,130,246,${a})` : `rgba(245,158,11,${a})`}`; inner = `<div class="font-mono font-semibold text-gray-100">${x.net >= 0 ? '+' : '−'}${brl(Math.abs(x.net))}</div><div class="text-gray-400">${x.n} op.</div>`; }
+                cells += `<div class="rounded-lg p-1.5 min-h-[60px] border border-gray-800 text-[11px] text-gray-300" style="${st}"><div class="text-gray-400">${d}</div>${inner}</div>`;
+            }
+            const nav = `<div class="flex items-center gap-2 text-xs"><button onclick="calNav(-1)" class="px-2 py-1 rounded border border-gray-700 hover:bg-gray-700" title="Mês anterior">◀</button><span class="font-semibold text-gray-200">${pad2(m)}/${y}</span><button onclick="calNav(1)" class="px-2 py-1 rounded border border-gray-700 hover:bg-gray-700" title="Próximo mês">▶</button></div>`;
+            const h = `<div class="p-4"><div class="grid grid-cols-7 gap-1">${cells}</div><p class="mt-3 text-xs text-gray-400">Total do mês: <span class="font-mono font-bold ${mcls(total)}">${money(total)}</span> em ${cnt} operação(ões). Azul = ganho, âmbar = perda (sempre com sinal + ou −).</p></div>`;
+            return rcard('8. Calendário de resultados', h, 'Usa os filtros de setup e ativo.', nav);
+        }
+
+        function renderReports() {
+            fillSel('repSetup', [...new Set(rows.map(r => r.setup))].sort());
+            fillSel('repAsset', [...new Set(rows.map(r => r.asset))].sort());
+            $('repCustom').classList.toggle('hidden', $('repPeriod').value !== 'custom');
+            const [from, to] = periodRange(), ops = filteredOps(true, true), opsP = filteredOps(false, true);
+            $('repNote').textContent = `${ops.length} operação(ões) no filtro.` + (ops.length && ops.length < 30 ? ' Amostra pequena: com menos de 30 operações, médias e win rate oscilam muito.' : '');
+            let h = '';
+            if (ops.length) h += secSetup(ops) + secRisk(stats(ops)) + secInOut(ops) + secPeriod(ops) + secTime(ops) + `<div class="grid md:grid-cols-2 gap-6">${secWeekday(ops)}${secAsset(ops)}</div>`;
+            else h += '<p class="bg-cardBg border border-gray-800 rounded-xl p-6 text-center text-xs text-gray-500">Nenhuma operação para os filtros selecionados.</p>';
+            $('repBody').innerHTML = h + secFinance(opsP, from, to) + secCalendar();
+        }
+
+        async function saveText(name, data, mime) {
+            try { const dl = await window.claude.use('downloads'); if (dl) { await dl.save({ filename: name, data }); return; } } catch (e) { if (e && e.code === 'declined') return; }
+            const a = document.createElement('a');
+            a.href = 'data:' + mime + ';charset=utf-8,' + encodeURIComponent(data); a.download = name;
+            document.body.appendChild(a); a.click(); a.remove();
+        }
+        function exportReportCsv() {
+            const q = v => `"${String(v).replace(/"/g, '""')}"`;
+            const head = ['Data', 'Entrada', 'Saída', 'Ativo', 'Setup', 'Contratos', 'Tipo', 'Pontos', 'Resultado (R$)'];
+            const lines = filteredOps(true, true).map(r => [r.date, r.timeIn, r.timeOut, r.asset, r.setup, r.contracts, r.type, num(r.points), brl(num(r.result))].map(q).join(';'));
+            saveText(backupName().replace('diario_operacoes_backup.json', 'relatorio_operacoes.csv'), '\ufeff' + [head.map(q).join(';'), ...lines].join('\r\n'), 'text/csv');
+        }
+
+        initLock();
+        processAndRender();
+        initStorage();
+    </script>
+</body>
+</html>
