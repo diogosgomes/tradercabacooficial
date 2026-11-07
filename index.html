@@ -117,33 +117,35 @@
     <main class="flex-1 p-3 sm:p-6 max-w-7xl mx-auto w-full space-y-4 sm:space-y-6">
 
         <!-- Metrics Cards Dinâmicos -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            <div class="bg-cardBg border-2 border-blue-500/60 p-4 sm:p-5 rounded-xl shadow-lg">
+        <h2 class="text-sm sm:text-base font-bold text-gray-200 -mb-1">Visão geral</h2>
+        <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            <div class="bg-cardBg border-2 border-blue-500/60 p-3 sm:p-5 rounded-xl shadow-lg">
                 <p class="text-[11px] sm:text-xs font-medium text-gray-400 uppercase tracking-wider">Valor Investido</p>
-                <div class="mt-2"><span id="metricInvested" class="text-2xl sm:text-3xl font-extrabold text-gray-100">R$ 0,00</span></div>
+                <div class="mt-2"><span id="metricInvested" class="text-xl sm:text-3xl font-extrabold text-gray-100">R$ 0,00</span></div>
                 <p id="metricInvestedSub" class="mt-1 text-[10px] sm:text-[11px] text-gray-500">0,00 depositados − 0,00 sacados</p>
             </div>
-            <div class="bg-cardBg border border-gray-800 p-4 sm:p-5 rounded-xl shadow-lg">
+            <div class="bg-cardBg border border-gray-800 p-3 sm:p-5 rounded-xl shadow-lg">
                 <p class="text-[11px] sm:text-xs font-medium text-gray-400 uppercase tracking-wider">Total Net Profit</p>
-                <div class="mt-2"><span id="metricNetProfit" class="text-2xl sm:text-3xl font-extrabold text-emerald-400">R$ 0,00</span></div>
+                <div class="mt-2"><span id="metricNetProfit" class="text-xl sm:text-3xl font-extrabold text-emerald-400">R$ 0,00</span></div>
                 <p class="mt-1 text-[10px] sm:text-[11px] text-gray-500">Ganhos líquidos das operações</p>
             </div>
-            <div class="bg-cardBg border-2 border-blue-500/60 p-4 sm:p-5 rounded-xl shadow-lg">
+            <div class="bg-cardBg border-2 border-blue-500/60 p-3 sm:p-5 rounded-xl shadow-lg">
                 <p class="text-[11px] sm:text-xs font-medium text-gray-400 uppercase tracking-wider">Capital Atual</p>
-                <div class="mt-2"><span id="metricCapital" class="text-2xl sm:text-3xl font-extrabold text-emerald-400">R$ 0,00</span></div>
+                <div class="mt-2"><span id="metricCapital" class="text-xl sm:text-3xl font-extrabold text-emerald-400">R$ 0,00</span></div>
                 <p id="metricCapitalSub" class="mt-1 text-[10px] sm:text-[11px] text-gray-500">0,00 investido + 0,00 de lucro</p>
             </div>
-            <div class="bg-cardBg border border-gray-800 p-4 sm:p-5 rounded-xl shadow-lg">
+            <div class="bg-cardBg border border-gray-800 p-3 sm:p-5 rounded-xl shadow-lg">
                 <p class="text-[11px] sm:text-xs font-medium text-gray-400 uppercase tracking-wider">Total Gain / Loss</p>
-                <div class="mt-2"><span id="metricGainLoss" class="text-xl sm:text-2xl font-bold text-emerald-400">Gain: 0 | Loss: 0</span></div>
+                <div class="mt-2"><span id="metricGainLoss" class="text-sm sm:text-2xl font-bold text-emerald-400">Gain: 0 | Loss: 0</span></div>
             </div>
-            <div class="bg-cardBg border border-gray-800 p-4 sm:p-5 rounded-xl shadow-lg">
+            <div class="bg-cardBg border border-gray-800 p-3 sm:p-5 rounded-xl shadow-lg">
                 <p class="text-[11px] sm:text-xs font-medium text-gray-400 uppercase tracking-wider">Win Rate</p>
-                <div class="mt-2"><span id="metricWinRate" class="text-2xl sm:text-3xl font-extrabold text-blue-400">0,0%</span></div>
+                <div class="mt-2"><span id="metricWinRate" class="text-xl sm:text-3xl font-extrabold text-blue-400">0,0%</span></div>
             </div>
-            <div class="bg-cardBg border border-gray-800 p-4 sm:p-5 rounded-xl shadow-lg">
+            <div class="bg-cardBg border border-gray-800 p-3 sm:p-5 rounded-xl shadow-lg">
                 <p class="text-[11px] sm:text-xs font-medium text-gray-400 uppercase tracking-wider">Best Setup</p>
-                <div class="mt-2"><span id="metricBestSetup" class="text-xs font-bold text-indigo-300 block truncate" title="N/A">N/A</span></div>
+                <div class="mt-2"><span id="metricBestSetup" class="text-xs font-bold text-indigo-300 block truncate">N/A</span></div>
+                <p id="metricBestSetupSub" class="mt-1 text-[10px] sm:text-[11px] text-gray-400 min-h-[1rem]"></p>
             </div>
         </div>
 
@@ -255,6 +257,16 @@
     </main>
 
     <footer class="w-full text-center py-6 px-3 text-[11px] text-gray-500">© 2026 Diogo Gomes · Todos os direitos reservados.</footer>
+
+    <div id="bestTip" role="tooltip" class="hidden fixed z-[70] w-72 max-w-[calc(100vw-16px)] pointer-events-none bg-cardBg border border-gray-600 rounded-lg shadow-2xl px-3 py-2 text-xs">
+        <p class="text-[10px] text-gray-500 uppercase tracking-wider">Best Setup</p>
+        <p id="bestTipName" class="mt-0.5 font-semibold text-gray-100 [overflow-wrap:anywhere]"></p>
+        <p id="bestTipSub" class="mt-1 text-[11px] text-gray-400"></p>
+    </div>
+
+    <div id="cellTip" role="tooltip" class="hidden fixed z-[70] w-72 max-w-[calc(100vw-16px)] pointer-events-none bg-cardBg border border-gray-600 rounded-lg shadow-2xl px-3 py-2 text-xs">
+        <p id="cellTipName" class="font-semibold text-gray-100 [overflow-wrap:anywhere]"></p>
+    </div>
 
     <!-- Modal de Registro -->
     <div id="tradeModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
@@ -636,7 +648,7 @@ hmoDb = db;
         function processAndRender() {
             const sorted = rows.slice().sort((a, b) => (a.ts || 0) - (b.ts || 0));
             let accum = 0, gains = 0, losses = 0;
-            const setupProfits = {};
+            const setupProfits = {}, setupCounts = {};
             const view = sorted.map(r => {
                 const row = { ...r };
                 row.result = Number(row.result) || 0;
@@ -644,6 +656,7 @@ hmoDb = db;
                 row.accum = accum;
                 if (row.type === 'Gain') gains++; else losses++;
                 setupProfits[row.setup] = (setupProfits[row.setup] || 0) + row.result;
+                setupCounts[row.setup] = (setupCounts[row.setup] || 0) + 1;
                 return row;
             });
 
@@ -662,7 +675,13 @@ hmoDb = db;
             }
             const best = document.getElementById('metricBestSetup');
             best.innerText = bestSetup;
-            best.title = bestSetup;
+            best.dataset.full = bestSetup;
+            const bestSub = document.getElementById('metricBestSetupSub');
+            if (bestSetup === 'N/A') bestSub.textContent = '';
+            else {
+                const bv = Math.round(maxProfit * 100) / 100, bn = setupCounts[bestSetup];
+                bestSub.textContent = `${bv >= 0 ? '▲ +' : '▼ −'} R$ ${brl(Math.abs(bv))} · ${bn} operaç${bn === 1 ? 'ão' : 'ões'}`;
+            }
 
             const tbody = document.getElementById('operationsTableBody');
             tbody.innerHTML = '';
@@ -671,9 +690,12 @@ hmoDb = db;
             const opsCount = {};
             view.forEach(r => { const k = monthKey(r.date); opsCount[k] = (opsCount[k] || 0) + 1; });
             const opKeys = Object.keys(opsCount);
-            if (expandedOps === undefined || (expandedOps !== null && !opsCount[expandedOps])) expandedOps = opKeys.length ? opKeys[opKeys.length - 1] : null;
+            checkMonthRollover();
+            if (expandedOps === undefined || (expandedOps !== null && !opsCount[expandedOps])) expandedOps = opsCount[curMonthKey()] ? curMonthKey() : (opKeys.length ? opKeys.slice().sort().pop() : null);
+            // Meses do mais recente para o mais antigo (ordem interna de cada mês preservada)
+            const viewByMonth = view.map((r, i) => ({ r, i, k: monthKey(r.date) })).sort((x, y) => x.k < y.k ? 1 : x.k > y.k ? -1 : x.i - y.i).map(o => o.r);
             let lastMk = null;
-            view.forEach(row => {
+            viewByMonth.forEach(row => {
                 const mk = monthKey(row.date);
                 if (mk !== lastMk) { lastMk = mk; tbody.appendChild(monthRow('ops', mk, opsCount[mk], expandedOps === mk)); }
                 if (mk !== expandedOps) return;
@@ -688,7 +710,7 @@ hmoDb = db;
                     <td class="py-3 px-3 text-gray-400">${esc(row.timeOut)}</td>
                     <td class="py-3 px-3 text-center font-mono text-indigo-300 bg-indigo-950/30 rounded">${calculateDuration(row.timeIn, row.timeOut)}</td>
                     <td class="py-3 px-3 font-mono text-blue-400">${esc(row.asset)}</td>
-                    <td class="py-3 px-3 truncate max-w-xs" title="${esc(row.setup)}">${esc(row.setup)}</td>
+                    <td class="py-3 px-3 truncate max-w-xs" data-tip="${esc(row.setup)}">${esc(row.setup)}</td>
                     <td class="py-3 px-3 text-center font-mono">${esc(row.contracts)}</td>
                     <td class="py-3 px-3 text-center">
                         <span class="px-2 py-0.5 rounded text-[10px] font-bold ${row.type === 'Gain' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-red-950 text-red-400 border border-red-800'}">${esc(row.type)}</span>
@@ -862,7 +884,6 @@ hmoDb = db;
                     result: money,
                     ts: computeTs(date, timeIn)
                 };
-                expandedOps = monthKey(date);
                 if (editingId) await updateTrade(editingId, payload);
                 else await addTrade(payload);
                 closeModal();
@@ -922,6 +943,75 @@ hmoDb = db;
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeOptsMenu(); });
         window.addEventListener('resize', closeOptsMenu);
         window.addEventListener('scroll', closeOptsMenu, { passive: true });
+
+        /* ---------- Janelinha com o nome completo do Best Setup ---------- */
+        (function () {
+            const tip = document.getElementById('bestTip');
+            const nameEl = document.getElementById('metricBestSetup');
+            const card = nameEl.closest('.rounded-xl');
+            card.setAttribute('tabindex', '0'); card.setAttribute('aria-describedby', 'bestTip');
+            card.classList.add('cursor-help', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500/60');
+            const canHover = !window.matchMedia || window.matchMedia('(hover: hover)').matches;
+            function fill() {
+                const full = nameEl.dataset.full || '';
+                if (!full || full === 'N/A') return false;
+                document.getElementById('bestTipName').innerHTML = esc(full).replace(/_/g, '_<wbr>');
+                document.getElementById('bestTipSub').textContent = document.getElementById('metricBestSetupSub').textContent;
+                return true;
+            }
+            function place() {
+                const r = card.getBoundingClientRect(), w = tip.offsetWidth || 288, h = tip.offsetHeight || 90;
+                let top = r.bottom + 8;
+                if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 8);
+                tip.style.top = top + 'px';
+                tip.style.left = Math.max(8, Math.min(r.left, window.innerWidth - w - 8)) + 'px';
+            }
+            window.showBestTip = () => { if (!fill()) return; tip.classList.remove('hidden'); place(); };
+            window.hideBestTip = () => tip.classList.add('hidden');
+            card.addEventListener('mouseenter', () => { if (canHover) window.showBestTip(); });
+            card.addEventListener('mouseleave', () => { if (canHover) window.hideBestTip(); });
+            card.addEventListener('focus', () => window.showBestTip());
+            card.addEventListener('blur', () => window.hideBestTip());
+            card.addEventListener('click', () => { if (!canHover) { if (tip.classList.contains('hidden')) window.showBestTip(); else window.hideBestTip(); } });
+            document.addEventListener('click', (e) => { if (!canHover && e.target.closest('.rounded-xl') !== card) window.hideBestTip(); });
+            window.addEventListener('scroll', () => window.hideBestTip(), { passive: true });
+            window.addEventListener('resize', () => window.hideBestTip());
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape') window.hideBestTip(); });
+        })();
+
+        /* ---------- Janelinha com o nome completo nas tabelas (lista e relatórios) ---------- */
+        (function () {
+            const tip = document.getElementById('cellTip'), nameEl = document.getElementById('cellTipName');
+            const canHover = !window.matchMedia || window.matchMedia('(hover: hover)').matches;
+            let current = null;
+            function hide() { tip.classList.add('hidden'); current = null; }
+            function show(el) {
+                const full = el.getAttribute('data-tip');
+                if (!full || el.scrollWidth <= el.clientWidth + 1) { hide(); return; }   // só quando o texto está cortado
+                current = el;
+                nameEl.innerHTML = esc(full).replace(/_/g, '_<wbr>');
+                tip.classList.remove('hidden');
+                const r = el.getBoundingClientRect(), w = tip.offsetWidth || 288, h = tip.offsetHeight || 60;
+                let top = r.bottom + 6;
+                if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 6);
+                tip.style.top = top + 'px';
+                tip.style.left = Math.max(8, Math.min(r.left, window.innerWidth - w - 8)) + 'px';
+            }
+            window.showCellTip = show; window.hideCellTip = hide;
+            document.addEventListener('mouseover', (e) => {
+                if (!canHover) return;
+                const el = e.target.closest && e.target.closest('[data-tip]');
+                if (el) { if (el !== current) show(el); } else if (current) hide();
+            });
+            document.addEventListener('click', (e) => {
+                if (canHover) return;
+                const el = e.target.closest && e.target.closest('[data-tip]');
+                if (el && el !== current) show(el); else hide();
+            });
+            window.addEventListener('scroll', hide, { passive: true });
+            window.addEventListener('resize', hide);
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hide(); });
+        })();
 
         function isUnlocked() { return $('lockScreen').classList.contains('hidden'); }
         function showLock() {
@@ -1103,6 +1193,10 @@ hmoDb = db;
 
         let flows = [], chartMode = 'capital';
         let expandedOps, expandedFlow;   
+        let lastCurMonth;
+        function curMonthKey() { const [y, m] = todayLocalISO().split('-'); return `${y}-${m}`; }
+        // Mês atual sempre abre expandido (se tiver lançamentos); na virada do mês, o novo mês assume.
+        function checkMonthRollover() { const c = curMonthKey(); if (lastCurMonth !== undefined && lastCurMonth !== c) { expandedOps = undefined; expandedFlow = undefined; } lastCurMonth = c; }
         function monthKey(d) { const [dd, mm, yy] = String(d).split('/'); return `${yy}-${mm}`; }
         function monthRow(kind, key, n, open) {
             const [y, m] = key.split('-');
@@ -1193,7 +1287,6 @@ hmoDb = db;
             if (!editingFlowId) data.createdAt = Date.now();
             const btn = $('fSubmit'); btn.disabled = true;
             try {
-                expandedFlow = monthKey(date);
                 if (editingFlowId) await updateFlow(editingFlowId, data); else await addFlow(data);
                 closeFlowModal(); switchTab('flow');
             } catch (ex) {
@@ -1335,7 +1428,8 @@ hmoDb = db;
             const flowCount = {};
             desc.forEach(f => { const k = monthKey(f.date); flowCount[k] = (flowCount[k] || 0) + 1; });
             const flowKeys = Object.keys(flowCount);
-            if (expandedFlow === undefined || (expandedFlow !== null && !flowCount[expandedFlow])) expandedFlow = flowKeys.length ? flowKeys[0] : null;
+            checkMonthRollover();
+            if (expandedFlow === undefined || (expandedFlow !== null && !flowCount[expandedFlow])) expandedFlow = flowCount[curMonthKey()] ? curMonthKey() : (flowKeys.length ? flowKeys[0] : null);
             let lastFk = null;
             desc.forEach(f => {
                 const fk = monthKey(f.date);
@@ -1439,7 +1533,7 @@ hmoDb = db;
 
         const rcard = (t, h, note, extra) => `<div class="bg-cardBg border border-gray-800 rounded-xl shadow-lg overflow-hidden"><div class="px-4 sm:px-6 py-3 border-b border-gray-800 flex flex-wrap gap-2 justify-between items-center"><div><h3 class="font-bold text-gray-200 text-xs sm:text-sm">${t}</h3>${note ? `<p class="text-[10px] sm:text-[11px] text-gray-500 mt-0.5">${note}</p>` : ''}</div>${extra || ''}</div><div class="overflow-x-auto">${h}</div></div>`;
         const rtable = (head, body) => `<table class="w-full text-left text-xs whitespace-nowrap"><thead><tr class="bg-gray-900/50 text-gray-400 border-b border-gray-800 uppercase tracking-wider">${head.map((h, i) => `<th class="py-2 px-3 ${i ? 'text-right' : ''}">${h}</th>`).join('')}</tr></thead><tbody class="divide-y divide-gray-800 text-gray-300">${body}</tbody></table>`;
-        const lbl = (t, w) => `<td class="py-2 px-3 ${w ? 'max-w-xs truncate' : ''}" title="${esc(t)}">${esc(t)}</td>`;
+        const lbl = (t, w) => `<td class="py-2 px-3 ${w ? 'max-w-xs truncate' : ''}"${w ? ` data-tip="${esc(t)}"` : ''}>${esc(t)}</td>`;
         const nOps = s => `${s.n}${s.n < 30 ? ' ⚠' : ''}`;
         function simpleRows(groups, withPts) {
             return groups.map(([k, l]) => { const s = stats(l); return `<tr class="hover:bg-cardHover">${lbl(k, true)}${td(nOps(s))}${td(pct(s.wr))}${tdm(s.net)}${withPts ? td((s.pts > 0 ? '+' : '') + s.pts) : ''}${tdm(s.exp)}</tr>`; }).join('');
