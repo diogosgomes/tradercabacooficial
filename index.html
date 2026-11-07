@@ -45,17 +45,16 @@
 <body class="bg-darkBg text-gray-100 font-sans min-h-screen flex flex-col w-full">
 
     <!-- Tela de acesso -->
-    <div id="lockScreen" class="fixed inset-0 z-[100] bg-darkBg flex items-center justify-center p-4">
-        <p class="absolute bottom-4 left-0 right-0 text-center text-[11px] text-gray-500">© 2026 Diogo Gomes · Todos os direitos reservados.</p>
+    <div id="lockScreen" class="fixed inset-0 z-[100] bg-darkBg flex flex-col items-center justify-center p-4">
         <div class="bg-cardBg border border-gray-800 rounded-2xl max-w-sm w-full p-8 shadow-2xl space-y-5">
             <div class="text-center">
                 <div class="inline-flex bg-blue-600 p-3 rounded-xl text-2xl mb-3">📈</div>
                 <h2 class="text-xl font-bold text-gray-100">My Trade Dash</h2>
-                <p class="text-xs text-gray-400 mt-1">Acesso restrito. Entre com suas credenciais.</p>
+                <p id="lockSub" class="text-xs text-gray-400 mt-1">Acesso restrito. Entre com suas credenciais.</p>
             </div>
             <form id="lockForm" class="space-y-3" autocomplete="off">
                 <div>
-                    <label for="lockUser" class="block text-xs font-medium text-gray-400 mb-1">E-mail</label>
+                    <label id="lockUserLabel" for="lockUser" class="block text-xs font-medium text-gray-400 mb-1">E-mail</label>
                     <input type="email" id="lockUser" autocomplete="username" autocapitalize="none" spellcheck="false" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200">
                 </div>
                 <div>
@@ -66,6 +65,7 @@
                 <button type="submit" id="lockBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">Entrar</button>
             </form>
         </div>
+        <p class="mt-4 text-center text-[11px] text-gray-500">© 2026 Diogo Gomes · Todos os direitos reservados.</p>
     </div>
 
     <!-- Top Navbar -->
@@ -75,7 +75,7 @@
                 <div class="bg-blue-600 p-2 rounded-lg text-white font-bold text-sm">📈</div>
                 <div>
                     <h1 class="text-base sm:text-lg font-bold tracking-tight">My Trade Dash</h1>
-                    <p class="text-[10px] sm:text-xs text-gray-400">Diário de Operações & Setups</p>
+                    <p class="text-[10px] sm:text-xs text-gray-400">Diário de Operações</p>
                 </div>
             </div>
         </div>
@@ -84,7 +84,7 @@
             <span id="syncStatus" class="text-[10px] px-2 py-1 rounded-full bg-gray-800 text-gray-400">Conectando…</span>
             <button onclick="openFlowModal()" class="border border-blue-500 text-blue-300 hover:bg-blue-950 px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition">🏦 Financeiro</button>
             <button onclick="openModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition flex items-center space-x-1">
-                <span>+ Novo</span>
+                <span>📈 Nova operação</span>
             </button>
             <div class="relative">
                 <button id="btnOpts" type="button" onclick="toggleOptsMenu()" aria-haspopup="true" aria-expanded="false" class="border border-gray-500 text-gray-200 hover:bg-gray-700 px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition">⚙️ Opções ▾</button>
@@ -165,7 +165,7 @@
         <div id="panelOps" class="bg-cardBg border border-gray-800 rounded-xl shadow-lg overflow-hidden">
             <div class="px-4 sm:px-6 py-4 border-b border-gray-800 flex flex-wrap gap-2 justify-between items-center">
                 <h3 class="font-bold text-gray-200 text-sm sm:text-base">Histórico de Operações</h3>
-                <button onclick="openModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition">+ Novo Registro</button>
+                <button onclick="openModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition">📈 Nova operação</button>
             </div>
             <div class="overflow-x-auto w-full">
                 <table class="w-full text-left border-collapse text-xs whitespace-nowrap">
@@ -188,7 +188,7 @@
                     <tbody id="operationsTableBody" class="divide-y divide-gray-800 text-gray-300"></tbody>
                 </table>
             </div>
-            <p id="emptyMsg" class="hidden px-6 py-8 text-center text-xs text-gray-500">Nenhum registro ainda. Clique em “+ Novo Registro” para começar.</p>
+            <p id="emptyMsg" class="hidden px-6 py-8 text-center text-xs text-gray-500">Nenhum registro ainda. Clique em “Nova operação” para começar.</p>
         </div>
 
         <div id="flowExtras" class="hidden space-y-4">
@@ -389,6 +389,9 @@
         const AUTO_LOGOUT_MIN = 15;   // sai sozinho após X minutos sem uso (0 = desligado)
         // Bancos e corretoras sugeridos nos campos Origem/Destino (edite à vontade; dá para digitar outros nomes)
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
+        // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
+        // Nenhuma senha fica escrita no código.
+        let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
         
@@ -498,10 +501,19 @@
         function initClaudeMode(db) {
             MODE = 'claude';
             dbCol = db.collection('trades'); flowCol = db.collection('cashflow');
-            $('lockScreen').classList.add('hidden');
-            $('btnPwd').classList.add('hidden'); $('btnLogout').classList.add('hidden'); $('sepLogout').classList.add('hidden');
+            $('btnPwd').classList.add('hidden');
             $('userBadge').textContent = '🧪 Ambiente HMO';
-            $('menuUserName').textContent = 'Ambiente HMO'; $('menuUserEmail').textContent = 'Sem login · dados de teste';
+            $('lockUserLabel').textContent = 'Utilizador'; $('lockUser').type = 'text'; $('lockUser').autocomplete = 'off';
+            $('lockSub').textContent = 'Ambiente HMO (teste). Entre com as credenciais de teste.';
+hmoDb = db;
+            hmoLoadCred().then(() => {
+                let ok = false;
+                try { ok = sessionStorage.getItem('hmo_ok') === '1'; } catch (e) {}
+                if (ok && hmoCred) { unlockHmo(); return; }
+                showLock();
+                if (hmoState === 'missing') $('lockSub').textContent = 'Primeiro acesso ao HMO: o utilizador e a senha digitados agora serão guardados como credencial de teste.';
+                if (hmoState === 'error') $('lockError').textContent = 'Não foi possível carregar as credenciais do HMO. Recarregue a página.';
+            });
             flowCol.orderBy('ts', 'asc').onSnapshot(snap => {
                 flows = snap.docs.map(d => ({ ...d.data(), id: d.id }));
                 processAndRender();
@@ -925,13 +937,34 @@
             processAndRender();
             showLock();
         }
+        async function hmoLoadCred() {
+            try {
+                const snap = await hmoDb.doc('config/hmo').get();
+                hmoCred = snap.exists ? snap.data() : null;
+                hmoState = hmoCred ? 'ok' : 'missing';
+            } catch (e) { hmoCred = null; hmoState = 'error'; }
+        }
+        async function sha256Hex(txt) {
+            const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(txt));
+            return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+        function unlockHmo() {
+            try { sessionStorage.setItem('hmo_ok', '1'); } catch (e) {}
+            $('lockScreen').classList.add('hidden');
+            $('menuUserName').textContent = (hmoCred && hmoCred.user) || 'Teste'; $('menuUserEmail').textContent = 'Ambiente HMO · dados de teste';
+            resetIdle();
+        }
         async function lockNow() {
+            if (MODE === 'claude') {
+                try { sessionStorage.removeItem('hmo_ok'); } catch (e) {}
+                closeOptsMenu(); showLock(); return;
+            }
             try { await sb.auth.signOut(); } catch (e) {}
             afterLogout();
         }
         function resetIdle() {
             clearTimeout(idleTimer);
-            if (MODE === 'supabase' && AUTO_LOGOUT_MIN > 0 && isUnlocked()) idleTimer = setTimeout(lockNow, AUTO_LOGOUT_MIN * 60000);
+            if (AUTO_LOGOUT_MIN > 0 && isUnlocked()) idleTimer = setTimeout(lockNow, AUTO_LOGOUT_MIN * 60000);
         }
         async function onSession(session) {
             if (!session) { if (currentUserId) afterLogout(); else showLock(); return; }
@@ -964,7 +997,28 @@
             const err = $('lockError'), now = Date.now();
             if (now < blockedUntil) { err.textContent = `Aguarde ${Math.ceil((blockedUntil - now) / 1000)} s.`; return; }
             const email = $('lockUser').value.trim(), password = $('lockPass').value;
-            if (!email || !password) { err.textContent = 'Informe e-mail e senha.'; return; }
+            if (!email || !password) { err.textContent = MODE === 'claude' ? 'Informe utilizador e senha.' : 'Informe e-mail e senha.'; return; }
+            if (MODE === 'claude') {
+                if (hmoState === 'error') { err.textContent = 'Não foi possível carregar as credenciais do HMO. Recarregue a página.'; return; }
+                try {
+                    const un = normTxt(email);
+                    if (!hmoCred) {
+                        if (password.length < 4) { err.textContent = 'Use pelo menos 4 caracteres na senha de teste.'; return; }
+                        const salt = [...crypto.getRandomValues(new Uint8Array(8))].map(b => b.toString(16).padStart(2, '0')).join('');
+                        const cred = { user: email, userNorm: un, salt, hash: await sha256Hex(`${salt}:${un}:${password}`) };
+                        await hmoDb.doc('config/hmo').set(cred);
+                        hmoCred = cred; hmoState = 'ok'; failCount = 0; unlockHmo(); return;
+                    }
+                    const h = await sha256Hex(`${hmoCred.salt}:${un}:${password}`);
+                    if (un === hmoCred.userNorm && h === hmoCred.hash) { failCount = 0; unlockHmo(); }
+                    else {
+                        failCount++; $('lockPass').value = '';
+                        if (failCount >= 5) { blockedUntil = now + 30000; failCount = 0; err.textContent = 'Muitas tentativas. Aguarde 30s.'; }
+                        else err.textContent = 'Utilizador ou senha incorretos.';
+                    }
+                } catch (ex) { err.textContent = 'Não foi possível verificar o acesso: ' + ((ex && ex.message) || ex); }
+                return;
+            }
             const btn = $('lockBtn');
             btn.disabled = true; btn.textContent = 'Entrando…'; err.textContent = '';
             try {
