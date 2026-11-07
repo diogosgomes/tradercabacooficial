@@ -93,6 +93,7 @@
             <button onclick="openModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition flex items-center space-x-1">
                 <span>📈 Nova operação</span>
             </button>
+            <button id="btnBell" type="button" onclick="openNewsModal()" aria-label="Novidades" class="relative border border-gray-500 text-gray-200 hover:bg-gray-700 px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition">🔔<span id="bellCount" class="hidden ml-1 px-1.5 rounded-full bg-amber-400 text-gray-900 font-extrabold text-[10px]"></span></button>
             <div class="relative">
                 <button id="btnOpts" type="button" onclick="toggleOptsMenu()" aria-haspopup="true" aria-expanded="false" class="border border-gray-500 text-gray-200 hover:bg-gray-700 px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition">⚙️ Opções ▾</button>
                 <div id="optsMenu" role="menu" class="hidden fixed z-[60] w-60 bg-cardBg border border-gray-700 rounded-lg shadow-2xl py-1 text-xs">
@@ -517,33 +518,232 @@
             await insertBatch('cashflow', newFlows.map(flowToDb));
             await reloadAll(true);
         }
+        // ---- Sino de novidades ----
+        let bellInit = false;
+        const NEWS_DAYS = 15, NEWS_MAX = 5, DAY_MS = 86400000;
+        function setBellCount(n) {
+            const el = $('bellCount'); if (!el) return;
+            el.textContent = n > 9 ? '9+' : String(n);
+            el.classList.toggle('hidden', !n);
+            $('btnBell').setAttribute('aria-label', n ? `Novidades: ${n} não lida${n > 1 ? 's' : ''}` : 'Novidades');
+        }
+        function brMs(d, h, m) { return Date.UTC(2026, d[0] - 1, d[1], (h || 0) + 3, m || 0); }
+        function hmoSeedNotes() {
+            const n = (dt, h, m, title, items, important, days) => ({ published_at: brMs(dt, h, m), expires_at: brMs(dt, h, m) + days * DAY_MS, title, items, important: !!important });
+            return [
+                n([11, 7], 20, 0, 'Histórico de importações e exportações', ['Em Opções, "Histórico de importações" mostra quando e qual arquivo foi importado ou exportado.', 'Cada evento tem um número fixo (H1, H2…), que não muda mesmo se eventos antigos forem apagados.', 'Os 5 últimos aparecem primeiro; o histórico completo é agrupado por mês.'], false, 15),
+                n([11, 7], 19, 30, 'Importar backup agora substitui os dados', ['Ao importar, o app pergunta antes e mostra quantos registros serão trocados.', 'Os dados novos são gravados antes de apagar os antigos, para não se perder nada se algo falhar.'], false, 15),
+                n([11, 7], 8, 30, 'Tela inicial mais clara', ['Novo título "Visão geral" e cards em duas colunas no celular.', 'O mês atual abre sozinho nas listas, e os meses vão do mais recente ao mais antigo.', 'Passe o cursor (ou toque) no nome de um setup para ver o nome completo.'], false, 15),
+                n([11, 7], 8, 0, 'Entrar ficou mais fácil', ['O ícone de olho mostra ou oculta a senha.', 'O campo de data voltou a aceitar digitação.'], false, 15),
+                n([11, 6], 23, 0, 'Nova identidade visual', ['O app ganhou o símbolo e o ícone da marca My Trade Dash.'], false, 15),
+                n([11, 7], 20, 5, 'Exemplo de aviso importante', ['Avisos importantes ficam no topo da lista até a validade acabar. Este é só uma demonstração no HMO.'], true, 7),
+                n([9, 1], 9, 0, 'Exemplo de novidade antiga', ['Novidades com mais de 15 dias saem da lista principal e ficam em "Ver anteriores". Demonstração no HMO.'], false, 15)
+            ];
+        }
+        async function newsLoad() {
+            if (MODE === 'claude') {
+                const col = hmoDb.collection('release_notes_v2');
+                let snap = await col.get();
+                if (!snap.docs.length) { for (const x of hmoSeedNotes()) await col.add(x); snap = await col.get(); }
+                return snap.docs.map(d => ({ ...d.data(), id: d.id }));
+            }
+            const { data, error } = await sb.from('tb_release_notes').select('*').order('published_at', { ascending: false });
+            if (error) throw error;
+            return data.map(x => {
+                const pub = Date.parse(x.published_at);
+                return { id: x.id, title: x.title, important: !!x.important, published_at: pub,
+                    expires_at: x.expires_at ? Date.parse(x.expires_at) : (x.important ? pub + 7 * DAY_MS : null),
+                    items: String(x.body || '').split('\n').map(t => t.trim()).filter(Boolean) };
+            });
+        }
+        // Estado de leitura por novidade: { baseline, ids } (ids = novidades já lidas)
+        async function newsReadState() {
+            if (MODE === 'claude') {
+                const snap = await hmoDb.collection('release_reads').get();
+                return { baseline: 0, ids: new Set(snap.docs.map(d => d.id)), dismissed: new Set(snap.docs.filter(d => d.data().dismissed).map(d => d.id)) };   // no HMO começa em 0 para você ver o sino
+            }
+            const [r, p] = await Promise.all([
+                sb.from('tb_release_reads').select('note_id, dismissed'),
+                sb.from('profiles').select('created_at').maybeSingle()
+            ]);
+            if (r.error) throw r.error;
+            // pessoa nova não vê como "não lidas" as novidades anteriores ao cadastro
+            const baseline = p.data && p.data.created_at ? Date.parse(p.data.created_at) : Date.now();
+            return { baseline, ids: new Set(r.data.map(x => x.note_id)), dismissed: new Set(r.data.filter(x => x.dismissed).map(x => x.note_id)) };
+        }
+        async function newsMarkRead(ids) {
+            if (!ids.length) return;
+            if (MODE === 'claude') { for (const id of ids) await hmoDb.collection('release_reads').doc(id).set({ read_at: Date.now() }); return; }
+            await sb.from('tb_release_reads').upsert(ids.map(id => ({ note_id: id })), { onConflict: 'user_id,note_id', ignoreDuplicates: true });
+        }
+        // Excluir = esconder só para esta pessoa; a novidade continua na tabela para os outros
+        async function newsDismiss(id) {
+            if (MODE === 'claude') { await hmoDb.collection('release_reads').doc(id).set({ read_at: Date.now(), dismissed: true }); return; }
+            const { error } = await sb.from('tb_release_reads').upsert({ note_id: id, dismissed: true }, { onConflict: 'user_id,note_id' });
+            if (error) throw error;
+        }
+        async function newsMarkUnread(id) {
+            if (MODE === 'claude') { await hmoDb.collection('release_reads').doc(id).delete(); return; }
+            await sb.from('tb_release_reads').delete().eq('note_id', id);
+        }
+        const newsActive = (x, now) => x.expires_at == null || x.expires_at > now;
+        const newsIsUnread = (x, st, now) => !st.dismissed.has(x.id) && !st.ids.has(x.id) && x.published_at > st.baseline && newsActive(x, now);
+        async function refreshBell() {
+            try {
+                const [notes, st] = await Promise.all([newsLoad(), newsReadState()]);
+                const now = Date.now();
+                setBellCount(notes.filter(x => newsIsUnread(x, st, now)).length);
+            } catch (e) { setBellCount(0); }
+        }
+        async function openNewsModal() {
+            const ov = document.createElement('div');
+            ov.className = 'fixed inset-0 z-[95] flex items-center justify-center p-3 bg-black/70';
+            ov.innerHTML = `<div class="w-full max-w-lg max-h-[85vh] flex flex-col rounded-xl border border-gray-600 bg-gray-900 text-sm text-gray-200 shadow-2xl">
+                <div class="flex items-center justify-between px-4 py-3 border-b border-gray-700">
+                    <h3 class="text-base font-bold">🔔 Novidades</h3>
+                    <button type="button" id="nwClose" class="px-3 py-1 rounded-lg bg-gray-700 text-white text-xs font-semibold">Fechar</button>
+                </div>
+                <div id="nwBody" class="p-4 overflow-y-auto text-xs"><p class="text-gray-400">Carregando…</p></div></div>`;
+            document.body.appendChild(ov);
+            ov.querySelector('#nwClose').onclick = () => ov.remove();
+            ov.addEventListener('click', ev => { if (ev.target === ov) ov.remove(); });
+            const body = ov.querySelector('#nwBody');
+            const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+            try {
+                const [notes0, st] = await Promise.all([newsLoad(), newsReadState()]);
+                const now = Date.now();
+                const notes = notes0.filter(x => !st.dismissed.has(x.id)).sort((a, b) => b.published_at - a.published_at);
+                const counted = x => x.published_at > st.baseline && newsActive(x, now);
+                const fresh = new Set(notes.filter(x => newsIsUnread(x, st, now)).map(x => x.id));
+                const updBell = () => setBellCount(notes.filter(x => newsIsUnread(x, st, Date.now())).length);
+                const card = x => {
+                    const read = st.ids.has(x.id);
+                    const tag = (!read || fresh.has(x.id)) && counted(x) ? (read ? '● NOVO · ' : '● NÃO LIDA · ') : '';
+                    return `<div class="border ${x.important ? 'border-amber-500 bg-amber-950/30' : 'border-gray-700 bg-gray-800/40'} rounded-lg p-3 mb-2">
+                        <div class="flex flex-wrap justify-between gap-1">
+                            <span class="font-bold">${x.important ? '⚠ IMPORTANTE · ' : ''}${tag}${esc(x.title)}</span>
+                            <span class="text-gray-400">${fmtDateTimeBR(x.published_at).split(',')[0]}</span></div>
+                        <ul class="mt-1 list-disc pl-5 text-gray-300 space-y-0.5">${(x.items || []).map(i => `<li>${esc(i)}</li>`).join('')}</ul>
+                        <div class="mt-2 flex flex-wrap gap-2" data-actions="${x.id}">
+                            <button type="button" data-tg="${x.id}" class="px-2.5 py-1 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700">${read ? '○ Marcar como não lida' : '✔ Marcar como lida'}</button>
+                            <button type="button" data-del="${x.id}" class="px-2.5 py-1 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700">🗑 Excluir</button></div></div>`;
+                };
+                const wireToggles = rerender => body.querySelectorAll('[data-tg]').forEach(b => b.onclick = async () => {
+                    const id = b.dataset.tg; b.disabled = true;
+                    try {
+                        if (st.ids.has(id)) { await newsMarkUnread(id); st.ids.delete(id); fresh.delete(id); }
+                        else { await newsMarkRead([id]); st.ids.add(id); }
+                    } catch (e) { showToast('Não foi possível atualizar agora.', 'err'); }
+                    updBell(); rerender();
+                });
+                const wireDelete = rerender => body.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
+                    const id = b.dataset.del, box = body.querySelector(`[data-actions="${id}"]`);
+                    box.innerHTML = '<span class="text-amber-200 w-full">Excluir só da sua tela? Para os outros utilizadores continua aparecendo, e a novidade não é apagada do sistema.</span>'
+                        + '<button type="button" data-yes class="px-2.5 py-1 rounded-lg bg-amber-600 text-white font-bold">Excluir</button><button type="button" data-no class="px-2.5 py-1 rounded-lg border border-gray-600 text-gray-300">Cancelar</button>';
+                    box.querySelector('[data-no]').onclick = rerender;
+                    box.querySelector('[data-yes]').onclick = async () => {
+                        try { await newsDismiss(id); st.dismissed.add(id); const i = notes.findIndex(x => x.id === id); if (i >= 0) notes.splice(i, 1); }
+                        catch (e) { showToast('Não foi possível excluir agora.', 'err'); }
+                        recompute(); updBell(); rerender();
+                    };
+                });
+                let important, regular, recent, older;
+                const recompute = () => {
+                    important = notes.filter(x => x.important && newsActive(x, Date.now()));
+                    regular = notes.filter(x => !x.important);
+                    recent = regular.filter(x => Date.now() - x.published_at <= NEWS_DAYS * DAY_MS).slice(0, NEWS_MAX);
+                    older = regular.filter(x => !recent.includes(x));
+                };
+                recompute();
+                const showMain = () => {
+                    body.innerHTML = important.map(card).join('')
+                        + (recent.length ? recent.map(card).join('') : `<p class="text-gray-400 mb-2">Sem novidades nos últimos ${NEWS_DAYS} dias.</p>`)
+                        + (older.length ? `<button type="button" id="nwOld" class="mt-2 w-full px-3 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-semibold">Ver anteriores (${older.length})</button>` : '');
+                    const o = body.querySelector('#nwOld'); if (o) o.onclick = showOld;
+                    wireToggles(showMain); wireDelete(showMain);
+                };
+                let openM;
+                const showOld = () => {
+                    const g = {}; older.forEach(x => { const k = auditMonthKey(x.published_at); (g[k] = g[k] || []).push(x); });
+                    const keys = Object.keys(g).sort().reverse();
+                    if (openM === undefined) openM = keys[0];
+                    body.innerHTML = '<button type="button" id="nwBack" class="mb-3 px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-semibold">← Voltar</button>'
+                        + keys.map(k => { const [yy, mm] = k.split('-'); return `<button type="button" data-m="${k}" class="w-full text-left px-3 py-2 mb-2 rounded-lg bg-gray-800 hover:bg-gray-700 font-semibold">${openM === k ? '−' : '+'} ${mm}/${yy} – ${g[k].length} ${g[k].length === 1 ? 'novidade' : 'novidades'}</button>` + (openM === k ? g[k].map(card).join('') : ''); }).join('');
+                    body.querySelector('#nwBack').onclick = showMain;
+                    body.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { openM = openM === b.dataset.m ? null : b.dataset.m; showOld(); });
+                    wireToggles(showOld); wireDelete(() => { if (older.length) showOld(); else showMain(); });
+                };
+                // abrir a janela marca como lidas as novas; a pessoa pode desmarcar uma a uma
+                const toRead = [...fresh];
+                toRead.forEach(id => st.ids.add(id));
+                showMain(); updBell();
+                try { await newsMarkRead(toRead); } catch (e) { toRead.forEach(id => st.ids.delete(id)); updBell(); }
+            } catch (e) {
+                body.innerHTML = '<p class="text-red-300">Não foi possível carregar as novidades agora.</p>';
+            }
+        }
+
         // ---- Auditoria de importações e exportações (best-effort: nunca bloqueia a operação) ----
+        async function claudeAuditAll() {
+            const snap = await hmoDb.collection('audit').get();
+            const arr = snap.docs.map(d => ({ ...d.data() })).sort((x, y) => (x.ts || 0) - (y.ts || 0));
+            arr.forEach((r, i) => { if (r.seq == null) r.seq = i + 1; });
+            return arr;
+        }
         async function auditAdd(e) {
             try {
                 const rec = { ts: Date.now(), kind: e.kind, filename: String(e.filename || ''), outcome: e.outcome,
                     file_ops: e.fileOps ?? null, file_flows: e.fileFlows ?? null,
                     before_ops: e.beforeOps ?? null, before_flows: e.beforeFlows ?? null,
                     after_ops: e.afterOps ?? null, after_flows: e.afterFlows ?? null };
-                if (MODE === 'claude') { await hmoDb.collection('audit').add(rec); return; }
+                if (MODE === 'claude') {
+                    const all = await claudeAuditAll();
+                    rec.seq = all.reduce((m, r) => Math.max(m, r.seq || 0), 0) + 1;
+                    await hmoDb.collection('audit').add(rec); return;
+                }
+                // Em produção o número (seq) é gravado pelo próprio banco (gatilho), por utilizador e sem reaproveitar números
                 await sb.from('tb_audit_log').insert(rec);
             } catch (err) {}
         }
-        async function auditList() {
-            let list = [];
-            if (MODE === 'claude') {
-                const snap = await hmoDb.collection('audit').get();
-                list = snap.docs.map(d => d.data());
-            } else {
-                const { data, error } = await sb.from('tb_audit_log').select('*').order('ts', { ascending: false }).limit(200);
+        // Só os instantes (leve): serve para contar eventos por mês sem baixar tudo
+        async function auditTsAll() {
+            if (MODE === 'claude') return (await claudeAuditAll()).map(r => r.ts).sort((a, b) => b - a);
+            let all = [], from = 0;
+            for (;;) {
+                const { data, error } = await sb.from('tb_audit_log').select('ts').order('ts', { ascending: false }).range(from, from + 999);
                 if (error) throw error;
-                list = data;
+                all = all.concat(data.map(r => Number(r.ts)));
+                if (data.length < 1000) break;
+                from += 1000;
             }
-            return list.sort((a, b) => (b.ts || 0) - (a.ts || 0)).slice(0, 200);
+            return all;
+        }
+        // Uma página de eventos (opcionalmente só de um intervalo de datas [from, to)), do mais recente para o mais antigo
+        async function auditPage({ from, to, offset = 0, limit = 5 }) {
+            if (MODE === 'claude') {
+                let arr = (await claudeAuditAll()).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+                if (from != null) arr = arr.filter(r => r.ts >= from && r.ts < to);
+                return arr.slice(offset, offset + limit);
+            }
+            let q = sb.from('tb_audit_log').select('*');
+            if (from != null) q = q.gte('ts', from).lt('ts', to);
+            const { data, error } = await q.order('ts', { ascending: false }).range(offset, offset + limit - 1);
+            if (error) throw error;
+            return data;
         }
         function fmtDateTimeBR(ms) {
             return new Date(Number(ms)).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
         }
+        function auditMonthKey(ms) {
+            const p = new Date(Number(ms)).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', month: '2-digit', year: 'numeric' }).split('/');
+            return `${p[1]}-${p[0]}`;
+        }
+        function auditMonthRange(k) {
+            const [y, m] = k.split('-').map(Number);   // Brasília = UTC-3
+            return [Date.UTC(y, m - 1, 1, 3, 0, 0), Date.UTC(m === 12 ? y + 1 : y, m === 12 ? 0 : m, 1, 3, 0, 0)];
+        }
         async function openAuditModal() {
+            const PAGE = 50;
             const ov = document.createElement('div');
             ov.className = 'fixed inset-0 z-[95] flex items-center justify-center p-3 bg-black/70';
             ov.innerHTML = `<div class="w-full max-w-2xl max-h-[85vh] flex flex-col rounded-xl border border-gray-600 bg-gray-900 text-sm text-gray-200 shadow-2xl">
@@ -556,30 +756,60 @@
             ov.querySelector('#auClose').onclick = () => ov.remove();
             ov.addEventListener('click', ev => { if (ev.target === ov) ov.remove(); });
             const body = ov.querySelector('#auBody');
+            const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+            const card = x => {
+                const imp = x.kind === 'import';
+                const icon = imp ? '📤 Importação' : '📥 Exportação';
+                const mark = x.outcome === 'Concluída' ? '✔' : (x.outcome === 'Erro' ? '✖' : '○');
+                let det = '';
+                if (imp) {
+                    det = `Arquivo: ${x.file_ops ?? 0} op. e ${x.file_flows ?? 0} mov.`;
+                    if (x.outcome === 'Concluída') det += `<br>Antes: ${x.before_ops ?? 0} op. e ${x.before_flows ?? 0} mov. → Depois: ${x.after_ops ?? 0} op. e ${x.after_flows ?? 0} mov.`;
+                    else if (x.outcome === 'Cancelada') det += '<br>Você cancelou: nada foi alterado.';
+                    else if (x.outcome === 'Sem alterações') det += '<br>Arquivo sem registros válidos: nada foi alterado.';
+                    else det += '<br>Arquivo inválido: nada foi alterado.';
+                } else det = `Salvos: ${x.file_ops ?? 0} op. e ${x.file_flows ?? 0} mov.`;
+                return `<div class="border border-gray-700 rounded-lg p-3 mb-2 bg-gray-800/40">
+                    <div class="flex flex-wrap justify-between gap-1"><span class="font-bold">H${x.seq ?? '?'} · ${icon} · ${mark} ${esc(x.outcome)}</span><span class="text-gray-400">${fmtDateTimeBR(x.ts)}</span></div>
+                    <div class="mt-1 break-all text-gray-100">${esc(x.filename) || '<span class="text-gray-500">(sem nome)</span>'}</div>
+                    <div class="mt-1 text-gray-400">${det}</div></div>`;
+            };
             try {
-                const list = await auditList();
-                if (!list.length) { body.innerHTML = '<p class="text-gray-400">Nenhum evento registrado ainda. Importações e exportações feitas a partir de agora aparecem aqui.</p>'; return; }
-                const lastImp = list.find(x => x.kind === 'import' && x.outcome === 'Concluída');
-                const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-                let h = lastImp ? `<p class="mb-3 text-gray-300">Última importação concluída: <b>${fmtDateTimeBR(lastImp.ts)}</b> · ${esc(lastImp.filename)}</p>` : '<p class="mb-3 text-gray-400">Nenhuma importação concluída registrada.</p>';
-                h += list.map(x => {
-                    const imp = x.kind === 'import';
-                    const icon = imp ? '📤 Importação' : '📥 Exportação';
-                    const mark = x.outcome === 'Concluída' ? '✔' : (x.outcome === 'Erro' ? '✖' : '○');
-                    let det = '';
-                    if (imp) {
-                        det = `Arquivo: ${x.file_ops ?? 0} op. e ${x.file_flows ?? 0} mov.`;
-                        if (x.outcome === 'Concluída') det += `<br>Antes: ${x.before_ops ?? 0} op. e ${x.before_flows ?? 0} mov. → Depois: ${x.after_ops ?? 0} op. e ${x.after_flows ?? 0} mov.`;
-                        else if (x.outcome === 'Cancelada') det += '<br>Você cancelou: nada foi alterado.';
-                        else if (x.outcome === 'Sem alterações') det += '<br>Arquivo sem registros válidos: nada foi alterado.';
-                        else det += '<br>Arquivo inválido: nada foi alterado.';
-                    } else det = `Salvos: ${x.file_ops ?? 0} op. e ${x.file_flows ?? 0} mov.`;
-                    return `<div class="border border-gray-700 rounded-lg p-3 mb-2 bg-gray-800/40">
-                        <div class="flex flex-wrap justify-between gap-1"><span class="font-bold">${icon} · ${mark} ${esc(x.outcome)}</span><span class="text-gray-400">${fmtDateTimeBR(x.ts)}</span></div>
-                        <div class="mt-1 break-all text-gray-100">${esc(x.filename) || '<span class="text-gray-500">(sem nome)</span>'}</div>
-                        <div class="mt-1 text-gray-400">${det}</div></div>`;
-                }).join('');
-                body.innerHTML = h;
+                const tsAll = await auditTsAll();
+                if (!tsAll.length) { body.innerHTML = '<p class="text-gray-400">Nenhum evento registrado ainda. Importações e exportações feitas a partir de agora aparecem aqui.</p>'; return; }
+                const total = tsAll.length;
+                const counts = {}; tsAll.forEach(t => { const k = auditMonthKey(t); counts[k] = (counts[k] || 0) + 1; });
+                const keys = Object.keys(counts).sort().reverse();
+                let openMonth; const loaded = {};
+                const showRecent = async () => {
+                    body.innerHTML = '<p class="text-gray-400">Carregando…</p>';
+                    const recent = await auditPage({ offset: 0, limit: 5 });
+                    body.innerHTML = `<p class="mb-2 text-gray-400">Últimos ${recent.length} de ${total} eventos</p>` + recent.map(card).join('')
+                        + (total > 5 ? `<button type="button" id="auAll" class="mt-2 w-full px-3 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-semibold">Ver histórico completo (${total})</button>` : '');
+                    const b = body.querySelector('#auAll'); if (b) b.onclick = () => { openMonth = undefined; showAll(); };
+                };
+                const loadMore = async k => {
+                    const [f, t] = auditMonthRange(k);
+                    const cur = loaded[k] || (loaded[k] = []);
+                    const page = await auditPage({ from: f, to: t, offset: cur.length, limit: PAGE });
+                    cur.push(...page);
+                };
+                const showAll = async () => {
+                    if (openMonth === undefined) openMonth = counts[auditMonthKey(Date.now())] ? auditMonthKey(Date.now()) : keys[0];
+                    try { if (openMonth && !(loaded[openMonth] || []).length) await loadMore(openMonth); } catch (e) {}
+                    body.innerHTML = '<button type="button" id="auBack" class="mb-3 px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-semibold">← Voltar aos 5 últimos</button>'
+                        + keys.map(k => {
+                            const n = counts[k], open = openMonth === k, [yy, mm] = k.split('-');
+                            const items = loaded[k] || [];
+                            const rest = n - items.length;
+                            return `<button type="button" data-m="${k}" class="w-full text-left px-3 py-2 mb-2 rounded-lg bg-gray-800 hover:bg-gray-700 font-semibold">${open ? '−' : '+'} ${mm}/${yy} – ${n} ${n === 1 ? 'evento' : 'eventos'}</button>`
+                                + (open ? items.map(card).join('') + (rest > 0 ? `<button type="button" data-more="${k}" class="mb-2 w-full px-3 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-semibold">Carregar mais (${rest} restantes)</button>` : '') : '');
+                        }).join('');
+                    body.querySelector('#auBack').onclick = showRecent;
+                    body.querySelectorAll('[data-m]').forEach(bt => bt.onclick = () => { openMonth = openMonth === bt.dataset.m ? null : bt.dataset.m; showAll(); });
+                    body.querySelectorAll('[data-more]').forEach(bt => bt.onclick = async () => { bt.disabled = true; bt.textContent = 'Carregando…'; try { await loadMore(bt.dataset.more); } catch (e) {} showAll(); });
+                };
+                await showRecent();
             } catch (err) {
                 body.innerHTML = '<p class="text-red-300">Não foi possível carregar o histórico agora.</p>';
             }
@@ -755,6 +985,7 @@ hmoDb = db;
         }
 
         function processAndRender() {
+            if (!bellInit && (MODE === 'claude' || currentUserId)) { bellInit = true; refreshBell(); }
             const sorted = rows.slice().sort((a, b) => (a.ts || 0) - (b.ts || 0));
             let accum = 0, gains = 0, losses = 0;
             const setupProfits = {}, setupCounts = {};
@@ -1132,6 +1363,7 @@ hmoDb = db;
         }
         function afterLogout() {
             currentUserId = null; rows = []; flows = [];
+            bellInit = false; setBellCount(0);
             $('userBadge').textContent = '';
             $('menuUserName').textContent = ''; $('menuUserEmail').textContent = '';
             closeOptsMenu();
