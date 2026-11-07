@@ -1,5 +1,9 @@
-const CACHE = 'mytradedash-v2';
+// My Trade Dash: service worker
+// Busca sempre a versão nova primeiro; só usa o cache quando estiver sem internet.
+// Chamadas ao banco de dados (supabase.co) NÃO passam por aqui e nunca são guardadas em cache.
+const CACHE = 'mytradedash-v3';
 const PRECACHE = ['/', '/index.html', '/manifest.json'];
+const CDN_HOSTS = ['cdn.tailwindcss.com', 'cdn.jsdelivr.net'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -19,7 +23,10 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const req = event.request;
-  if (req.method !== 'GET' || !req.url.startsWith('http')) return;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  const mesmaOrigem = url.origin === self.location.origin;
+  if (!mesmaOrigem && !CDN_HOSTS.includes(url.hostname)) return; // banco de dados e demais: direto na rede
 
   event.respondWith(
     fetch(req, { cache: 'no-cache' })
