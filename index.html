@@ -46,6 +46,7 @@
 
     <!-- Tela de acesso -->
     <div id="lockScreen" class="fixed inset-0 z-[100] bg-darkBg flex items-center justify-center p-4">
+        <p class="absolute bottom-4 left-0 right-0 text-center text-[11px] text-gray-500">© 2026 Diogo Gomes · Todos os direitos reservados.</p>
         <div class="bg-cardBg border border-gray-800 rounded-2xl max-w-sm w-full p-8 shadow-2xl space-y-5">
             <div class="text-center">
                 <div class="inline-flex bg-blue-600 p-3 rounded-xl text-2xl mb-3">📈</div>
@@ -85,10 +86,22 @@
             <button onclick="openModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition flex items-center space-x-1">
                 <span>+ Novo</span>
             </button>
-            <button id="btnPwd" onclick="openPwdModal()" class="bg-gray-700 hover:bg-gray-600 text-white px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs transition" title="Trocar senha">🔑</button>
-            <button id="btnLogout" onclick="lockNow()" class="bg-gray-700 hover:bg-gray-600 text-white px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs transition" title="Sair">🚪</button>
-            <button onclick="exportData()" class="bg-amber-500 hover:bg-amber-400 text-gray-900 px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs transition" title="Baixar backup">📥</button>
-            <button onclick="document.getElementById('importFile').click()" class="bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs transition" title="Importar backup">📤</button>
+            <div class="relative">
+                <button id="btnOpts" type="button" onclick="toggleOptsMenu()" aria-haspopup="true" aria-expanded="false" class="border border-gray-500 text-gray-200 hover:bg-gray-700 px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition">⚙️ Opções ▾</button>
+                <div id="optsMenu" role="menu" class="hidden fixed z-[60] w-60 bg-cardBg border border-gray-700 rounded-lg shadow-2xl py-1 text-xs">
+                    <div class="px-3 py-2">
+                        <p class="text-[10px] text-gray-500">Conectado como</p>
+                        <p id="menuUserName" class="font-semibold text-gray-100 truncate"></p>
+                        <p id="menuUserEmail" class="text-[11px] text-gray-400 truncate"></p>
+                    </div>
+                    <div class="border-t border-gray-700 my-1"></div>
+                    <button id="btnPwd" type="button" role="menuitem" onclick="optsAction(openPwdModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🔑 Trocar senha</button>
+                    <button type="button" role="menuitem" onclick="optsAction(exportData)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📥 Exportar backup</button>
+                    <button type="button" role="menuitem" onclick="optsAction(() => document.getElementById('importFile').click())" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📤 Importar backup</button>
+                    <div id="sepLogout" class="border-t border-gray-700 my-1"></div>
+                    <button id="btnLogout" type="button" role="menuitem" onclick="optsAction(lockNow)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-100 font-semibold">🚪 Sair</button>
+                </div>
+            </div>
             <input type="file" id="importFile" accept=".json,application/json" class="hidden" onchange="importData(this.files[0])">
         </div>
     </header>
@@ -233,6 +246,8 @@
         </div>
 
     </main>
+
+    <footer class="w-full text-center py-6 px-3 text-[11px] text-gray-500">© 2026 Diogo Gomes · Todos os direitos reservados.</footer>
 
     <!-- Modal de Registro -->
     <div id="tradeModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
@@ -484,8 +499,9 @@
             MODE = 'claude';
             dbCol = db.collection('trades'); flowCol = db.collection('cashflow');
             $('lockScreen').classList.add('hidden');
-            $('btnPwd').classList.add('hidden'); $('btnLogout').classList.add('hidden');
-            $('userBadge').textContent = '🧪 claude.ai (teste)';
+            $('btnPwd').classList.add('hidden'); $('btnLogout').classList.add('hidden'); $('sepLogout').classList.add('hidden');
+            $('userBadge').textContent = '🧪 Ambiente HMO';
+            $('menuUserName').textContent = 'Ambiente HMO'; $('menuUserEmail').textContent = 'Sem login · dados de teste';
             flowCol.orderBy('ts', 'asc').onSnapshot(snap => {
                 flows = snap.docs.map(d => ({ ...d.data(), id: d.id }));
                 processAndRender();
@@ -876,6 +892,23 @@
         const $ = id => document.getElementById(id);
         let failCount = 0, blockedUntil = 0, idleTimer = null;
 
+        /* ---------- Menu ⚙ Opções ---------- */
+        function closeOptsMenu() { $('optsMenu').classList.add('hidden'); $('btnOpts').setAttribute('aria-expanded', 'false'); }
+        function toggleOptsMenu() {
+            const m = $('optsMenu');
+            if (!m.classList.contains('hidden')) { closeOptsMenu(); return; }
+            m.classList.remove('hidden');
+            const b = $('btnOpts').getBoundingClientRect(), w = m.offsetWidth || 240;
+            m.style.top = (b.bottom + 4) + 'px';
+            m.style.left = Math.max(8, Math.min(b.right - w, window.innerWidth - w - 8)) + 'px';
+            $('btnOpts').setAttribute('aria-expanded', 'true');
+        }
+        function optsAction(fn) { closeOptsMenu(); fn(); }
+        document.addEventListener('click', (e) => { if (!e.target.closest('#optsMenu') && !e.target.closest('#btnOpts')) closeOptsMenu(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeOptsMenu(); });
+        window.addEventListener('resize', closeOptsMenu);
+        window.addEventListener('scroll', closeOptsMenu, { passive: true });
+
         function isUnlocked() { return $('lockScreen').classList.contains('hidden'); }
         function showLock() {
             $('lockScreen').classList.remove('hidden');
@@ -886,6 +919,8 @@
         function afterLogout() {
             currentUserId = null; rows = []; flows = [];
             $('userBadge').textContent = '';
+            $('menuUserName').textContent = ''; $('menuUserEmail').textContent = '';
+            closeOptsMenu();
             setStatus('Desconectado');
             processAndRender();
             showLock();
@@ -911,7 +946,9 @@
                 const { data } = await sb.from('profiles').select('display_name').eq('id', session.user.id).maybeSingle();
                 if (data && data.display_name) name = data.display_name;
             } catch (e) {}
-            $('userBadge').textContent = '👤 ' + name;
+            $('userBadge').textContent = '';
+            $('menuUserName').textContent = name;
+            $('menuUserEmail').textContent = session.user.email || '';
             await reloadAll();
         }
         function initAuth() {
