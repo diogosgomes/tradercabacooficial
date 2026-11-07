@@ -508,7 +508,6 @@
         function initClaudeMode(db) {
             MODE = 'claude';
             dbCol = db.collection('trades'); flowCol = db.collection('cashflow');
-            $('btnPwd').classList.add('hidden');
             $('userBadge').textContent = '🧪 Ambiente HMO';
             $('lockUserLabel').textContent = 'Utilizador'; $('lockUser').type = 'text'; $('lockUser').autocomplete = 'off';
             $('lockSub').textContent = 'Ambiente HMO (teste). Entre com as credenciais de teste.';
@@ -806,11 +805,7 @@ hmoDb = db;
             el.addEventListener('input', ev => maskMoney(el, ev));
             el.addEventListener('blur', () => { if (el.value.trim() !== '') el.value = fmtMoneyBR(parseMoney(el.value)); });
         });
-        // Datas: clicar no campo abre o calendário
-        ['tDate', 'fDate', 'repFrom', 'repTo'].forEach(id => {
-            const el = document.getElementById(id);
-            el.addEventListener('click', () => { try { if (el.showPicker) el.showPicker(); } catch (e) {} });
-        });
+        // Datas: o campo é o nativo do navegador (digitar nos segmentos ou abrir o calendário pelo ícone)
 
         // Máscara de horário: digita 1200 e vira 12:00
         function maskTime(el, ev) {
@@ -930,6 +925,7 @@ hmoDb = db;
 
         function isUnlocked() { return $('lockScreen').classList.contains('hidden'); }
         function showLock() {
+            resetEyes();
             $('lockScreen').classList.remove('hidden');
             $('lockUser').value = ''; $('lockPass').value = ''; $('lockError').textContent = '';
             clearTimeout(idleTimer);
@@ -1043,17 +1039,44 @@ hmoDb = db;
             } finally { btn.disabled = false; btn.textContent = 'Entrar'; }
         });
 
+        /* ---------- Olhinho: mostrar ou ocultar a senha ---------- */
+        const EYE_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+        const EYE_OFF_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+        const eyes = [];
+        function setEye(e, show) {
+            e.inp.type = show ? 'text' : 'password';
+            e.b.innerHTML = show ? EYE_OFF_SVG : EYE_SVG;
+            e.b.setAttribute('aria-label', show ? 'Ocultar senha' : 'Mostrar senha');
+            e.b.setAttribute('aria-pressed', String(show));
+        }
+        function addEye(id) {
+            const inp = $(id), wrap = document.createElement('div');
+            wrap.className = 'relative';
+            inp.parentNode.insertBefore(wrap, inp); wrap.appendChild(inp);
+            inp.classList.add('pr-11');
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-200';
+            const e = { inp, b }; eyes.push(e); setEye(e, false);
+            b.addEventListener('click', () => { setEye(e, inp.type === 'password'); inp.focus(); });
+            wrap.appendChild(b);
+        }
+        function resetEyes() { eyes.forEach((e) => setEye(e, false)); }
+        ['lockPass', 'pwdNew', 'pwdNew2'].forEach(addEye);
+
         function openPwdModal() {
+            resetEyes();
             $('pwdError').textContent = ''; $('pwdNew').value = ''; $('pwdNew2').value = '';
             $('pwdModal').classList.remove('hidden'); $('pwdModal').classList.add('flex');
         }
-        function closePwdModal() { $('pwdModal').classList.remove('flex'); $('pwdModal').classList.add('hidden'); }
+        function closePwdModal() { resetEyes(); $('pwdModal').classList.remove('flex'); $('pwdModal').classList.add('hidden'); }
         $('pwdForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const err = $('pwdError'), a = $('pwdNew').value, b = $('pwdNew2').value;
             err.textContent = '';
             if (a.length < 8) { err.textContent = 'Use pelo menos 8 caracteres.'; return; }
             if (a !== b) { err.textContent = 'As senhas não conferem.'; return; }
+            if (MODE === 'claude') { closePwdModal(); showToast('Ambiente HMO: demonstração. A senha de teste não foi alterada.', 'ok'); return; }
             const btn = $('pwdBtn'); btn.disabled = true;
             try {
                 const { error } = await sb.auth.updateUser({ password: a });
