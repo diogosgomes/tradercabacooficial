@@ -89,10 +89,16 @@
         <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 justify-start sm:justify-end">
             <span id="userBadge" class="text-[11px] text-gray-400 mr-1"></span>
             <span id="syncStatus" class="text-[10px] px-2 py-1 rounded-full bg-gray-800 text-gray-400">Conectando…</span>
-            <button onclick="openFlowModal()" class="border border-blue-500 text-blue-300 hover:bg-blue-950 px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition">🏦 Financeiro</button>
             <button onclick="openModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition flex items-center space-x-1">
                 <span>📈 Nova operação</span>
             </button>
+            <div class="relative">
+                <button id="btnMore" type="button" onclick="toggleMoreMenu()" aria-haspopup="true" aria-expanded="false" class="border border-blue-500 text-blue-300 hover:bg-blue-950 px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition">📝 Mais lançamentos ▾</button>
+                <div id="moreMenu" role="menu" class="hidden fixed z-[60] w-56 bg-cardBg border border-gray-700 rounded-lg shadow-2xl py-1 text-xs">
+                    <button type="button" role="menuitem" onclick="moreAction(() => openNoteModal())" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🧾 Nota do dia</button>
+                    <button type="button" role="menuitem" onclick="moreAction(() => openFlowModal())" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🏦 Financeiro (depósito ou saque)</button>
+                </div>
+            </div>
             <button id="btnBell" type="button" onclick="openNewsModal()" aria-label="Novidades" class="relative border border-gray-500 text-gray-200 hover:bg-gray-700 px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition">🔔<span id="bellCount" class="hidden ml-1 px-1.5 rounded-full bg-amber-400 text-gray-900 font-extrabold text-[10px]"></span></button>
             <div class="relative">
                 <button id="btnOpts" type="button" onclick="toggleOptsMenu()" aria-haspopup="true" aria-expanded="false" class="border border-gray-500 text-gray-200 hover:bg-gray-700 px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition">⚙️ Opções ▾</button>
@@ -277,6 +283,10 @@
                 <h3 id="modalTitle" class="text-lg font-bold text-gray-100">Registrar Nova Operação</h3>
                 <button onclick="closeModal()" class="text-gray-400 hover:text-gray-200 text-xl font-bold">&times;</button>
             </div>
+            <div id="tSwitch" class="grid grid-cols-2 gap-2">
+                <button type="button" id="tTabOp" onclick="entrySwitch('op')" class="px-3 py-2 rounded-lg text-xs font-semibold border"></button>
+                <button type="button" id="tTabNote" onclick="entrySwitch('note')" class="px-3 py-2 rounded-lg text-xs font-semibold border"></button>
+            </div>
             <form id="tradeForm" class="space-y-4">
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
@@ -383,6 +393,47 @@
         </div>
     </div>
 
+
+    <div id="noteModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-cardBg border border-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                <h3 id="noteTitle" class="text-lg font-bold text-gray-100">Nota do dia</h3>
+                <button onclick="closeNoteModal()" class="text-gray-400 hover:text-gray-200 text-xl font-bold">&times;</button>
+            </div>
+            <div id="nSwitch" class="grid grid-cols-2 gap-2">
+                <button type="button" id="nTabOp" onclick="entrySwitch('op')" class="px-3 py-2 rounded-lg text-xs font-semibold border"></button>
+                <button type="button" id="nTabNote" onclick="entrySwitch('note')" class="px-3 py-2 rounded-lg text-xs font-semibold border"></button>
+            </div>
+            <form id="noteForm" class="space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="block text-xs font-medium text-gray-400 mb-1">Data do pregão</label>
+                        <input type="date" id="nDate" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div>
+                    <div><label class="block text-xs font-medium text-gray-400 mb-1">Nº da nota (opcional)</label>
+                        <input type="text" id="nNo" autocomplete="off" placeholder="61774" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div>
+                </div>
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="col-span-1"><label class="block text-xs font-medium text-gray-400 mb-1">Resultado</label>
+                        <select id="nType" class="w-full bg-darkBg border border-gray-700 rounded-lg px-2 py-2 text-xs text-gray-200"><option value="Ganho">+ Ganho</option><option value="Perda">− Perda</option></select></div>
+                    <div class="col-span-2"><label class="block text-xs font-medium text-gray-400 mb-1">Líquido da nota (R$)</label>
+                        <input type="text" inputmode="decimal" autocomplete="off" id="nNet" placeholder="0,00" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="block text-xs font-medium text-gray-400 mb-1">IRRF day trade (R$)</label>
+                        <input type="text" inputmode="decimal" autocomplete="off" id="nIrrf" placeholder="estimado" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div>
+                    <div><label class="block text-xs font-medium text-gray-400 mb-1">Custos do dia (R$, opcional)</label>
+                        <input type="text" inputmode="decimal" autocomplete="off" id="nCosts" placeholder="0,00" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div>
+                </div>
+                <p id="nHint" class="text-[11px] text-gray-400 leading-relaxed"></p>
+                <p class="text-[11px] text-gray-500">Use o "Total líquido da nota" (já com o IRRF descontado). Se deixar o IRRF em branco, o app estima em 1% do lucro do dia. Custos: taxas, emolumentos e corretagem da nota.</p>
+                <p id="nError" class="text-xs text-red-400 min-h-[1rem]"></p>
+                <div class="flex justify-end space-x-3 pt-3 border-t border-gray-800">
+                    <button type="button" onclick="closeNoteModal()" class="px-4 py-2 rounded-lg text-xs font-medium text-gray-400">Cancelar</button>
+                    <button type="submit" id="nSubmit" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-xs font-semibold">Salvar nota</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="pwdModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
         <div class="bg-cardBg border border-gray-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
             <div class="flex justify-between items-center border-b border-gray-800 pb-3">
@@ -412,11 +463,14 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
+        const HMO_VERSION = 'V58';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
         
-        let rows = [];        
+        let rows = [];
+        let notes = [], darfPaid = {};   // notas do dia e meses de DARF marcados como pagos
+        
         let pendingDeleteId = null;
         let capitalCurveChart;
 
@@ -480,8 +534,8 @@
         }
         async function reloadAll(silent) {
             try {
-                const [t, f] = await Promise.all([fetchAll('trades', ['ts']), fetchAll('cashflow', ['ts', 'created_ms'])]);
-                rows = t.map(tradeFromDb); flows = f.map(flowFromDb);
+                const [t, f, nt, dp] = await Promise.all([fetchAll('trades', ['ts']), fetchAll('cashflow', ['ts', 'created_ms']), fetchAll('tb_day_notes', ['ts']).catch(() => []), fetchAll('tb_darf_paid', ['ym']).catch(() => [])]);
+                rows = t.map(tradeFromDb); flows = f.map(flowFromDb); notes = nt.map(noteFromDb); darfPaid = {}; dp.forEach(x => { darfPaid[x.ym] = Date.parse(x.paid_at) || 1; });
                 setStatus('Sincronizado ✓', 'ok');
                 processAndRender();
             } catch (e) {
@@ -516,6 +570,28 @@
             }
             await insertBatch('trades', newTrades.map(tradeToDb));
             await insertBatch('cashflow', newFlows.map(flowToDb));
+            await reloadAll(true);
+        }
+
+        // ---- Notas do dia e DARF ----
+        const noteFromDb = r => ({ id: r.id, date: isoToBr(r.note_date), no: r.note_no || '', net: Number(r.net), irrf: r.irrf == null ? null : Number(r.irrf), costs: r.costs == null ? null : Number(r.costs), ts: Number(r.ts) });
+        const noteToDb = n => ({ note_date: brToIso(n.date), note_no: n.no || null, net: n.net, irrf: n.irrf == null ? null : n.irrf, costs: n.costs == null ? null : n.costs, ts: n.ts });
+        async function addNote(n) {
+            if (MODE === 'claude') { await hmoDb.collection('day_notes').add(n); return; }
+            await dbRun(sb.from('tb_day_notes').insert(noteToDb(n))); await reloadAll(true);
+        }
+        async function updateNote(id, n) {
+            if (MODE === 'claude') { await hmoDb.collection('day_notes').doc(id).update(n); return; }
+            await dbRun(sb.from('tb_day_notes').update(noteToDb(n)).eq('id', id)); await reloadAll(true);
+        }
+        async function removeNote(id) {
+            if (MODE === 'claude') { await hmoDb.collection('day_notes').doc(id).delete(); return; }
+            await dbRun(sb.from('tb_day_notes').delete().eq('id', id)); await reloadAll(true);
+        }
+        async function setDarfPaid(ym, paid) {
+            if (MODE === 'claude') { const d = hmoDb.collection('darf_paid').doc(ym); if (paid) await d.set({ ym, paid_at: Date.now() }); else await d.delete(); return; }
+            if (paid) await dbRun(sb.from('tb_darf_paid').upsert({ ym }, { onConflict: 'user_id,ym' }));
+            else await dbRun(sb.from('tb_darf_paid').delete().eq('ym', ym));
             await reloadAll(true);
         }
         // ---- Sino de novidades ----
@@ -818,29 +894,33 @@
         }
 
         // Substituição: grava os novos registros e só depois apaga os antigos (se algo falhar, nada se perde)
-        async function replaceAll(newTrades, newFlows, replaceFlows) {
-            const oldT = rows.map(r => r.id), oldF = replaceFlows ? flows.map(f => f.id) : [];
+        async function replaceAll(newTrades, newFlows, replaceFlows, newNotes, replaceNotes) {
+            const oldT = rows.map(r => r.id), oldF = replaceFlows ? flows.map(f => f.id) : [], oldN = replaceNotes ? notes.map(n => n.id) : [];
             if (MODE === 'claude') {
                 for (const t of newTrades) await dbCol.add(t);
                 if (replaceFlows) for (const f of newFlows) await flowCol.add(f);
+                if (replaceNotes) for (const n of (newNotes || [])) await hmoDb.collection('day_notes').add(n);
                 for (const id of oldT) await dbCol.doc(id).delete();
                 for (const id of oldF) await flowCol.doc(id).delete();
+                for (const id of oldN) await hmoDb.collection('day_notes').doc(id).delete();
                 return;
             }
             await insertBatch('trades', newTrades.map(tradeToDb));
             if (replaceFlows) await insertBatch('cashflow', newFlows.map(flowToDb));
+            if (replaceNotes && (newNotes || []).length) await insertBatch('tb_day_notes', newNotes.map(noteToDb));
             for (let i = 0; i < oldT.length; i += 100) await dbRun(sb.from('trades').delete().in('id', oldT.slice(i, i + 100)));
             for (let i = 0; i < oldF.length; i += 100) await dbRun(sb.from('cashflow').delete().in('id', oldF.slice(i, i + 100)));
+            for (let i = 0; i < oldN.length; i += 100) await dbRun(sb.from('tb_day_notes').delete().in('id', oldN.slice(i, i + 100)));
             await reloadAll(true);
         }
-        function askReplace(nOps, nFlows, hasFlows, curOps, curFlows) {
+        function askReplace(nOps, nFlows, hasFlows, curOps, curFlows, nNotes, hasNotes, curNotes) {
             return new Promise(res => {
                 const ov = document.createElement('div');
                 ov.className = 'fixed inset-0 z-[95] flex items-center justify-center p-4 bg-black/70';
                 ov.innerHTML = `<div class="w-full max-w-md rounded-xl border border-amber-600 bg-gray-900 p-5 text-sm text-gray-200 shadow-2xl">
                     <h3 class="text-base font-bold text-amber-300 mb-2">⚠ Substituir os dados atuais?</h3>
-                    <p class="mb-2">O arquivo tem <b>${nOps} operações</b> e <b>${nFlows} movimentações financeiras</b>.</p>
-                    <p class="mb-2">Hoje o app tem <b>${curOps} operações</b> e <b>${curFlows} movimentações financeiras</b>. Tudo isso será <b>apagado e substituído</b> pelo conteúdo do arquivo.</p>
+                    <p class="mb-2">O arquivo tem <b>${nOps} operações</b>, <b>${nFlows} movimentações financeiras</b>${hasNotes ? ` e <b>${nNotes} notas do dia</b>` : ''}.</p>
+                    <p class="mb-2">Hoje o app tem <b>${curOps} operações</b>, <b>${curFlows} movimentações financeiras</b> e <b>${curNotes} notas do dia</b>. ${hasNotes ? 'Tudo isso será <b>apagado e substituído</b>' : 'As operações e as movimentações serão <b>apagadas e substituídas</b>'} pelo conteúdo do arquivo.</p>${hasNotes ? '' : '<p class="mb-2 text-amber-200">Este arquivo não tem notas do dia: as notas atuais serão mantidas.</p>'}
                     ${hasFlows ? '' : '<p class="mb-2 text-amber-200">Este arquivo é de uma versão antiga e não tem movimentações financeiras: as atuais também serão apagadas.</p>'}
                     <p class="mb-4 text-amber-200">Esta ação não pode ser desfeita. Se tiver dúvida, cancele e use <b>Exportar</b> antes, para guardar um backup.</p>
                     <div class="flex justify-end gap-2">
@@ -857,7 +937,7 @@
         function initClaudeMode(db) {
             MODE = 'claude';
             dbCol = db.collection('trades'); flowCol = db.collection('cashflow');
-            $('userBadge').textContent = '🧪 Ambiente HMO';
+            $('userBadge').textContent = '🧪 Ambiente HMO - ' + HMO_VERSION;
             $('lockUserLabel').textContent = 'Utilizador'; $('lockUser').type = 'text'; $('lockUser').autocomplete = 'off';
             $('lockSub').textContent = 'Ambiente HMO (teste). Entre com as credenciais de teste.';
 hmoDb = db;
@@ -873,6 +953,8 @@ hmoDb = db;
                 flows = snap.docs.map(d => ({ ...d.data(), id: d.id }));
                 processAndRender();
             }, () => {});
+            db.collection('day_notes').orderBy('ts', 'asc').onSnapshot(snap => { notes = snap.docs.map(d => ({ ...d.data(), id: d.id })); processAndRender(); }, () => {});
+            db.collection('darf_paid').onSnapshot(snap => { darfPaid = {}; snap.docs.forEach(d => { darfPaid[d.id] = Number((d.data() || {}).paid_at) || 1; }); processAndRender(); }, () => {});
             const timer = setTimeout(() => setStatus('Sem resposta…', 'warn'), 10000);
             dbCol.orderBy('ts', 'asc').onSnapshot(snap => {
                 if (!snap.metadata.fromCache) { clearTimeout(timer); setStatus('Salvo online ✓', 'ok'); }
@@ -958,10 +1040,16 @@ hmoDb = db;
                     fAdded++;
                 }
                 const hasFlows = !Array.isArray(raw) && Array.isArray(raw.movimentacoes);
+                const hasNotes = !Array.isArray(raw) && Array.isArray(raw.notas);
+                const newNotes = [];
+                if (hasNotes) for (const n of raw.notas) {
+                    if (!n || typeof n !== 'object' || !/^\d{2}\/\d{2}\/\d{4}$/.test(n.date || '') || !isFinite(Number(n.net))) { invalid++; continue; }
+                    newNotes.push({ date: n.date, no: String(n.no || ''), net: Math.round(Number(n.net) * 100) / 100, irrf: n.irrf == null ? null : Math.round(Number(n.irrf) * 100) / 100, costs: n.costs == null ? null : Math.round(Number(n.costs) * 100) / 100, ts: computeTs(n.date, '00:00') });
+                }
                 aud.fileOps = newTrades.length; aud.fileFlows = newFlows.length;
                 if (!newTrades.length && !newFlows.length) { showToast('O arquivo não tem registros válidos. Nada foi alterado.', 'err'); aud.outcome = 'Sem alterações'; await auditAdd(aud); return; }
-                if (!(await askReplace(newTrades.length, newFlows.length, hasFlows, rows.length, flows.length))) { showToast('Importação cancelada. Nada foi alterado.', 'ok'); aud.outcome = 'Cancelada'; await auditAdd(aud); return; }
-                await replaceAll(newTrades, newFlows, true);
+                if (!(await askReplace(newTrades.length, newFlows.length, hasFlows, rows.length, flows.length, newNotes.length, hasNotes, notes.length))) { showToast('Importação cancelada. Nada foi alterado.', 'ok'); aud.outcome = 'Cancelada'; await auditAdd(aud); return; }
+                await replaceAll(newTrades, newFlows, true, newNotes, hasNotes);
                 aud.outcome = 'Concluída'; aud.afterOps = newTrades.length; aud.afterFlows = newFlows.length; await auditAdd(aud);
                 showToast(`Dados substituídos: ${added} op. e ${fAdded} mov. importadas` + (skipped || fSkipped ? ` (${skipped + fSkipped} repetidas no arquivo ignoradas)` : '') + (invalid ? ` (${invalid} inválidas ignoradas)` : ''), 'ok');
             } catch (e) {
@@ -974,7 +1062,7 @@ hmoDb = db;
 
         async function exportData() {
             const strip = arr => arr.map(({ id, ...rest }) => rest);
-            const data = JSON.stringify({ versao: 2, operacoes: strip(rows), movimentacoes: strip(flows) }, null, 2);
+            const data = JSON.stringify({ versao: 3, operacoes: strip(rows), movimentacoes: strip(flows), notas: strip(notes) }, null, 2);
             try {
                 const dl = await window.claude.use('downloads');
                 if (dl) { await dl.save({ filename: backupName(), data }); auditAdd({ kind: 'export', filename: backupName(), outcome: 'Concluída', fileOps: rows.length, fileFlows: flows.length }); return; }
@@ -1036,11 +1124,14 @@ hmoDb = db;
             if (expandedOps === undefined || (expandedOps !== null && !opsCount[expandedOps])) expandedOps = opsCount[curMonthKey()] ? curMonthKey() : (opKeys.length ? opKeys.slice().sort().pop() : null);
             // Meses do mais recente para o mais antigo (ordem interna de cada mês preservada)
             const viewByMonth = view.map((r, i) => ({ r, i, k: monthKey(r.date) })).sort((x, y) => x.k < y.k ? 1 : x.k > y.k ? -1 : x.i - y.i).map(o => o.r);
-            let lastMk = null;
+            const daySum = {};
+            view.forEach(r => { const d = daySum[r.date] || (daySum[r.date] = { n: 0, sum: 0 }); d.n++; d.sum = Math.round((d.sum + r.result) * 100) / 100; });
+            let lastMk = null, lastDay = null;
             viewByMonth.forEach(row => {
                 const mk = monthKey(row.date);
-                if (mk !== lastMk) { lastMk = mk; tbody.appendChild(monthRow('ops', mk, opsCount[mk], expandedOps === mk)); }
+                if (mk !== lastMk) { lastMk = mk; lastDay = null; tbody.appendChild(monthRow('ops', mk, opsCount[mk], expandedOps === mk)); }
                 if (mk !== expandedOps) return;
+                if (row.date !== lastDay) { lastDay = row.date; tbody.appendChild(dayNoteRow(row.date, daySum[row.date])); }
                 const isGain = row.result >= 0;
                 const points = Number(row.points) || 0;
                 const confirming = pendingDeleteId === row.id;
@@ -1080,6 +1171,7 @@ hmoDb = db;
             if (!btn) return;
             const act = btn.dataset.act;
             if (act === 'month') { toggleMonth('ops', btn.dataset.month); return; }
+            if (act === 'note') { const dt = btn.dataset.date, n = notes.find(x => x.date === dt); if (n) openNoteModal(n.id); else openNoteModal(undefined, isoOf(dt)); return; }
             if (act === 'edit') { pendingDeleteId = null; openModal(btn.dataset.id); }
             else if (act === 'ask') { pendingDeleteId = btn.dataset.id; processAndRender(); }
             else if (act === 'cancel') { pendingDeleteId = null; processAndRender(); }
@@ -1143,6 +1235,7 @@ hmoDb = db;
                 setField('tPoints', 300);
                 setField('tMoney', '60,00');
             }
+            paintEntryTabs('op', !!row);
             const m = document.getElementById('tradeModal');
             m.classList.remove('hidden'); m.classList.add('flex');
         }
@@ -1281,6 +1374,20 @@ hmoDb = db;
             $('btnOpts').setAttribute('aria-expanded', 'true');
         }
         function optsAction(fn) { closeOptsMenu(); fn(); }
+        function closeMoreMenu() { $('moreMenu').classList.add('hidden'); $('btnMore').setAttribute('aria-expanded', 'false'); }
+        function toggleMoreMenu() {
+            const m = $('moreMenu');
+            if (!m.classList.contains('hidden')) { closeMoreMenu(); return; }
+            closeOptsMenu();
+            m.classList.remove('hidden');
+            const b = $('btnMore').getBoundingClientRect(), w = m.offsetWidth || 224;
+            m.style.top = (b.bottom + 4) + 'px';
+            m.style.left = Math.max(8, Math.min(b.left, window.innerWidth - w - 8)) + 'px';
+            $('btnMore').setAttribute('aria-expanded', 'true');
+        }
+        function moreAction(fn) { closeMoreMenu(); fn(); }
+        document.addEventListener('click', (e) => { if (!e.target.closest('#moreMenu') && !e.target.closest('#btnMore')) closeMoreMenu(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMoreMenu(); });
         document.addEventListener('click', (e) => { if (!e.target.closest('#optsMenu') && !e.target.closest('#btnOpts')) closeOptsMenu(); });
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeOptsMenu(); });
         window.addEventListener('resize', closeOptsMenu);
@@ -1547,6 +1654,22 @@ hmoDb = db;
             const tr = document.createElement('tr');
             tr.className = 'bg-gray-900/60 hover:bg-cardHover transition';
             tr.innerHTML = `<td colspan="${kind === 'ops' ? 12 : 6}" class="p-0"><button type="button" data-act="month" data-month="${key}" aria-expanded="${open}" class="w-full text-left px-4 py-3 text-xs font-semibold text-gray-200 flex items-center gap-2"><span class="inline-block w-4 text-center font-mono">${open ? '−' : '+'}</span>${m}/${y} – ${n} ${noun}</button></td>`;
+            return tr;
+        }
+        // Linha do dia no Diário: mostra a nota do dia ligada (pela data) ou avisa que falta lançar
+        function dayNoteRow(date, ds) {
+            const note = notes.find(n => n.date === date);
+            let txt, cls = 'text-gray-400';
+            if (note) {
+                const diff = Math.round((note.net - ds.sum) * 100) / 100;
+                txt = `🧾 Nota${note.no ? ' ' + esc(note.no) : ' do dia'} · líquido R$ ${brl(Math.abs(note.net))}${note.net < 0 ? ' (perda)' : ''}` +
+                    (Math.abs(diff) > 0.005 ? ` · ⚠ as operações somam ${ds.sum >= 0 ? '+' : '−'} R$ ${brl(Math.abs(ds.sum))} (diferença de R$ ${brl(Math.abs(diff))})` : ' · ✔ confere com as operações');
+                cls = 'text-gray-300';
+            } else if (isoOf(date) === todayLocalISO()) txt = '💡 nota do dia ainda não lançada (toque para lançar)';
+            else txt = '⚠ sem nota do dia lançada (toque para lançar)';
+            const tr = document.createElement('tr');
+            tr.className = 'bg-gray-900/30';
+            tr.innerHTML = `<td colspan="12" class="px-3 py-1.5 text-[11px] ${cls}"><button type="button" data-act="note" data-date="${esc(date)}" class="text-left hover:underline"><b>${esc(date)}</b> · ${ds.n} operaç${ds.n === 1 ? 'ão' : 'ões'} · ${txt}</button></td>`;
             return tr;
         }
         function toggleMonth(kind, key) {
@@ -1884,16 +2007,16 @@ hmoDb = db;
 
         function secSetup(ops) {
             const g = [...group(ops, r => r.setup)].sort((a, b) => stats(b[1]).net - stats(a[1]).net);
-            return rcard('1. Desempenho por setup', rtable(['Setup', 'Operações', 'Win rate', 'Resultado', 'Pontos', 'Média/op.'], simpleRows(g, true)), '⚠ = menos de 30 operações.');
+            return rcard('2. Desempenho por setup', rtable(['Setup', 'Operações', 'Win rate', 'Resultado', 'Pontos', 'Média/op.'], simpleRows(g, true)), '⚠ = menos de 30 operações.');
         }
         function secRisk(s) {
             const c = (t, v, sub) => `<div class="bg-darkBg border border-gray-800 rounded-lg p-3"><p class="text-[10px] sm:text-[11px] text-gray-400 uppercase tracking-wider">${t}</p><p class="mt-1 text-base sm:text-lg font-bold text-gray-100">${v}</p>${sub ? `<p class="text-[9px] sm:text-[10px] text-gray-500">${sub}</p>` : ''}</div>`;
             const h = `<div class="p-4 grid grid-cols-2 md:grid-cols-4 gap-3">${c('Payoff', fx(s.payoff), 'ganho ÷ perda')}${c('Profit factor', fx(s.pf), 'lucro ÷ prejuízo')}${c('Expectativa/op.', money(s.exp))}${c('Drawdown máximo', 'R$ ' + brl(s.dd))}${c('Ganho médio', 'R$ ' + brl(s.avgGain))}${c('Perda média', 'R$ ' + brl(s.avgLoss))}${c('Maior seq. ganhos', s.sw + ' op.')}${c('Maior seq. perdas', s.sl + ' op.')}</div>`;
-            return rcard('2. Métricas de risco', h);
+            return rcard('3. Métricas de risco', h);
         }
         function secInOut(ops) {
             const OUT = 'Outras - Fora do Setup', a = ops.filter(r => r.setup !== OUT), b = ops.filter(r => r.setup === OUT);
-            return rcard('3. Dentro x fora do setup', rtable(['Grupo', 'Operações', 'Win rate', 'Resultado', 'Média/op.'], simpleRows([['Dentro', a], ['Fora', b]].filter(x => x[1].length), false)));
+            return rcard('4. Dentro x fora do setup', rtable(['Grupo', 'Operações', 'Win rate', 'Resultado', 'Média/op.'], simpleRows([['Dentro', a], ['Fora', b]].filter(x => x[1].length), false)));
         }
         function weekKey(iso) { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; }
         function secPeriod(ops) {
@@ -1906,22 +2029,22 @@ hmoDb = db;
             }).join('');
             const on = 'px-2.5 py-1 bg-gray-700 text-white font-semibold', off = 'px-2.5 py-1 text-gray-400 hover:text-gray-200';
             const tog = `<div class="flex rounded-lg border border-gray-700 overflow-hidden text-xs"><button onclick="setGran('month')" class="${repGran === 'month' ? on : off}">Mensal</button><button onclick="setGran('week')" class="${repGran === 'week' ? on : off}">Semanal</button></div>`;
-            return rcard('4. Resumo mensal e semanal', rtable(['Período', 'Op.', 'Win rate', 'Resultado', 'Pontos', 'Melhor dia', 'Pior dia'], body), null, tog);
+            return rcard('5. Resumo mensal e semanal', rtable(['Período', 'Op.', 'Win rate', 'Resultado', 'Pontos', 'Melhor dia', 'Pior dia'], body), null, tog);
         }
         function secTime(ops) {
             const slot = r => { const [h, m] = String(r.timeIn).split(':').map(Number); return `${pad2(h)}:${m < 30 ? '00' : '30'}`; };
             const g = [...group(ops, slot)].sort((a, b) => a[0].localeCompare(b[0])).map(([k, l]) => { const e = k.endsWith('00') ? '29' : '59'; return [`${k}–${k.slice(0, 2)}:${e}`, l]; });
-            return rcard('5. Por horário de entrada', rtable(['Faixa', 'Op.', 'Win rate', 'Resultado', 'Média/op.'], simpleRows(g, false)));
+            return rcard('6. Por horário de entrada', rtable(['Faixa', 'Op.', 'Win rate', 'Resultado', 'Média/op.'], simpleRows(g, false)));
         }
         function secWeekday(ops) {
             const names = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'], order = [1, 2, 3, 4, 5, 6, 0];
             const m = group(ops, r => new Date(isoOf(r.date) + 'T12:00:00').getDay());
             const g = order.filter(d => m.has(d)).map(d => [names[d], m.get(d)]);
-            return rcard('6a. Por dia da semana', rtable(['Dia', 'Op.', 'Win rate', 'Resultado', 'Média/op.'], simpleRows(g, false)));
+            return rcard('7a. Por dia da semana', rtable(['Dia', 'Op.', 'Win rate', 'Resultado', 'Média/op.'], simpleRows(g, false)));
         }
         function secAsset(ops) {
             const g = [...group(ops, r => r.asset)].sort((a, b) => stats(b[1]).net - stats(a[1]).net);
-            return rcard('6b. Por ativo', rtable(['Ativo', 'Op.', 'Win rate', 'Resultado', 'Média/op.'], simpleRows(g, false)));
+            return rcard('7b. Por ativo', rtable(['Ativo', 'Op.', 'Win rate', 'Resultado', 'Média/op.'], simpleRows(g, false)));
         }
         function secFinance(opsP, from, to) {
             const fl = flows.filter(f => { const i = isoOf(f.date); return i >= from && i <= to; });
@@ -1943,7 +2066,7 @@ hmoDb = db;
                 const rent = inv > 0 ? profit / inv * 100 : null;
                 return `<tr class="bg-gray-900/60 font-bold">${lbl('Total do período')}${td('+ ' + brl(dep), 'text-blue-300')}${td('− ' + brl(saq), 'text-amber-300')}${tdm(dep - saq)}${tdm(profit)}${td('R$ ' + brl(inv))}${td(rent === null ? '—' : (rent >= 0 ? '+' : '−') + pct(Math.abs(rent)), rent === null ? '' : mcls(rent))}</tr>`;
             })();
-            return rcard('7. Financeiro: fluxo e rentabilidade', rtable(['Mês', 'Dep.', 'Saques', 'Fluxo', 'Lucro op.', 'Investido', 'Rent.'], body + totRow));
+            return rcard('8. Financeiro: fluxo e rentabilidade', rtable(['Mês', 'Dep.', 'Saques', 'Fluxo', 'Lucro op.', 'Investido', 'Rent.'], body + totRow));
         }
         function setGran(g) { repGran = g; renderReports(); }
         function calNav(d) { const [y, m] = calMonth.split('-').map(Number), dt = new Date(y, m - 1 + d, 1); calMonth = `${dt.getFullYear()}-${pad2(dt.getMonth() + 1)}`; renderReports(); }
@@ -1963,7 +2086,225 @@ hmoDb = db;
             }
             const nav = `<div class="flex items-center gap-2 text-xs"><button onclick="calNav(-1)" class="px-2 py-1 rounded border border-gray-700">◀</button><span class="font-semibold text-gray-200">${pad2(m)}/${y}</span><button onclick="calNav(1)" class="px-2 py-1 rounded border border-gray-700">▶</button></div>`;
             const h = `<div class="p-3"><div class="grid grid-cols-7 gap-1">${cells}</div><p class="mt-3 text-xs text-gray-400">Total do mês: <span class="font-mono font-bold ${mcls(total)}">${money(total)}</span> (${cnt} op.)</p></div>`;
-            return rcard('8. Calendário de resultados', h, null, nav);
+            return rcard('9. Calendário de resultados', h, null, nav);
+        }
+
+
+        /* ---------- Notas do dia e apuração do DARF (day trade) ---------- */
+        const r2 = v => Math.round((Number(v) || 0) * 100) / 100;
+        const IR_RATE = 0.2, DARF_MIN = 10;
+        const fmtBR = iso => `${iso.slice(8)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
+        function lastBizDayNext(ym) {          // último dia útil do mês seguinte (só fins de semana; feriados não entram)
+            const [y, m] = ym.split('-').map(Number);
+            const d = new Date(y, m + 1, 0);
+            while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() - 1);
+            return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+        }
+        function taxEngine(opRows, noteRows, paid, todayIso) {
+            const days = new Map();
+            const get = i => { let d = days.get(i); if (!d) { d = { iso: i, ops: 0, nOps: 0, note: null }; days.set(i, d); } return d; };
+            opRows.forEach(r => { const d = get(isoOf(r.date)); d.ops += num(r.result); d.nOps++; });
+            noteRows.forEach(n => { get(isoOf(n.date)).note = n; });
+            const byM = new Map();
+            days.forEach(d => {
+                const net = r2(d.note ? d.note.net : d.ops);
+                let irrf = 0, est = false;
+                if (net > 0) { if (d.note && d.note.irrf != null) irrf = r2(d.note.irrf); else { irrf = r2(net / 99); est = true; } }
+                const base = r2(net + irrf);
+                const ym = d.iso.slice(0, 7);
+                const a = byM.get(ym) || { base: 0, irrf: 0, estDays: 0, costs: 0, costDays: 0, grossBase: 0, days: 0 };
+                a.base = r2(a.base + base); a.irrf = r2(a.irrf + irrf); a.days++;
+                if (est) a.estDays++;
+                if (d.note && d.note.costs != null) { a.costs = r2(a.costs + d.note.costs); a.costDays++; a.grossBase = r2(a.grossBase + base); }
+                byM.set(ym, a);
+            });
+            const keys = [...byM.keys()].sort();
+            if (!keys.length) return [];
+            const ymNow = todayIso.slice(0, 7), out = [];
+            let [y, m] = keys[0].split('-').map(Number), L = 0, C = 0, A = 0;
+            for (;;) {
+                const ym = `${y}-${pad2(m)}`;
+                if (ym > ymNow && ym > keys[keys.length - 1]) break;
+                if (ym > ymNow) break;
+                const a = byM.get(ym) || { base: 0, irrf: 0, estDays: 0, costs: 0, costDays: 0, grossBase: 0, days: 0 };
+                const Lin = L, Cin = C, Ain = A;
+                let comp = 0, taxable = 0, ir = 0, used = 0, darf = 0;
+                if (a.base < 0) { L = r2(L - a.base); C = r2(C + a.irrf); }
+                else {
+                    comp = r2(Math.min(L, a.base)); L = r2(L - comp); taxable = r2(a.base - comp);
+                    ir = r2(taxable * IR_RATE);
+                    const pool = r2(C + a.irrf); used = r2(Math.min(ir, pool)); darf = r2(ir - used); C = r2(pool - used);
+                }
+                const total = r2(darf + A);
+                let status;
+                if (total >= DARF_MIN) status = 'pay';
+                else if (total > 0) status = 'acc';
+                else if (a.base < 0) status = 'neg';
+                else if (a.base === 0 && !a.days) status = 'none';
+                else if (taxable === 0) status = 'comp';
+                else status = 'irrf';
+                A = status === 'acc' ? total : 0;
+                out.push({ ym, ...a, Lin, Cin, Ain, comp, taxable, ir, used, darf, total, status, Lout: L, Cout: C, Aout: A,
+                    due: lastBizDayNext(ym), paidAt: paid[ym] || 0, partial: ym === ymNow });
+                if (m === 12) { y++; m = 1; } else m++;
+            }
+            return out;
+        }
+
+
+        // Abas "Operação | Nota do dia": a mesma tela de lançamento, com a data levada de uma aba para a outra
+        const ENT_ON = 'px-3 py-2 rounded-lg text-xs font-semibold border border-blue-400 bg-blue-950 text-white', ENT_OFF = 'px-3 py-2 rounded-lg text-xs font-semibold border border-gray-700 text-gray-400 hover:bg-gray-800';
+        function paintEntryTabs(active, editing) {
+            ['t', 'n'].forEach(p => {
+                $(p + 'Switch').classList.toggle('hidden', !!editing);
+                $(p + 'TabOp').className = active === 'op' ? ENT_ON : ENT_OFF; $(p + 'TabOp').textContent = (active === 'op' ? '● ' : '') + '📈 Operação';
+                $(p + 'TabNote').className = active === 'note' ? ENT_ON : ENT_OFF; $(p + 'TabNote').textContent = (active === 'note' ? '● ' : '') + '🧾 Nota do dia';
+                $(p + 'TabOp').setAttribute('aria-pressed', String(active === 'op')); $(p + 'TabNote').setAttribute('aria-pressed', String(active === 'note'));
+            });
+        }
+        function entrySwitch(to) {
+            if (to === 'note') { const iso = $('tDate').value; closeModal(); openNoteModal(undefined, iso); }
+            else { const iso = $('nDate').value; closeNoteModal(); openModal(); if (iso) setField('tDate', iso); }
+        }
+        let pendingNoteDeleteId = null, editingNoteId = null, noteNetTouched = false, taxOpen = {}, notesListOpen = false;
+        const dayOpsSum = iso => rows.filter(r => isoOf(r.date) === iso).reduce((t, r) => t + num(r.result), 0);
+        const dayOpsCount = iso => rows.filter(r => isoOf(r.date) === iso).length;
+        function noteHint() {
+            const iso = $('nDate').value, n = parseMoney($('nNet').value) * ($('nType').value === 'Perda' ? -1 : 1);
+            const hasIrrf = $('nIrrf').value.trim() !== '', costs = $('nCosts').value.trim() !== '' ? parseMoney($('nCosts').value) : null;
+            const irrf = hasIrrf ? parseMoney($('nIrrf').value) : (n > 0 ? r2(n / 99) : 0);
+            $('nIrrf').placeholder = n > 0 ? `estimado ${fmtMoneyBR(r2(n / 99))}` : 'estimado';
+            const cnt = iso ? dayOpsCount(iso) : 0;
+            let t = cnt ? `Suas ${cnt} operação(ões) do dia somam ${money(dayOpsSum(iso))}. ` : 'Sem operações lançadas neste dia. ';
+            t += `Base do imposto (líquido + IRRF): R$ ${brl(Math.abs(r2(n + irrf)))}${n + irrf < 0 ? ' (perda)' : ''}.`;
+            if (costs != null) t += ` Bruto (base + custos): R$ ${brl(Math.abs(r2(n + irrf + costs)))}.`;
+            $('nHint').textContent = t;
+        }
+        function noteFillFromOps() {
+            const iso = $('nDate').value;
+            if (!iso || editingNoteId || noteNetTouched) return;
+            const cnt = dayOpsCount(iso), sum = dayOpsSum(iso);
+            if (cnt) { $('nType').value = sum < 0 ? 'Perda' : 'Ganho'; $('nNet').value = fmtMoneyBR(Math.abs(sum)); }
+            else $('nNet').value = '';
+        }
+        function openNoteModal(editId, isoDate) {
+            const n = typeof editId === 'string' ? notes.find(x => x.id === editId) : null;
+            editingNoteId = n ? n.id : null; noteNetTouched = !!n; pendingNoteDeleteId = null;
+            $('noteTitle').textContent = n ? 'Editar nota do dia' : 'Nova nota do dia';
+            $('nSubmit').textContent = n ? 'Salvar alterações' : 'Salvar nota';
+            $('nDate').max = todayLocalISO(); $('nError').textContent = '';
+            if (n) {
+                $('nDate').value = isoOf(n.date); $('nNo').value = n.no || '';
+                $('nType').value = n.net < 0 ? 'Perda' : 'Ganho'; $('nNet').value = fmtMoneyBR(Math.abs(n.net));
+                $('nIrrf').value = n.irrf == null ? '' : fmtMoneyBR(n.irrf); $('nCosts').value = n.costs == null ? '' : fmtMoneyBR(n.costs);
+            } else {
+                $('nDate').value = (isoDate && isoDate <= todayLocalISO()) ? isoDate : todayLocalISO(); $('nNo').value = ''; $('nIrrf').value = ''; $('nCosts').value = ''; $('nNet').value = ''; $('nType').value = 'Ganho';
+                noteFillFromOps();
+            }
+            noteHint(); paintEntryTabs('note', !!n);
+            $('noteModal').classList.remove('hidden'); $('noteModal').classList.add('flex');
+        }
+        function closeNoteModal() { $('noteModal').classList.remove('flex'); $('noteModal').classList.add('hidden'); }
+        ['nNet', 'nIrrf', 'nCosts'].forEach(id => {
+            const el = $(id);
+            el.addEventListener('input', ev => { maskMoney(el, ev); if (id === 'nNet') noteNetTouched = true; noteHint(); });
+            el.addEventListener('blur', () => { if (el.value.trim() !== '') el.value = fmtMoneyBR(parseMoney(el.value)); noteHint(); });
+        });
+        $('nType').addEventListener('change', () => { noteNetTouched = true; noteHint(); });
+        $('nDate').addEventListener('change', () => { noteFillFromOps(); noteHint(); });
+        $('noteForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const err = $('nError'); err.textContent = '';
+            const iso = $('nDate').value || todayLocalISO();
+            if ($('nNet').value.trim() === '') { err.textContent = 'Informe o líquido da nota.'; return; }
+            if (iso > todayLocalISO()) { err.textContent = 'A data não pode ser futura.'; return; }
+            const date = fmtBR(iso);
+            if (notes.some(x => x.date === date && x.id !== editingNoteId)) { err.textContent = 'Já existe uma nota deste dia. Edite a existente na lista de notas.'; return; }
+            const net = r2(parseMoney($('nNet').value) * ($('nType').value === 'Perda' ? -1 : 1));
+            const data = {
+                date, no: $('nNo').value.trim(), net,
+                irrf: $('nIrrf').value.trim() === '' ? null : r2(Math.abs(parseMoney($('nIrrf').value))),
+                costs: $('nCosts').value.trim() === '' ? null : r2(Math.abs(parseMoney($('nCosts').value))),
+                ts: computeTs(date, '00:00')
+            };
+            const btn = $('nSubmit'); btn.disabled = true;
+            try {
+                if (editingNoteId) await updateNote(editingNoteId, data); else await addNote(data);
+                closeNoteModal(); showToast('Nota do dia salva.', 'ok');
+                if ($('panelReport').classList.contains('hidden')) switchTab('report');
+            } catch (ex) { err.textContent = 'Erro ao salvar.'; } finally { btn.disabled = false; }
+        });
+        async function noteAct(a, id) {
+            if (a === 'edit') { openNoteModal(id); return; }
+            if (a === 'ask') { pendingNoteDeleteId = id; renderReports(); return; }
+            if (a === 'cancel') { pendingNoteDeleteId = null; renderReports(); return; }
+            if (a === 'del') { pendingNoteDeleteId = null; try { await removeNote(id); showToast('Nota excluída.', 'ok'); } catch (er) { showToast('Erro ao excluir', 'err'); } }
+        }
+        async function darfToggle(ym, paid) { try { await setDarfPaid(ym, paid); } catch (er) { showToast('Erro ao salvar', 'err'); } }
+        async function darfCopy(txt) {
+            try { await navigator.clipboard.writeText(txt); showToast('Valor copiado: ' + txt, 'ok'); }
+            catch (e) { showToast('Copie manualmente: ' + txt, 'err'); }
+        }
+        function darfStatusText(x) {
+            const R = v => 'R$ ' + brl(Math.abs(v));
+            if (x.status === 'pay') {
+                if (x.partial) return `… Em andamento: DARF estimado de ${R(x.total)} se o mês fechasse hoje`;
+                if (x.paidAt) return `✔ Pago: ${R(x.total)}`;
+                return `${todayLocalISO() > x.due ? '✖ Atrasado' : '○ DARF a pagar'}: ${R(x.total)} · vence em ${fmtBR(x.due)}`;
+            }
+            if (x.status === 'acc') return `${x.partial ? '… Em andamento: ' : '○ Acumulado: '}${R(x.total)} (abaixo de R$ 10), soma ao mês seguinte`;
+            if (x.status === 'neg') return `Sem DARF: mês negativo, prejuízo de ${R(x.base)} vai para compensação`;
+            if (x.status === 'comp') return 'Sem DARF: lucro coberto por prejuízo anterior';
+            if (x.status === 'irrf') return 'Sem DARF: o IRRF retido cobriu o imposto';
+            return 'Sem movimento';
+        }
+        function noteCheckCell(n) {
+            const iso = isoOf(n.date), cnt = dayOpsCount(iso), sum = r2(dayOpsSum(iso));
+            if (!cnt) return '<td class="py-2 px-3 text-gray-500">○ sem operações no dia</td>';
+            const diff = r2(n.net - sum);
+            return `<td class="py-2 px-3 text-gray-300">${cnt} op. · ${sum >= 0 ? '+' : '−'} R$ ${brl(Math.abs(sum))} · ${Math.abs(diff) > 0.005 ? `⚠ diferença de R$ ${brl(Math.abs(diff))}` : '✔ confere'}</td>`;
+        }
+        function secTax() {
+            const today = todayLocalISO();
+            const months = taxEngine(rows, notes, darfPaid, today).filter(x => x.days || x.Lin || x.Cin || x.Ain).reverse();
+            const R = v => 'R$ ' + brl(Math.abs(v));
+            const ln = (a, b, c = '') => `<tr class="border-b border-gray-800/60"><td class="py-1.5 px-3 text-gray-300">${a}</td><td class="py-1.5 px-3 text-right font-mono ${c}">${b}</td></tr>`;
+            const btn = `<button onclick="openNoteModal()" class="border border-blue-500 text-blue-300 hover:bg-blue-950 px-2.5 py-1.5 rounded-lg text-xs font-semibold">🧾 Nota do dia</button>`;
+            let h = '<div class="p-4 space-y-3">';
+            h += '<p class="text-xs text-gray-400 leading-relaxed">Estimativa de day trade: IR de 20% sobre o resultado do mês, prejuízo compensado entre meses, IRRF (1%) abatido e DARF código 6015. Considera todo o histórico, sem o filtro de período. Confira os valores com seu contador.</p>';
+            const nl = notes.slice().sort((a, b) => b.ts - a.ts);
+            h += `<details ontoggle="notesListOpen = this.open" ${notesListOpen || pendingNoteDeleteId ? 'open' : ''} class="bg-darkBg border border-gray-800 rounded-lg"><summary class="cursor-pointer px-3 py-2.5 text-xs text-gray-100"><b>Notas do dia lançadas</b> (${nl.length})</summary><div class="overflow-x-auto"><table class="w-full text-left text-xs whitespace-nowrap"><thead><tr class="text-gray-400 border-b border-gray-800 uppercase tracking-wider"><th class="py-2 px-3">Data</th><th class="py-2 px-3">Nº</th><th class="py-2 px-3 text-right">Líquido</th><th class="py-2 px-3 text-right">IRRF</th><th class="py-2 px-3 text-right">Custos</th><th class="py-2 px-3">Operações do dia</th><th class="py-2 px-3"></th></tr></thead><tbody>${nl.map(n => `<tr class="border-b border-gray-800/60"><td class="py-2 px-3">${esc(n.date)}</td><td class="py-2 px-3">${esc(n.no || '—')}</td>${tdm(n.net)}${td(n.irrf == null ? 'estimado' : R(n.irrf))}${td(n.costs == null ? '—' : R(n.costs))}${noteCheckCell(n)}<td class="py-2 px-3 text-right">${pendingNoteDeleteId === n.id ? `<button onclick="noteAct('del','${n.id}')" class="px-2 py-1 rounded bg-red-700 text-white font-semibold">Confirmar exclusão</button> <button onclick="noteAct('cancel')" class="px-2 py-1 rounded border border-gray-600">Cancelar</button>` : `<button onclick="noteAct('edit','${n.id}')" class="px-2 py-1 rounded border border-gray-600 hover:bg-gray-800">Editar</button> <button onclick="noteAct('ask','${n.id}')" class="px-2 py-1 rounded border border-gray-600 hover:bg-gray-800">Excluir</button>`}</td></tr>`).join('') || '<tr><td colspan="7" class="py-4 px-3 text-center text-gray-500">Nenhuma nota lançada. Sem nota, o app usa a soma das suas operações do dia e estima o IRRF.</td></tr>'}</tbody></table></div></details>`;
+            const withCosts = months.reduce((t, x) => t + x.costDays, 0);
+            if (withCosts) {
+                const costs = months.reduce((t, x) => t + x.costs, 0), gross = months.reduce((t, x) => t + x.grossBase + x.costs, 0), base = months.reduce((t, x) => t + x.grossBase, 0);
+                h += `<div class="grid grid-cols-2 md:grid-cols-4 gap-3">${[['Bruto', R(gross)], ['Custos', '− ' + R(costs)], ['Líquido (antes do IRRF)', R(base)], ['Custos / bruto', gross > 0 ? (costs / gross * 100).toFixed(1).replace('.', ',') + '%' : '—']].map(([t, v]) => `<div class="bg-darkBg border border-gray-800 rounded-lg p-3"><p class="text-[10px] text-gray-400 uppercase tracking-wider">${t}</p><p class="mt-1 text-sm font-bold font-mono text-gray-100">${v}</p></div>`).join('')}</div><p class="text-[10px] text-gray-500">Somente dias com custos informados na nota (${withCosts} dia(s)).</p>`;
+            }
+            if (!months.length) h += '<p class="text-xs text-gray-500 text-center py-4">Nenhuma operação ou nota lançada ainda.</p>';
+            months.forEach((x, i) => {
+                const lastDay = fmtBR(`${x.ym}-${pad2(new Date(+x.ym.slice(0, 4), +x.ym.slice(5), 0).getDate())}`);
+                let rows_ = ln('Resultado do mês (líquido + IRRF)', money(x.base), mcls(x.base));
+                if (x.costDays) rows_ += ln(`Custos informados (${x.costDays} dia(s))`, '− ' + R(x.costs)) + ln('Bruto desses dias', R(x.grossBase + x.costs));
+                rows_ += ln(`IRRF retido${x.estDays ? ` (${x.estDays} dia(s) estimado(s))` : ''}`, R(x.irrf));
+                if (x.Lin) rows_ += ln('Prejuízo anterior a compensar', R(x.Lin));
+                if (x.comp) rows_ += ln('(−) Prejuízo compensado neste mês', '− ' + R(x.comp));
+                rows_ += ln('Base de cálculo', R(x.taxable)) + ln('IR de 20%', R(x.ir));
+                if (x.used) rows_ += ln('(−) IRRF usado', '− ' + R(x.used));
+                if (x.Cin && x.used) rows_ += ln('Crédito de IRRF de meses anteriores incluído', R(x.Cin));
+                rows_ += ln('DARF do mês', R(x.darf));
+                if (x.Ain) rows_ += ln('(+) Acumulado de meses anteriores', R(x.Ain));
+                rows_ += ln('<b>Valor a pagar</b>', `<b>${x.status === 'pay' ? R(x.total) : R(0)}</b>`);
+                const saldos = [x.Lout ? `prejuízo a compensar ${R(x.Lout)}` : '', x.Cout ? `crédito de IRRF ${R(x.Cout)}` : '', x.Aout ? `acumulado ${R(x.Aout)}` : ''].filter(Boolean).join(' · ');
+                let pay = '';
+                if (x.status === 'pay' && !x.partial) {
+                    pay = `<div class="mt-2 p-3 rounded-lg bg-darkBg border border-gray-700 text-xs text-gray-300 leading-relaxed">Código <b>6015</b> · Período de apuração <b>${lastDay}</b> · Valor <b>${R(x.total)}</b> · Vencimento <b>${fmtBR(x.due)}</b> (sem considerar feriados)
+                        <div class="mt-2 flex flex-wrap gap-2"><button onclick="darfCopy('${brl(x.total)}')" class="px-2.5 py-1 rounded border border-gray-600 hover:bg-gray-800">Copiar valor</button>
+                        ${x.paidAt ? `<button onclick="darfToggle('${x.ym}', false)" class="px-2.5 py-1 rounded border border-gray-600 hover:bg-gray-800">Desfazer pagamento</button>` : `<button onclick="darfToggle('${x.ym}', true)" class="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white font-semibold">Marcar como pago</button>`}</div></div>`;
+                }
+                h += `<details ontoggle="taxOpen['${x.ym}'] = this.open" class="bg-darkBg border border-gray-800 rounded-lg" ${(x.ym in taxOpen ? taxOpen[x.ym] : i === 0) ? 'open' : ''}><summary class="cursor-pointer px-3 py-2.5 text-xs text-gray-100"><b>${x.ym.slice(5)}/${x.ym.slice(0, 4)}</b> · ${darfStatusText(x)}</summary>
+                    <div class="px-1 pb-3"><table class="w-full text-xs"><tbody>${rows_}</tbody></table>${saldos ? `<p class="px-3 pt-2 text-[11px] text-gray-400">Saldos para o mês seguinte: ${saldos}.</p>` : ''}${pay}</div></details>`;
+            });
+            h += '</div>';
+            return rcard('1. Custos e imposto (DARF)', h, 'Estimativa. Vencimento no último dia útil do mês seguinte, sem considerar feriados.', btn);
         }
 
         function renderReports() {
@@ -1975,7 +2316,7 @@ hmoDb = db;
             let h = '';
             if (ops.length) h += secSetup(ops) + secRisk(stats(ops)) + secInOut(ops) + secPeriod(ops) + secTime(ops) + `<div class="grid md:grid-cols-2 gap-6">${secWeekday(ops)}${secAsset(ops)}</div>`;
             else h += '<p class="bg-cardBg border border-gray-800 rounded-xl p-6 text-center text-xs text-gray-500">Nenhuma operação encontrada.</p>';
-            $('repBody').innerHTML = h + secFinance(opsP, from, to) + secCalendar();
+            $('repBody').innerHTML = secTax() + h + secFinance(opsP, from, to) + secCalendar();
         }
 
         async function saveText(name, data, mime) {
