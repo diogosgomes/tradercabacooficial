@@ -622,7 +622,7 @@
                     return `<div class="border ${x.important ? 'border-amber-500 bg-amber-950/30' : 'border-gray-700 bg-gray-800/40'} rounded-lg p-3 mb-2">
                         <div class="flex flex-wrap justify-between gap-1">
                             <span class="font-bold">${x.important ? '⚠ IMPORTANTE · ' : ''}${tag}${esc(x.title)}</span>
-                            <span class="text-gray-400">${fmtDateTimeBR(x.published_at).split(',')[0]}</span></div>
+                            <span class="text-gray-400">${fmtDateTimeBR(x.published_at).replace(', ', ' - ')}</span></div>
                         <ul class="mt-1 list-disc pl-5 text-gray-300 space-y-0.5">${(x.items || []).map(i => `<li>${esc(i)}</li>`).join('')}</ul>
                         <div class="mt-2 flex flex-wrap gap-2" data-actions="${x.id}">
                             <button type="button" data-tg="${x.id}" class="px-2.5 py-1 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700">${read ? '○ Marcar como não lida' : '✔ Marcar como lida'}</button>
