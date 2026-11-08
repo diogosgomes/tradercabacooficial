@@ -463,7 +463,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V61';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V62';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -1097,7 +1097,7 @@ hmoDb = db;
 
             const net = document.getElementById('metricNetProfit');
             net.innerText = `R$ ${brl(accum)}`;
-            net.className = accum >= 0 ? 'text-2xl sm:text-3xl font-extrabold text-emerald-400' : 'text-2xl sm:text-3xl font-extrabold text-red-400';
+            net.className = 'text-sm sm:text-3xl leading-tight font-extrabold ' + (accum >= 0 ? 'text-emerald-400' : 'text-red-400');
 
             let bestSetup = 'N/A', maxProfit = -Infinity;
             for (const s in setupProfits) {
@@ -1884,7 +1884,7 @@ hmoDb = db;
             $('metricInvestedSub').innerText = (invested === 0 && dep > 0) ? 'Capital recuperado: operando com o lucro' : `${brl(dep)} depositados − ${brl(saq - profitOut)} já recuperados`;
             const capEl = $('metricCapital');
             capEl.innerText = `R$ ${brl(capital)}`;
-            capEl.className = 'text-2xl sm:text-3xl font-extrabold ' + (avail >= 0 ? 'text-emerald-400' : 'text-red-400');
+            capEl.className = 'text-sm sm:text-3xl leading-tight font-extrabold ' + (avail >= 0 ? 'text-emerald-400' : 'text-red-400');
             $('metricCapitalSub').innerText = `${brl(invested)} investido ${avail >= 0 ? '+' : '−'} ${brl(Math.abs(avail))} de ${avail >= 0 ? 'lucro' : 'prejuízo'}` + (profitOut > 0 ? ` (lucro ${brl(net)} − ${brl(profitOut)} já sacado)` : '');
 
             const tb = $('flowTableBody');
