@@ -269,9 +269,9 @@
                     </div>
                 </div>
                 <button onclick="repClearFilters()" id="repClearBtn" class="hidden border border-gray-600 hover:bg-gray-700 text-gray-200 px-3 py-2 rounded-lg text-xs font-semibold transition">✖ Limpar filtro</button>
+                <div id="repDataBox" class="w-full basis-full"></div>
                 </div>
             </div>
-            <p id="repNote" class="text-xs text-gray-400"></p>
             <div id="repBody" class="space-y-6"></div>
         </div>
 
@@ -478,7 +478,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V76';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V77';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -2035,6 +2035,8 @@ hmoDb = db;
             const pv = $('repPeriod'), pl = pv.value === 'custom' ? `${$('repFrom').value ? isoToBr($('repFrom').value) : 'início'} a ${$('repTo').value ? isoToBr($('repTo').value) : 'hoje'}` : pv.options[pv.selectedIndex].text;
             const su = $('repSetup').value, as = $('repAsset').value;
             $('repFiltSum').textContent = (pv.value === 'all' && !su && !as) ? 'Filtro desativado' : `Filtro ativo: ${pl} · ${su || 'Todos os setups'} · ${as || 'Todos os ativos'}`;
+            const nOps = filteredOps(true, true).length;
+            $('repFiltSum').textContent += ` · ${nOps} operação(ões)`;
             $('repFiltSum').classList.toggle('hidden', repFiltOpen);
             $('repClearBtn').classList.toggle('hidden', pv.value === 'all' && !su && !as);
         }
@@ -2358,12 +2360,12 @@ hmoDb = db;
             $('repCustom').classList.toggle('hidden', $('repPeriod').value !== 'custom');
             const [from, to] = periodRange(), ops = filteredOps(true, true), opsP = filteredOps(false, true);
             repFiltApply();
-            $('repNote').textContent = `${ops.length} operação(ões) no filtro.`;
             let h = '';
             if (ops.length) h += secSetup(ops) + secRisk(stats(ops)) + secInOut(ops) + secPeriod(ops) + secTime(ops) + secWD7(ops);
             else h += '<p class="bg-cardBg border border-gray-800 rounded-xl p-6 text-center text-xs text-gray-500">Nenhuma operação encontrada.</p>';
             $('repViewBtn').textContent = repShowData ? '🙈 Ocultar dados' : '👁 Ver dados filtrados';
-            $('repBody').innerHTML = secData() + secTax() + h + secFinance(opsP, from, to) + secCalendar();
+            $('repDataBox').innerHTML = secData();
+            $('repBody').innerHTML = secTax() + h + secFinance(opsP, from, to) + secCalendar();
         }
 
         async function saveText(name, data, mime) {
@@ -2393,10 +2395,10 @@ hmoDb = db;
         function secData() {
             if (!repShowData) return '';
             const D = repData();
-            if (!D.ops.length) return '';
+            if (!D.ops.length) return '<p class="text-xs text-gray-400 py-2">Nenhuma operação no filtro.</p>';
             const rowsH = D.ops.map(r => `<tr class="border-b border-gray-800/60"><td class="py-1.5 px-3 whitespace-nowrap">${esc(r.date)}</td><td class="py-1.5 px-3">${esc(r.timeIn)}</td><td class="py-1.5 px-3">${esc(r.timeOut)}</td><td class="py-1.5 px-3">${esc(r.asset)}</td><td class="py-1.5 px-3 text-[11px]">${esc(r.setup)}</td><td class="py-1.5 px-3 text-right">${esc(r.contracts)}</td><td class="py-1.5 px-3">${esc(r.type)}</td><td class="py-1.5 px-3 text-right font-mono">${brl(num(r.points))}</td>${tdm(num(r.result))}</tr>`).join('');
             const tbl = `<div class="max-h-[28rem] overflow-y-auto"><table class="w-full text-xs text-gray-300 whitespace-nowrap"><thead class="sticky top-0 bg-cardBg text-gray-400"><tr class="border-b border-gray-700 text-left">${REP_HEAD.map((h, i) => `<th class="py-2 px-3 font-semibold ${i >= 5 && i !== 6 ? 'text-right' : ''}">${h}</th>`).join('')}</tr></thead><tbody>${rowsH}</tbody><tfoot><tr class="border-t border-gray-600 font-bold"><td class="py-2 px-3" colspan="8">Total (${D.s.n} operações)</td>${tdm(D.s.net)}</tr></tfoot></table></div>`;
-            return rcard('👁 Dados filtrados', tbl, `Período: ${esc(D.per)} · Setup: ${esc(D.su)} · Ativo: ${esc(D.as)}`);
+            return rcard('👁 Dados filtrados', tbl, `Período: ${esc(D.per)} · Setup: ${esc(D.su)} · Ativo: ${esc(D.as)} · ${D.s.n} operação(ões)`);
         }
 
         /* --- utilitários binários --- */
