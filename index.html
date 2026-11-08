@@ -531,6 +531,7 @@
         function hmoSeedNotes() {
             const n = (dt, h, m, title, items, important, days) => ({ published_at: brMs(dt, h, m), expires_at: brMs(dt, h, m) + days * DAY_MS, title, items, important: !!important });
             return [
+                n([11, 7], 20, 40, 'Novo sino de novidades', ['O sino 🔔 mostra o que mudou no app, com o número de avisos não lidos.', 'Abrir o sino não marca nada como lido: você decide, aviso por aviso, ou usa "Marcar todas como lidas".', 'Marque como não lida para voltar depois e testar com calma, ou exclua só da sua tela.'], false, 15),
                 n([11, 7], 20, 0, 'Histórico de importações e exportações', ['Em Opções, "Histórico de importações" mostra quando e qual arquivo foi importado ou exportado.', 'Cada evento tem um número fixo (H1, H2…), que não muda mesmo se eventos antigos forem apagados.', 'Os 5 últimos aparecem primeiro; o histórico completo é agrupado por mês.'], false, 15),
                 n([11, 7], 19, 30, 'Importar backup agora substitui os dados', ['Ao importar, o app pergunta antes e mostra quantos registros serão trocados.', 'Os dados novos são gravados antes de apagar os antigos, para não se perder nada se algo falhar.'], false, 15),
                 n([11, 7], 8, 30, 'Tela inicial mais clara', ['Novo título "Visão geral" e cards em duas colunas no celular.', 'O mês atual abre sozinho nas listas, e os meses vão do mais recente ao mais antigo.', 'Passe o cursor (ou toque) no nome de um setup para ver o nome completo.'], false, 15),
@@ -542,7 +543,7 @@
         }
         async function newsLoad() {
             if (MODE === 'claude') {
-                const col = hmoDb.collection('release_notes_v2');
+                const col = hmoDb.collection('release_notes_v3');
                 let snap = await col.get();
                 if (!snap.docs.length) { for (const x of hmoSeedNotes()) await col.add(x); snap = await col.get(); }
                 return snap.docs.map(d => ({ ...d.data(), id: d.id }));
@@ -587,7 +588,8 @@
             await sb.from('tb_release_reads').delete().eq('note_id', id);
         }
         const newsActive = (x, now) => x.expires_at == null || x.expires_at > now;
-        const newsIsUnread = (x, st, now) => !st.dismissed.has(x.id) && !st.ids.has(x.id) && x.published_at > st.baseline && newsActive(x, now);
+        const newsCounts = (x, st, now) => x.published_at > st.baseline && (x.important ? newsActive(x, now) : now - x.published_at <= NEWS_DAYS * DAY_MS);
+        const newsIsUnread = (x, st, now) => !st.dismissed.has(x.id) && !st.ids.has(x.id) && newsCounts(x, st, now);
         async function refreshBell() {
             try {
                 const [notes, st] = await Promise.all([newsLoad(), newsReadState()]);
@@ -613,12 +615,10 @@
                 const [notes0, st] = await Promise.all([newsLoad(), newsReadState()]);
                 const now = Date.now();
                 const notes = notes0.filter(x => !st.dismissed.has(x.id)).sort((a, b) => b.published_at - a.published_at);
-                const counted = x => x.published_at > st.baseline && newsActive(x, now);
-                const fresh = new Set(notes.filter(x => newsIsUnread(x, st, now)).map(x => x.id));
                 const updBell = () => setBellCount(notes.filter(x => newsIsUnread(x, st, Date.now())).length);
                 const card = x => {
                     const read = st.ids.has(x.id);
-                    const tag = (!read || fresh.has(x.id)) && counted(x) ? (read ? '● NOVO · ' : '● NÃO LIDA · ') : '';
+                    const tag = newsIsUnread(x, st, Date.now()) ? '● NÃO LIDA · ' : '';
                     return `<div class="border ${x.important ? 'border-amber-500 bg-amber-950/30' : 'border-gray-700 bg-gray-800/40'} rounded-lg p-3 mb-2">
                         <div class="flex flex-wrap justify-between gap-1">
                             <span class="font-bold">${x.important ? '⚠ IMPORTANTE · ' : ''}${tag}${esc(x.title)}</span>
@@ -631,7 +631,7 @@
                 const wireToggles = rerender => body.querySelectorAll('[data-tg]').forEach(b => b.onclick = async () => {
                     const id = b.dataset.tg; b.disabled = true;
                     try {
-                        if (st.ids.has(id)) { await newsMarkUnread(id); st.ids.delete(id); fresh.delete(id); }
+                        if (st.ids.has(id)) { await newsMarkUnread(id); st.ids.delete(id); }
                         else { await newsMarkRead([id]); st.ids.add(id); }
                     } catch (e) { showToast('Não foi possível atualizar agora.', 'err'); }
                     updBell(); rerender();
@@ -655,29 +655,31 @@
                     older = regular.filter(x => !recent.includes(x));
                 };
                 recompute();
+                const unreadIds = () => notes.filter(x => newsIsUnread(x, st, Date.now())).map(x => x.id);
+                const markAllBar = () => unreadIds().length ? `<button type="button" id="nwAll" class="mb-3 w-full px-3 py-2 rounded-lg border border-gray-500 text-gray-100 hover:bg-gray-700 font-semibold">✔ Marcar todas como lidas (${unreadIds().length})</button>` : '';
+                const wireAll = rerender => { const b = body.querySelector('#nwAll'); if (b) b.onclick = async () => {
+                    b.disabled = true; const ids = unreadIds();
+                    try { await newsMarkRead(ids); ids.forEach(id => st.ids.add(id)); } catch (e) { showToast('Não foi possível atualizar agora.', 'err'); }
+                    updBell(); rerender(); }; };
                 const showMain = () => {
-                    body.innerHTML = important.map(card).join('')
+                    body.innerHTML = markAllBar() + important.map(card).join('')
                         + (recent.length ? recent.map(card).join('') : `<p class="text-gray-400 mb-2">Sem novidades nos últimos ${NEWS_DAYS} dias.</p>`)
                         + (older.length ? `<button type="button" id="nwOld" class="mt-2 w-full px-3 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-semibold">Ver anteriores (${older.length})</button>` : '');
                     const o = body.querySelector('#nwOld'); if (o) o.onclick = showOld;
-                    wireToggles(showMain); wireDelete(showMain);
+                    wireToggles(showMain); wireDelete(showMain); wireAll(showMain);
                 };
                 let openM;
                 const showOld = () => {
                     const g = {}; older.forEach(x => { const k = auditMonthKey(x.published_at); (g[k] = g[k] || []).push(x); });
                     const keys = Object.keys(g).sort().reverse();
                     if (openM === undefined) openM = keys[0];
-                    body.innerHTML = '<button type="button" id="nwBack" class="mb-3 px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-semibold">← Voltar</button>'
+                    body.innerHTML = '<button type="button" id="nwBack" class="mb-3 px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-semibold">← Voltar</button>' + markAllBar()
                         + keys.map(k => { const [yy, mm] = k.split('-'); return `<button type="button" data-m="${k}" class="w-full text-left px-3 py-2 mb-2 rounded-lg bg-gray-800 hover:bg-gray-700 font-semibold">${openM === k ? '−' : '+'} ${mm}/${yy} – ${g[k].length} ${g[k].length === 1 ? 'novidade' : 'novidades'}</button>` + (openM === k ? g[k].map(card).join('') : ''); }).join('');
                     body.querySelector('#nwBack').onclick = showMain;
                     body.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { openM = openM === b.dataset.m ? null : b.dataset.m; showOld(); });
-                    wireToggles(showOld); wireDelete(() => { if (older.length) showOld(); else showMain(); });
+                    wireToggles(showOld); wireAll(showOld); wireDelete(() => { if (older.length) showOld(); else showMain(); });
                 };
-                // abrir a janela marca como lidas as novas; a pessoa pode desmarcar uma a uma
-                const toRead = [...fresh];
-                toRead.forEach(id => st.ids.add(id));
                 showMain(); updBell();
-                try { await newsMarkRead(toRead); } catch (e) { toRead.forEach(id => st.ids.delete(id)); updBell(); }
             } catch (e) {
                 body.innerHTML = '<p class="text-red-300">Não foi possível carregar as novidades agora.</p>';
             }
