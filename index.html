@@ -236,7 +236,9 @@
         </div>
 
         <div id="panelReport" class="hidden space-y-6">
-            <div class="bg-cardBg border border-gray-800 rounded-xl p-4 shadow-lg flex flex-wrap gap-3 items-end">
+            <div class="bg-cardBg border border-gray-800 rounded-xl shadow-lg">
+                <div class="px-4 sm:px-6 py-3"><button type="button" onclick="repFiltToggle()" id="repFiltHead" aria-expanded="true" class="w-full text-left flex items-start gap-2"><span id="repFiltSign" class="inline-block w-5 text-center font-mono text-gray-300 border border-gray-700 rounded shrink-0">−</span><span class="min-w-0"><span class="block font-bold text-gray-200 text-xs sm:text-sm">1. Filtros e exportação</span><span id="repFiltSum" class="hidden block text-[10px] sm:text-[11px] text-gray-400 mt-0.5 font-normal"></span></span></button></div>
+                <div id="repFiltBody" class="px-4 pb-4 pt-3 border-t border-gray-800 flex flex-wrap gap-3 items-end">
                 <div>
                     <label class="block text-xs font-medium text-gray-400 mb-1">Período</label>
                     <select id="repPeriod" onchange="renderReports()" class="bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200">
@@ -256,7 +258,18 @@
                     <label class="block text-xs font-medium text-gray-400 mb-1">Ativo</label>
                     <select id="repAsset" onchange="renderReports()" class="bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"><option value="">Todos</option></select>
                 </div>
-                <button onclick="exportReportCsv()" class="bg-violet-700 hover:bg-violet-600 text-white px-3 py-2 rounded-lg text-xs font-semibold transition">📥 Exportar CSV</button>
+                <button onclick="repToggleData()" id="repViewBtn" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-xs font-semibold transition">👁 Ver dados filtrados</button>
+                <div class="relative">
+                    <button onclick="repMenuToggle(event)" class="bg-violet-700 hover:bg-violet-600 text-white px-3 py-2 rounded-lg text-xs font-semibold transition">📥 Exportar ▾</button>
+                    <div id="repMenu" class="hidden absolute right-0 mt-1 w-44 bg-cardBg border border-gray-700 rounded-lg shadow-xl z-20 text-xs overflow-hidden">
+                        <button onclick="exportReportPdf()" class="block w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📄 PDF</button>
+                        <button onclick="exportReportDocx()" class="block w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📝 Word (.docx)</button>
+                        <button onclick="exportReportXlsx()" class="block w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📊 Excel (.xlsx)</button>
+                        <button onclick="exportReportCsv()" class="block w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🧾 CSV</button>
+                    </div>
+                </div>
+                <button onclick="repClearFilters()" id="repClearBtn" class="hidden border border-gray-600 hover:bg-gray-700 text-gray-200 px-3 py-2 rounded-lg text-xs font-semibold transition">✖ Limpar filtro</button>
+                </div>
             </div>
             <p id="repNote" class="text-xs text-gray-400"></p>
             <div id="repBody" class="space-y-6"></div>
@@ -320,15 +333,17 @@
                 <div>
                     <label class="block text-xs font-medium text-gray-400 mb-1">Setup Utilizado</label>
                     <select id="tSetup" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200">
-                        <option value="Pullback0930_Max3int4b_PriceAction_Cpernas_operacoesCondicionadasde250e200pontos">Pullback0930_Max3int4b_PriceAction_Cpernas_operacoesCondicionadasde250e200pontos</option>
-                        <option value="Pullback1005_Max3intervalo4barras">Pullback1005_Max3intervalo4barras</option>
-                        <option value="Pullback1015_Max3COM2contratos">Pullback1015_Max3COM2contratos</option>
-                        <option value="Pullback1015_Max3">Pullback1015_Max3</option>
+                        <option value="Operações anteriores a 10/2026">Operações anteriores a 10/2026</option>
+                        <option value="Outras - Fora do Setup">Outras - Fora do Setup</option>
+                        <option value="Setup Topo e Fundo">Setup Topo e Fundo</option>
+                        <option value="Setup_Pullback0930_Max3int4b_PriceAction_Cpernas_operacoesCondicionadasde250e200pontos">Setup_Pullback0930_Max3int4b_PriceAction_Cpernas_operacoesCondicionadasde250e200pontos</option>
+                        <option value="Setup_Pullback1005_Max3intervalo4barras">Setup_Pullback1005_Max3intervalo4barras</option>
+                        <option value="Setup_Pullback1015_Max3">Setup_Pullback1015_Max3</option>
+                        <option value="Setup_Pullback1015_Max3COM2contratos">Setup_Pullback1015_Max3COM2contratos</option>
+                        <option value="Setup_Pullback1015_Max3intervalo4barras">Setup_Pullback1015_Max3intervalo4barras</option>
+                        <option value="Setup_Pullback250pontos0930_Max3intervalo3barras">Setup_Pullback250pontos0930_Max3intervalo3barras</option>
                         <option value="SetupGemini_Pullback250pontosSEMprotecao1015">SetupGemini_Pullback250pontosSEMprotecao1015</option>
                         <option value="SetupGemini_SR_Max3">SetupGemini_SR_Max3</option>
-                        <option value="Pullback250pontos0930_Max3intervalo3barras">Pullback250pontos0930_Max3intervalo3barras</option>
-                        <option value="Pullback1015_Max3intervalo4barras">Pullback1015_Max3intervalo4barras</option>
-                        <option value="Outras - Fora do Setup">Outras - Fora do Setup</option>
                     </select>
                 </div>
 
@@ -463,7 +478,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V67';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V76';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -514,7 +529,17 @@
         let currentUserId = null;
         const brToIso = d => { const [dd, mm, yy] = String(d).split('/'); return `${yy}-${mm}-${dd}`; };
         const isoToBr = d => { const [yy, mm, dd] = String(d).split('-'); return `${dd}/${mm}/${yy}`; };
-        const tradeFromDb = r => ({ id: r.id, date: isoToBr(r.trade_date), timeIn: r.time_in, timeOut: r.time_out, asset: r.asset, setup: r.setup, contracts: r.contracts, type: r.type, points: r.points, result: Number(r.result), ts: Number(r.ts) });
+        const SETUP_RENAME = {
+            'Pullback0930_Max3int4b_PriceAction_Cpernas_operacoesCondicionadasde250e200pontos': 'Setup_Pullback0930_Max3int4b_PriceAction_Cpernas_operacoesCondicionadasde250e200pontos',
+            'Pullback1005_Max3intervalo4barras': 'Setup_Pullback1005_Max3intervalo4barras',
+            'Pullback1015_Max3COM2contratos': 'Setup_Pullback1015_Max3COM2contratos',
+            'Pullback1015_Max3': 'Setup_Pullback1015_Max3',
+            'Pullback250pontos0930_Max3intervalo3barras': 'Setup_Pullback250pontos0930_Max3intervalo3barras',
+            'Pullback1015_Max3intervalo4barras': 'Setup_Pullback1015_Max3intervalo4barras'
+        };
+        const DEFAULT_SETUP = 'Setup_Pullback0930_Max3int4b_PriceAction_Cpernas_operacoesCondicionadasde250e200pontos';
+        const normSetup = v => SETUP_RENAME[v] || v;
+        const tradeFromDb = r => ({ id: r.id, date: isoToBr(r.trade_date), timeIn: r.time_in, timeOut: r.time_out, asset: r.asset, setup: normSetup(r.setup), contracts: r.contracts, type: r.type, points: r.points, result: Number(r.result), ts: Number(r.ts) });
         const tradeToDb = t => ({ trade_date: brToIso(t.date), time_in: t.timeIn, time_out: t.timeOut, asset: t.asset, setup: t.setup, contracts: t.contracts, type: t.type, points: t.points, result: t.result, ts: t.ts });
         const flowFromDb = r => ({ id: r.id, date: isoToBr(r.flow_date), type: r.type, amount: Number(r.amount), from: r.from_bank, to: r.to_bank, ts: Number(r.ts), createdAt: Number(r.created_ms) });
         const flowToDb = f => { const o = { flow_date: brToIso(f.date), type: f.type, amount: f.amount, from_bank: f.from, to_bank: f.to, ts: f.ts }; if (f.createdAt) o.created_ms = f.createdAt; return o; };
@@ -958,7 +983,7 @@ hmoDb = db;
             const timer = setTimeout(() => setStatus('Sem resposta…', 'warn'), 10000);
             dbCol.orderBy('ts', 'asc').onSnapshot(snap => {
                 if (!snap.metadata.fromCache) { clearTimeout(timer); setStatus('Salvo online ✓', 'ok'); }
-                rows = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+                rows = snap.docs.map(d => { const x = { ...d.data(), id: d.id }; x.setup = normSetup(x.setup); return x; });
                 processAndRender();
             }, () => { clearTimeout(timer); setStatus('Erro sync', 'err'); });
         }
@@ -1015,7 +1040,7 @@ hmoDb = db;
                         timeIn: normTime(r.timeIn),
                         timeOut: normTime(r.timeOut || r.timeIn),
                         asset: String(r.asset || ''),
-                        setup: String(r.setup || ''),
+                        setup: normSetup(String(r.setup || '')),
                         contracts: parseInt(r.contracts) || 1,
                         type: r.type,
                         points: Math.round(Number(r.points) || 0),
@@ -1234,6 +1259,7 @@ hmoDb = db;
                 setField('tType', 'Gain');
                 setField('tPoints', 300);
                 setField('tMoney', '60,00');
+                document.getElementById('tSetup').value = DEFAULT_SETUP;
             }
             paintEntryTabs('op', !!row);
             const m = document.getElementById('tradeModal');
@@ -1998,7 +2024,20 @@ hmoDb = db;
         }
 
         const rcard = (t, h, note, extra) => `<div class="bg-cardBg border border-gray-800 rounded-xl shadow-lg overflow-hidden"><div class="px-4 sm:px-6 py-3 border-b border-gray-800 flex flex-wrap gap-2 justify-between items-center"><div><h3 class="font-bold text-gray-200 text-xs sm:text-sm">${t}</h3>${note ? `<p class="text-[10px] sm:text-[11px] text-gray-500 mt-0.5">${note}</p>` : ''}</div>${extra || ''}</div><div class="overflow-x-auto">${h}</div></div>`;
-        let repOpen = '1';
+        let repOpen = null;   // itens 2 a 10: um por vez; todos recolhidos ao entrar
+        let repFiltOpen = true;   // seção 1 (filtros): independente do acordeão
+        function repClearFilters() { $('repPeriod').value = 'all'; $('repFrom').value = ''; $('repTo').value = ''; $('repSetup').value = ''; $('repAsset').value = ''; renderReports(); }
+        function repFiltToggle() { repFiltOpen = !repFiltOpen; repFiltApply(); }
+        function repFiltApply() {
+            $('repFiltBody').classList.toggle('hidden', !repFiltOpen);
+            $('repFiltSign').textContent = repFiltOpen ? '−' : '+';
+            $('repFiltHead').setAttribute('aria-expanded', repFiltOpen);
+            const pv = $('repPeriod'), pl = pv.value === 'custom' ? `${$('repFrom').value ? isoToBr($('repFrom').value) : 'início'} a ${$('repTo').value ? isoToBr($('repTo').value) : 'hoje'}` : pv.options[pv.selectedIndex].text;
+            const su = $('repSetup').value, as = $('repAsset').value;
+            $('repFiltSum').textContent = (pv.value === 'all' && !su && !as) ? 'Filtro desativado' : `Filtro ativo: ${pl} · ${su || 'Todos os setups'} · ${as || 'Todos os ativos'}`;
+            $('repFiltSum').classList.toggle('hidden', repFiltOpen);
+            $('repClearBtn').classList.toggle('hidden', pv.value === 'all' && !su && !as);
+        }
         function repToggle(k) { repOpen = (repOpen === k) ? null : k; renderReports(); }
         const rsec = (k, t, h, note, extra) => { const o = repOpen === k; return `<div class="bg-cardBg border border-gray-800 rounded-xl shadow-lg overflow-hidden"><div class="px-4 sm:px-6 py-3 ${o ? 'border-b border-gray-800' : ''} flex flex-wrap gap-2 justify-between items-center"><button type="button" onclick="repToggle('${k}')" aria-expanded="${o}" class="flex-1 min-w-0 text-left flex items-start gap-2"><span class="inline-block w-5 text-center font-mono text-gray-300 border border-gray-700 rounded shrink-0">${o ? '−' : '+'}</span><span><span class="block font-bold text-gray-200 text-xs sm:text-sm">${t}</span>${note ? `<span class="block text-[10px] sm:text-[11px] text-gray-500 mt-0.5 font-normal">${note}</span>` : ''}</span></button>${o ? (extra || '') : ''}</div>${o ? `<div class="overflow-x-auto">${h}</div>` : ''}</div>`; };
         const rtable = (head, body) => `<table class="w-full text-left text-xs whitespace-nowrap"><thead><tr class="bg-gray-900/50 text-gray-400 border-b border-gray-800 uppercase tracking-wider">${head.map((h, i) => `<th class="py-2 px-3 ${i ? 'text-right' : ''}">${h}</th>`).join('')}</tr></thead><tbody class="divide-y divide-gray-800 text-gray-300">${body}</tbody></table>`;
@@ -2010,16 +2049,16 @@ hmoDb = db;
 
         function secSetup(ops) {
             const g = [...group(ops, r => r.setup)].sort((a, b) => stats(b[1]).net - stats(a[1]).net);
-            return rsec('2', '2. Desempenho por setup', rtable(['Setup', 'Operações', 'Win rate', 'Resultado', 'Pontos', 'Média/op.'], simpleRows(g, true)), '⚠ = menos de 30 operações.');
+            return rsec('2', '3. Desempenho por setup', rtable(['Setup', 'Operações', 'Win rate', 'Resultado', 'Pontos', 'Média/op.'], simpleRows(g, true)), '⚠ = menos de 30 operações.');
         }
         function secRisk(s) {
             const c = (t, v, sub) => `<div class="bg-darkBg border border-gray-800 rounded-lg p-3"><p class="text-[10px] sm:text-[11px] text-gray-400 uppercase tracking-wider">${t}</p><p class="mt-1 text-base sm:text-lg font-bold text-gray-100">${v}</p>${sub ? `<p class="text-[9px] sm:text-[10px] text-gray-500">${sub}</p>` : ''}</div>`;
             const h = `<div class="p-4 grid grid-cols-2 md:grid-cols-4 gap-3">${c('Payoff', fx(s.payoff), 'ganho ÷ perda')}${c('Profit factor', fx(s.pf), 'lucro ÷ prejuízo')}${c('Expectativa/op.', money(s.exp))}${c('Drawdown máximo', 'R$ ' + brl(s.dd))}${c('Ganho médio', 'R$ ' + brl(s.avgGain))}${c('Perda média', 'R$ ' + brl(s.avgLoss))}${c('Maior seq. ganhos', s.sw + ' op.')}${c('Maior seq. perdas', s.sl + ' op.')}</div>`;
-            return rsec('3', '3. Métricas de risco', h);
+            return rsec('3', '4. Métricas de risco', h);
         }
         function secInOut(ops) {
-            const OUT = 'Outras - Fora do Setup', a = ops.filter(r => r.setup !== OUT), b = ops.filter(r => r.setup === OUT);
-            return rsec('4', '4. Dentro x fora do setup', rtable(['Grupo', 'Operações', 'Win rate', 'Resultado', 'Média/op.'], simpleRows([['Dentro', a], ['Fora', b]].filter(x => x[1].length), false)));
+            const OUT = ['Outras - Fora do Setup', 'Operações anteriores a 10/2026'], a = ops.filter(r => !OUT.includes(r.setup)), b = ops.filter(r => OUT.includes(r.setup));
+            return rsec('4', '5. Dentro x fora do setup', rtable(['Grupo', 'Operações', 'Win rate', 'Resultado', 'Média/op.'], simpleRows([['Dentro', a], ['Fora', b]].filter(x => x[1].length), false)));
         }
         function weekKey(iso) { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; }
         function secPeriod(ops) {
@@ -2032,12 +2071,12 @@ hmoDb = db;
             }).join('');
             const on = 'px-2.5 py-1 bg-gray-700 text-white font-semibold', off = 'px-2.5 py-1 text-gray-400 hover:text-gray-200';
             const tog = `<div class="flex rounded-lg border border-gray-700 overflow-hidden text-xs"><button onclick="setGran('month')" class="${repGran === 'month' ? on : off}">Mensal</button><button onclick="setGran('week')" class="${repGran === 'week' ? on : off}">Semanal</button></div>`;
-            return rsec('5', '5. Resumo mensal e semanal', rtable(['Período', 'Op.', 'Win rate', 'Resultado', 'Pontos', 'Melhor dia', 'Pior dia'], body), null, tog);
+            return rsec('5', '6. Resumo mensal e semanal', rtable(['Período', 'Op.', 'Win rate', 'Resultado', 'Pontos', 'Melhor dia', 'Pior dia'], body), null, tog);
         }
         function secTime(ops) {
             const slot = r => { const [h, m] = String(r.timeIn).split(':').map(Number); return `${pad2(h)}:${m < 30 ? '00' : '30'}`; };
             const g = [...group(ops, slot)].sort((a, b) => a[0].localeCompare(b[0])).map(([k, l]) => { const e = k.endsWith('00') ? '29' : '59'; return [`${k}–${k.slice(0, 2)}:${e}`, l]; });
-            return rsec('6', '6. Por horário de entrada', rtable(['Faixa', 'Op.', 'Win rate', 'Resultado', 'Média/op.'], simpleRows(g, false)));
+            return rsec('6', '7. Por horário de entrada', rtable(['Faixa', 'Op.', 'Win rate', 'Resultado', 'Média/op.'], simpleRows(g, false)));
         }
         function secWeekday(ops) {
             const names = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'], order = [1, 2, 3, 4, 5, 6, 0];
@@ -2045,7 +2084,7 @@ hmoDb = db;
             const g = order.filter(d => m.has(d)).map(d => [names[d], m.get(d)]);
             return rcard('7a. Por dia da semana', rtable(['Dia', 'Op.', 'Win rate', 'Resultado', 'Média/op.'], simpleRows(g, false)));
         }
-        function secWD7(ops) { return rsec('7', '7. Por dia da semana e por ativo', `<div class="grid md:grid-cols-2 gap-4 p-3">${secWeekday(ops)}${secAsset(ops)}</div>`); }
+        function secWD7(ops) { return rsec('7', '8. Por dia da semana e por ativo', `<div class="grid md:grid-cols-2 gap-4 p-3">${secWeekday(ops)}${secAsset(ops)}</div>`); }
         function secAsset(ops) {
             const g = [...group(ops, r => r.asset)].sort((a, b) => stats(b[1]).net - stats(a[1]).net);
             return rcard('7b. Por ativo', rtable(['Ativo', 'Op.', 'Win rate', 'Resultado', 'Média/op.'], simpleRows(g, false)));
@@ -2070,7 +2109,7 @@ hmoDb = db;
                 const rent = inv > 0 ? profit / inv * 100 : null;
                 return `<tr class="bg-gray-900/60 font-bold">${lbl('Total do período')}${td('+ ' + brl(dep), 'text-blue-300')}${td('− ' + brl(saq), 'text-amber-300')}${tdm(dep - saq)}${tdm(profit)}${td('R$ ' + brl(inv))}${td(rent === null ? '—' : (rent >= 0 ? '+' : '−') + pct(Math.abs(rent)), rent === null ? '' : mcls(rent))}</tr>`;
             })();
-            return rsec('8', '8. Financeiro: fluxo e rentabilidade', rtable(['Mês', 'Dep.', 'Saques', 'Fluxo', 'Lucro op.', 'Investido', 'Rent.'], body + totRow));
+            return rsec('8', '9. Financeiro: fluxo e rentabilidade', rtable(['Mês', 'Dep.', 'Saques', 'Fluxo', 'Lucro op.', 'Investido', 'Rent.'], body + totRow));
         }
         function setGran(g) { repGran = g; renderReports(); }
         function calNav(d) { const [y, m] = calMonth.split('-').map(Number), dt = new Date(y, m - 1 + d, 1); const nx = `${dt.getFullYear()}-${pad2(dt.getMonth() + 1)}`; if (nx > todayLocalISO().slice(0, 7)) return; calMonth = nx; renderReports(); }
@@ -2092,7 +2131,7 @@ hmoDb = db;
             }
             const nav = `<div class="flex items-center gap-2 text-xs"><button onclick="calNav(-1)" class="px-2 py-1 rounded border border-gray-700">◀</button><span class="font-semibold text-gray-200">${pad2(m)}/${y}</span><button onclick="calNav(1)" ${calMonth >= todayIso.slice(0, 7) ? 'disabled aria-disabled="true"' : ''} class="px-2 py-1 rounded border border-gray-700 ${calMonth >= todayIso.slice(0, 7) ? 'opacity-30 cursor-not-allowed' : ''}">▶</button></div>`;
             const h = `<div class="p-3"><div class="grid grid-cols-7 gap-1">${cells}</div><p class="mt-3 text-xs text-gray-400">Total do mês: <span class="font-mono font-bold ${mcls(total)}">${money(total)}</span> (${cnt} op.)</p></div>`;
-            return rsec('9', '9. Calendário de resultados', h, null, nav);
+            return rsec('9', '10. Calendário de resultados', h, null, nav);
         }
 
 
@@ -2310,7 +2349,7 @@ hmoDb = db;
                     <div class="px-1 pb-3"><table class="w-full text-xs"><tbody>${rows_}</tbody></table>${saldos ? `<p class="px-3 pt-2 text-[11px] text-gray-400">Saldos para o mês seguinte: ${saldos}.</p>` : ''}${pay}</div></details>`;
             });
             h += '</div>';
-            return rsec('1', '1. Custos e imposto (DARF)', h, 'Estimativa. Vencimento no último dia útil do mês seguinte, sem considerar feriados.', btn);
+            return rsec('1', '2. Custos e imposto (DARF)', h, 'Estimativa. Vencimento no último dia útil do mês seguinte, sem considerar feriados.', btn);
         }
 
         function renderReports() {
@@ -2318,11 +2357,13 @@ hmoDb = db;
             fillSel('repAsset', [...new Set(rows.map(r => r.asset))].sort());
             $('repCustom').classList.toggle('hidden', $('repPeriod').value !== 'custom');
             const [from, to] = periodRange(), ops = filteredOps(true, true), opsP = filteredOps(false, true);
+            repFiltApply();
             $('repNote').textContent = `${ops.length} operação(ões) no filtro.`;
             let h = '';
             if (ops.length) h += secSetup(ops) + secRisk(stats(ops)) + secInOut(ops) + secPeriod(ops) + secTime(ops) + secWD7(ops);
             else h += '<p class="bg-cardBg border border-gray-800 rounded-xl p-6 text-center text-xs text-gray-500">Nenhuma operação encontrada.</p>';
-            $('repBody').innerHTML = secTax() + h + secFinance(opsP, from, to) + secCalendar();
+            $('repViewBtn').textContent = repShowData ? '🙈 Ocultar dados' : '👁 Ver dados filtrados';
+            $('repBody').innerHTML = secData() + secTax() + h + secFinance(opsP, from, to) + secCalendar();
         }
 
         async function saveText(name, data, mime) {
@@ -2331,11 +2372,157 @@ hmoDb = db;
             a.href = 'data:' + mime + ';charset=utf-8,' + encodeURIComponent(data); a.download = name;
             document.body.appendChild(a); a.click(); a.remove();
         }
+        /* ===== Relatórios: ver dados na tela + exportar (CSV, Excel, Word, PDF) — sem bibliotecas ===== */
+        let repShowData = false;
+        const REP_HEAD = ['Data', 'Entrada', 'Saída', 'Ativo', 'Setup', 'Contratos', 'Tipo', 'Pontos', 'Resultado (R$)'];
+        function repData() {
+            const ops = filteredOps(true, true).slice().reverse();   // mais recente primeiro
+            const pv = $('repPeriod'), pl = pv.options[pv.selectedIndex].text;
+            const per = pv.value === 'custom' ? `${$('repFrom').value ? isoToBr($('repFrom').value) : 'início'} a ${$('repTo').value ? isoToBr($('repTo').value) : 'hoje'}` : pl;
+            const d = new Date(), gen = `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+            return { ops, s: stats(ops), per, su: $('repSetup').value || 'Todos', as: $('repAsset').value || 'Todos', gen };
+        }
+        function repSummaryLines(D) {
+            const s = D.s;
+            return [`Operações: ${s.n}   |   Resultado líquido: ${money(s.net)}   |   Acerto: ${pct(s.wr)}   |   Pontos: ${s.pts >= 0 ? '+' : '−'}${brl(Math.abs(s.pts))}`];
+        }
+        function repFileName(ext) { const d = new Date(); return `${pad2(d.getDate())}${pad2(d.getMonth() + 1)}${String(d.getFullYear()).slice(2)}_${pad2(d.getHours())}${pad2(d.getMinutes())}_Relatório_de_Operações_My_Trade_Dash.${ext}`; }
+        function repToggleData() { repShowData = !repShowData; renderReports(); }
+        function repMenuToggle(ev) { if (ev) ev.stopPropagation(); $('repMenu').classList.toggle('hidden'); }
+        document.addEventListener('click', () => { const m = $('repMenu'); if (m) m.classList.add('hidden'); });
+        function secData() {
+            if (!repShowData) return '';
+            const D = repData();
+            if (!D.ops.length) return '';
+            const rowsH = D.ops.map(r => `<tr class="border-b border-gray-800/60"><td class="py-1.5 px-3 whitespace-nowrap">${esc(r.date)}</td><td class="py-1.5 px-3">${esc(r.timeIn)}</td><td class="py-1.5 px-3">${esc(r.timeOut)}</td><td class="py-1.5 px-3">${esc(r.asset)}</td><td class="py-1.5 px-3 text-[11px]">${esc(r.setup)}</td><td class="py-1.5 px-3 text-right">${esc(r.contracts)}</td><td class="py-1.5 px-3">${esc(r.type)}</td><td class="py-1.5 px-3 text-right font-mono">${brl(num(r.points))}</td>${tdm(num(r.result))}</tr>`).join('');
+            const tbl = `<div class="max-h-[28rem] overflow-y-auto"><table class="w-full text-xs text-gray-300 whitespace-nowrap"><thead class="sticky top-0 bg-cardBg text-gray-400"><tr class="border-b border-gray-700 text-left">${REP_HEAD.map((h, i) => `<th class="py-2 px-3 font-semibold ${i >= 5 && i !== 6 ? 'text-right' : ''}">${h}</th>`).join('')}</tr></thead><tbody>${rowsH}</tbody><tfoot><tr class="border-t border-gray-600 font-bold"><td class="py-2 px-3" colspan="8">Total (${D.s.n} operações)</td>${tdm(D.s.net)}</tr></tfoot></table></div>`;
+            return rcard('👁 Dados filtrados', tbl, `Período: ${esc(D.per)} · Setup: ${esc(D.su)} · Ativo: ${esc(D.as)}`);
+        }
+
+        /* --- utilitários binários --- */
+        const U8 = s => new TextEncoder().encode(s);
+        const CRC_T = (() => { const t = []; for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+        const crc32 = b => { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+        function zipStore(files) {   // ZIP sem compressão (suficiente para xlsx/docx)
+            const parts = [], cen = []; let off = 0;
+            const u16 = n => [n & 255, (n >>> 8) & 255], u32 = n => [n & 255, (n >>> 8) & 255, (n >>> 16) & 255, (n >>> 24) & 255];
+            files.forEach(f => {
+                const nm = U8(f.name), d = typeof f.data === 'string' ? U8(f.data) : f.data, c = crc32(d);
+                const lh = new Uint8Array([0x50, 0x4B, 3, 4, ...u16(20), ...u16(0x0800), ...u16(0), ...u16(0), ...u16(0x21), ...u32(c), ...u32(d.length), ...u32(d.length), ...u16(nm.length), ...u16(0)]);
+                parts.push(lh, nm, d);
+                cen.push(new Uint8Array([0x50, 0x4B, 1, 2, ...u16(20), ...u16(20), ...u16(0x0800), ...u16(0), ...u16(0), ...u16(0x21), ...u32(c), ...u32(d.length), ...u32(d.length), ...u16(nm.length), ...u16(0), ...u16(0), ...u16(0), ...u16(0), ...u32(0), ...u32(off)]), nm);
+                off += lh.length + nm.length + d.length;
+            });
+            const cs = cen.reduce((a, b) => a + b.length, 0);
+            parts.push(...cen, new Uint8Array([0x50, 0x4B, 5, 6, 0, 0, 0, 0, ...u16(files.length), ...u16(files.length), ...u32(cs), ...u32(off), 0, 0]));
+            const out = new Uint8Array(off + cs + 22); let p = 0; parts.forEach(a => { out.set(a, p); p += a.length; }); return out;
+        }
+        async function saveBin(name, bytes, mime) {
+            try { const dl = await window.claude.use('downloads'); if (dl) { await dl.save({ filename: name, data: bytes }); return; } } catch (e) { if (e && e.code === 'declined') return; }
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([bytes], { type: mime })); a.download = name;
+            document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+        }
+        const X = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
+
         function exportReportCsv() {
             const q = v => `"${String(v).replace(/"/g, '""')}"`;
-            const head = ['Data', 'Entrada', 'Saída', 'Ativo', 'Setup', 'Contratos', 'Tipo', 'Pontos', 'Resultado (R$)'];
-            const lines = filteredOps(true, true).map(r => [r.date, r.timeIn, r.timeOut, r.asset, r.setup, r.contracts, r.type, num(r.points), brl(num(r.result))].map(q).join(';'));
-            saveText(backupName().replace('diario_operacoes_backup.json', 'relatorio_operacoes.csv'), '\ufeff' + [head.map(q).join(';'), ...lines].join('\r\n'), 'text/csv');
+            const lines = repData().ops.map(r => [r.date, r.timeIn, r.timeOut, r.asset, r.setup, r.contracts, r.type, brl(num(r.points)), brl(num(r.result))].map(q).join(';'));
+            const D = repData(), pad = ';'.repeat(8), tot = ['Total', '', '', '', '', '', '', brl(D.s.pts), brl(D.s.net)].map(q).join(';');
+            saveText(repFileName('csv'), '\ufeff' + [q('My Trade Dash — Relatório de operações') + pad, q(`Período: ${D.per} | Setup: ${D.su} | Ativo: ${D.as} | Gerado em ${D.gen}`) + pad, pad, REP_HEAD.map(q).join(';'), ...lines, tot].join('\r\n'), 'text/csv');
+        }
+
+        function exportReportXlsx() {
+            const D = repData(), n = D.ops.length;
+            const serial = d => { const [dd, mm, yy] = d.split('/').map(Number); return Math.round((Date.UTC(yy, mm - 1, dd) - Date.UTC(1899, 11, 30)) / 864e5); };
+            const S = (v, st) => `<c t="inlineStr"${st ? ` s="${st}"` : ''}><is><t xml:space="preserve">${X(v)}</t></is></c>`;
+            const N = (v, st) => `<c${st ? ` s="${st}"` : ''}><v>${v}</v></c>`;
+            const TT = 'My Trade Dash — Relatório de operações', SUB = `Período: ${D.per} | Setup: ${D.su} | Ativo: ${D.as} | Gerado em ${D.gen}`;
+            let r = `<row r="1" ht="24" customHeight="1">${S(TT, 5)}</row><row r="2">${S(SUB, 6)}</row><row r="4">${REP_HEAD.map(h => S(h, 1)).join('')}</row>`;
+            D.ops.forEach((o, i) => {
+                r += `<row r="${i + 5}">${N(serial(o.date), 2)}${S(o.timeIn)}${S(o.timeOut)}${S(o.asset)}${S(o.setup)}${N(num(o.contracts))}${S(o.type)}${N(num(o.points), 3)}${N(num(o.result), 3)}</row>`;
+            });
+            r += `<row r="${n + 5}">${S('Total', 1)}${n ? `<c r="H${n + 5}" s="4"><f>SUM(H5:H${n + 4})</f></c><c r="I${n + 5}" s="4"><f>SUM(I5:I${n + 4})</f></c>` : ''}</row>`;
+            const widths = [11, 9, 9, 8, 70, 10, 8, 10, 15];
+            const sheet = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="4" topLeftCell="A5" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join('')}</cols><sheetData>${r}</sheetData>${n ? `<autoFilter ref="A4:I${n + 4}"/>` : ''}<mergeCells count="2"><mergeCell ref="A1:I1"/><mergeCell ref="A2:I2"/></mergeCells></worksheet>`;
+            const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="3"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="16"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFDDE6F5"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="7"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/><xf numFmtId="14" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="4" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="4" fontId="1" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyFont="1"/><xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment horizontal="center"/></xf><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1" applyAlignment="1"><alignment horizontal="center"/></xf></cellXfs></styleSheet>`;
+            const ct = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`;
+            const rel = (t, tg) => `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${t}</Relationships>`;
+            const R = (id, type, tg) => `<Relationship Id="${id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/${type}" Target="${tg}"/>`;
+            const wb = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Operações" sheetId="1" r:id="rId1"/></sheets></workbook>`;
+            const z = zipStore([
+                { name: '[Content_Types].xml', data: ct }, { name: '_rels/.rels', data: rel(R('rId1', 'officeDocument', 'xl/workbook.xml')) },
+                { name: 'xl/workbook.xml', data: wb }, { name: 'xl/_rels/workbook.xml.rels', data: rel(R('rId1', 'worksheet', 'worksheets/sheet1.xml') + R('rId2', 'styles', 'styles.xml')) },
+                { name: 'xl/styles.xml', data: styles }, { name: 'xl/worksheets/sheet1.xml', data: sheet }]);
+            saveBin(repFileName('xlsx'), z, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        }
+
+        function exportReportDocx() {
+            const D = repData(), s = D.s;
+            const run = (t, o = {}) => `<w:r><w:rPr>${o.b ? '<w:b/>' : ''}${o.sz ? `<w:sz w:val="${o.sz}"/>` : ''}</w:rPr><w:t xml:space="preserve">${X(t)}</w:t></w:r>`;
+            const p = (t, o = {}) => `<w:p><w:pPr><w:spacing w:after="${o.after == null ? 80 : o.after}"/>${o.right ? '<w:jc w:val="right"/>' : ''}</w:pPr>${run(t, o)}</w:p>`;
+            const W = [1150, 850, 850, 1700, 5300, 1000, 700, 1000, 1400];
+            const cell = (t, i, o = {}) => `<w:tc><w:tcPr><w:tcW w:w="${W[i]}" w:type="dxa"/>${o.fill ? `<w:shd w:val="clear" w:color="auto" w:fill="${o.fill}"/>` : ''}</w:tcPr>${p(t, { b: o.b, sz: 16, after: 0, right: i >= 5 && i !== 6 })}</w:tc>`;
+            const tr = (cells, hdr) => `<w:tr>${hdr ? '<w:trPr><w:tblHeader/></w:trPr>' : ''}${cells}</w:tr>`;
+            let rowsX = tr(REP_HEAD.map((h, i) => cell(h, i, { b: 1, fill: 'DDE6F5' })).join(''), true);
+            D.ops.forEach(o => { rowsX += tr([o.date, o.timeIn, o.timeOut, o.asset, o.setup, o.contracts, o.type, brl(num(o.points)), brl(num(o.result))].map((v, i) => cell(v, i)).join('')); });
+            rowsX += tr(`<w:tc><w:tcPr><w:tcW w:w="${W.slice(0, 8).reduce((a, b) => a + b, 0)}" w:type="dxa"/><w:gridSpan w:val="8"/></w:tcPr>${p(`Total (${s.n} operações)`, { b: 1, sz: 16, after: 0 })}</w:tc>` + cell(brl(s.net), 8, { b: 1 }));
+            const bd = ['top', 'left', 'bottom', 'right', 'insideH', 'insideV'].map(k => `<w:${k} w:val="single" w:sz="4" w:space="0" w:color="BBBBBB"/>`).join('');
+            const tbl = `<w:tbl><w:tblPr><w:tblW w:w="${W.reduce((a, b) => a + b, 0)}" w:type="dxa"/><w:tblBorders>${bd}</w:tblBorders><w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>${W.map(w => `<w:gridCol w:w="${w}"/>`).join('')}</w:tblGrid>${rowsX}</w:tbl>`;
+            const body = p('My Trade Dash — Relatório de operações', { b: 1, sz: 32 }) + p(`Período: ${D.per}   |   Setup: ${D.su}   |   Ativo: ${D.as}`) + p(`Gerado em ${D.gen}`, { sz: 18 }) + p(repSummaryLines(D)[0], { b: 1, after: 160 }) + tbl;
+            const doc = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body}<w:sectPr><w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/><w:pgMar w:top="900" w:right="900" w:bottom="900" w:left="900" w:header="400" w:footer="400" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+            const ct = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`;
+            const rels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`;
+            saveBin(repFileName('docx'), zipStore([{ name: '[Content_Types].xml', data: ct }, { name: '_rels/.rels', data: rels }, { name: 'word/document.xml', data: doc }]), 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+        }
+
+        function exportReportPdf() {   // PDF escrito à mão (Helvetica, A4 paisagem), sem diálogo de impressão
+            const D = repData(), s = D.s, PW = 842, PH = 595, M = 30;
+            const L = t => String(t == null ? '' : t).replace(/[—–]/g, '-').replace(/−/g, '-').replace(/…/g, '...').replace(/[^\x20-\xFF]/g, '?');
+            const esc1 = t => L(t).replace(/[\\()]/g, '\\$&');
+            const cw = { '0': 556, '1': 556, '2': 556, '3': 556, '4': 556, '5': 556, '6': 556, '7': 556, '8': 556, '9': 556, '.': 278, ',': 278, '-': 333 };
+            const tw = (t, sz) => L(t).split('').reduce((a, c) => a + (cw[c] || 520), 0) * sz / 1000;
+            const cols = [[M, 'l'], [88, 'l'], [124, 'l'], [160, 'l'], [262, 'l'], [606, 'r'], [620, 'l'], [730, 'r'], [PW - M, 'r']];   // x e alinhamento
+            const pages = []; let cur, y;
+            const txt = (t, x, yy, sz, bold, al) => { const xx = al === 'r' ? x - tw(t, sz) : x; return `BT /${bold ? 'F2' : 'F1'} ${sz} Tf ${xx.toFixed(1)} ${yy.toFixed(1)} Td (${esc1(t)}) Tj ET\n`; };
+            const newPage = (first) => {
+                const pg = { c: '' }; pages.push(pg); cur = pg; y = PH - M;
+                pg.c += txt('My Trade Dash - Relatório de operações', M, y - 8, 14, true); y -= 24;
+                if (first) {
+                    pg.c += txt(`Período: ${D.per}   |   Setup: ${D.su}   |   Ativo: ${D.as}`, M, y, 9); y -= 13;
+                    pg.c += txt(`Gerado em ${D.gen}`, M, y, 8); y -= 16;
+                    pg.c += txt(repSummaryLines(D)[0], M, y, 9, true); y -= 18;
+                }
+                head();
+            };
+            const head = () => { cur.c += '0.87 0.9 0.96 rg ' + `${M} ${y - 4} ${PW - 2 * M} 15 re f 0 g\n`; REP_HEAD.forEach((h, i) => cur.c += txt(h, cols[i][0], y, 8, true, cols[i][1])); y -= 16; };
+            const wrap = (t, n) => { const out = []; let r = L(t); while (r.length > n) { let k = r.lastIndexOf('_', n); if (k < 20) k = n; out.push(r.slice(0, k)); r = r.slice(k); } out.push(r); return out; };
+            newPage(true);
+            D.ops.forEach(o => {
+                const sl = wrap(o.setup, 78), h = 11 * sl.length + 2;
+                if (y - h < M + 14) newPage(false);
+                const vals = [o.date, o.timeIn, o.timeOut, o.asset, null, o.contracts, o.type, brl(num(o.points)), brl(num(o.result))];
+                vals.forEach((v, i) => { if (v !== null) cur.c += txt(v, cols[i][0], y, 7.5, false, cols[i][1]); });
+                sl.forEach((l, k) => cur.c += txt(l, cols[4][0], y - 11 * k, 7, false));
+                y -= h; cur.c += `0.8 g ${M} ${y + 8} ${PW - 2 * M} 0.4 re f 0 g\n`;
+            });
+            if (y - 18 < M + 14) newPage(false);
+            y -= 4; cur.c += txt(`Total (${s.n} operações)`, M, y, 8.5, true) + txt(brl(s.net), cols[8][0], y, 8.5, true, 'r');
+            pages.forEach((pg, i) => pg.c += txt(`Página ${i + 1} de ${pages.length}`, PW - M, 14, 7, false, 'r'));
+            // montagem dos objetos
+            const objs = ['<< /Type /Catalog /Pages 2 0 R >>', null, '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>', '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>'];
+            const kids = [];
+            pages.forEach(pg => {
+                const pn = objs.length + 1; kids.push(pn + ' 0 R');
+                objs.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW} ${PH}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${pn + 1} 0 R >>`);
+                objs.push(`<< /Length ${pg.c.length} >>\nstream\n${pg.c}endstream`);
+            });
+            objs[1] = `<< /Type /Pages /Kids [${kids.join(' ')}] /Count ${pages.length} >>`;
+            let out = '%PDF-1.4\n', offs = [];
+            objs.forEach((o, i) => { offs.push(out.length); out += `${i + 1} 0 obj\n${o}\nendobj\n`; });
+            const xr = out.length;
+            out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n` + offs.map(o => String(o).padStart(10, '0') + ' 00000 n \n').join('') + `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xr}\n%%EOF`;
+            const b = new Uint8Array(out.length); for (let i = 0; i < out.length; i++) b[i] = out.charCodeAt(i) & 255;
+            saveBin(repFileName('pdf'), b, 'application/pdf');
         }
 
         if ('serviceWorker' in navigator) {
