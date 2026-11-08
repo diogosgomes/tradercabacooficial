@@ -463,7 +463,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V62';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V67';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -2073,10 +2073,11 @@ hmoDb = db;
             return rsec('8', '8. Financeiro: fluxo e rentabilidade', rtable(['Mês', 'Dep.', 'Saques', 'Fluxo', 'Lucro op.', 'Investido', 'Rent.'], body + totRow));
         }
         function setGran(g) { repGran = g; renderReports(); }
-        function calNav(d) { const [y, m] = calMonth.split('-').map(Number), dt = new Date(y, m - 1 + d, 1); calMonth = `${dt.getFullYear()}-${pad2(dt.getMonth() + 1)}`; renderReports(); }
+        function calNav(d) { const [y, m] = calMonth.split('-').map(Number), dt = new Date(y, m - 1 + d, 1); const nx = `${dt.getFullYear()}-${pad2(dt.getMonth() + 1)}`; if (nx > todayLocalISO().slice(0, 7)) return; calMonth = nx; renderReports(); }
         function secCalendar() {
             const ops = filteredOps(true, false);
             if (!calMonth) { const t = todayLocalISO().slice(0, 7); calMonth = ops.length ? isoOf(ops[ops.length - 1].date).slice(0, 7) : t; }
+            const todayIso = todayLocalISO(); if (calMonth > todayIso.slice(0, 7)) calMonth = todayIso.slice(0, 7);
             const [y, m] = calMonth.split('-').map(Number), days = new Date(y, m, 0).getDate(), first = new Date(y, m - 1, 1).getDay();
             const sums = {}; let total = 0, cnt = 0;
             ops.filter(r => isoOf(r.date).slice(0, 7) === calMonth).forEach(r => { const d = +isoOf(r.date).slice(8); (sums[d] = sums[d] || { net: 0, n: 0 }); sums[d].net += num(r.result); sums[d].n++; total += num(r.result); cnt++; });
@@ -2086,9 +2087,10 @@ hmoDb = db;
             for (let d = 1; d <= days; d++) {
                 const x = sums[d]; let st = '', inner = '';
                 if (x) { const a = (0.15 + 0.45 * Math.abs(x.net) / maxAbs).toFixed(2); st = `background:${x.net >= 0 ? `rgba(59,130,246,${a})` : `rgba(245,158,11,${a})`}`; inner = `<div class="font-mono font-semibold text-[10px] text-gray-100">${x.net >= 0 ? '+' : '−'}${brl(Math.abs(x.net))}</div>`; }
-                cells += `<div class="rounded-lg p-1 min-h-[50px] border border-gray-800 text-[10px] text-gray-300" style="${st}"><div class="text-gray-400">${d}</div>${inner}</div>`;
+                const future = `${calMonth}-${pad2(d)}` > todayIso;
+                cells += `<div class="rounded-lg p-1 min-h-[50px] border border-gray-800 text-[10px] text-gray-300${future ? ' opacity-30' : ''}" style="${st}"><div class="text-gray-400">${d}</div>${inner}</div>`;
             }
-            const nav = `<div class="flex items-center gap-2 text-xs"><button onclick="calNav(-1)" class="px-2 py-1 rounded border border-gray-700">◀</button><span class="font-semibold text-gray-200">${pad2(m)}/${y}</span><button onclick="calNav(1)" class="px-2 py-1 rounded border border-gray-700">▶</button></div>`;
+            const nav = `<div class="flex items-center gap-2 text-xs"><button onclick="calNav(-1)" class="px-2 py-1 rounded border border-gray-700">◀</button><span class="font-semibold text-gray-200">${pad2(m)}/${y}</span><button onclick="calNav(1)" ${calMonth >= todayIso.slice(0, 7) ? 'disabled aria-disabled="true"' : ''} class="px-2 py-1 rounded border border-gray-700 ${calMonth >= todayIso.slice(0, 7) ? 'opacity-30 cursor-not-allowed' : ''}">▶</button></div>`;
             const h = `<div class="p-3"><div class="grid grid-cols-7 gap-1">${cells}</div><p class="mt-3 text-xs text-gray-400">Total do mês: <span class="font-mono font-bold ${mcls(total)}">${money(total)}</span> (${cnt} op.)</p></div>`;
             return rsec('9', '9. Calendário de resultados', h, null, nav);
         }
