@@ -467,7 +467,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V82';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V85';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -877,6 +877,17 @@
         }
 
         /* ===== Gerenciar setups ===== */
+        function askInfo(title, msg) {
+            return new Promise(res => {
+                const o = document.createElement('div');
+                o.className = 'fixed inset-0 z-[110] flex items-center justify-center p-3 bg-black/70';
+                o.innerHTML = `<div class="w-full max-w-sm rounded-xl border border-amber-500 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl"><p class="font-bold mb-1 break-words">⚠ ${esc(title)}</p><p class="text-xs text-gray-300 mb-4">${esc(msg)}</p><div class="flex justify-end"><button type="button" data-ok class="px-4 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold">Entendi</button></div></div>`;
+                document.body.appendChild(o);
+                const end = () => { o.remove(); res(); };
+                o.querySelector('[data-ok]').onclick = end;
+                o.addEventListener('click', ev => { if (ev.target === o) end(); });
+            });
+        }
         function askBox(title, msg, okLabel) {
             return new Promise(res => {
                 const o = document.createElement('div');
@@ -892,7 +903,8 @@
             if (op === 'add') await dbRun(sb.from('tb_setups').insert(data)); else if (op === 'upd') await dbRun(sb.from('tb_setups').update(data).eq('id', s.id)); else await dbRun(sb.from('tb_setups').delete().eq('id', s.id));
         }
         async function setupAfter() { if (MODE !== 'claude') await reloadAll(true); renderSetupsModal(); }
-        const SETUP_FIXED = ['Operações anteriores a 10/2026', 'Outras - Fora do Setup'];   // nunca saem da lista (só inativam)
+        const SETUP_FIXED = ['Outras - Fora do Setup'];   // não pode ser excluído (só inativar); pode ser renomeado e continua protegido pelo nome antigo
+        const setupIsFixed = s => SETUP_FIXED.includes(s.name) || (s.prev || []).some(x => SETUP_FIXED.includes(x));
         let suNote = null;
         function suMsg(msg, kind) {
             const pre = kind === 'err' ? '⚠ ' : (kind === 'wait' ? '⏳ ' : '✔ ');
@@ -983,8 +995,9 @@
             await setupAfter();
         }
         async function setupDelete(s) {
-            if (SETUP_FIXED.includes(s.name)) { suMsg('Este setup fixo não pode ser excluído, só inativado.', 'err'); return; }
-            if (setupCount(s.name)) { suMsg('Este setup tem operações: só pode ser inativado.', 'err'); return; }
+            if (setupIsFixed(s)) { await askInfo(`"${s.name}" não pode ser excluído`, 'Ele é o destino das operações feitas fora de qualquer setup e dos relatórios "Dentro x fora". Se não quiser usá-lo, use Inativar.'); return; }
+            const nOps = setupCount(s.name);
+            if (nOps) { await askInfo(`"${s.name}" não pode ser excluído`, `Ele tem ${nOps} operação(ões) registrada(s). Mova as operações para outro setup (desmarque "Ativo" e escolha "Mover e inativar") e depois exclua.`); return; }
             if (!(await askBox(`Excluir o setup "${s.name}"?`, 'Nenhuma operação usa este setup. Esta ação não pode ser desfeita.', 'Excluir'))) return;
             try { await setupDb('del', s); auditAdd({ kind: 'setup_delete', outcome: 'Concluída', detail: s.name }); suMsg('Setup excluído.', 'ok'); }
             catch (e) { suMsg('Não foi possível excluir.', 'err'); }
@@ -998,11 +1011,11 @@
             const opt = (v, k) => `<option value="${v}" ${k === v ? 'selected' : ''}>${v === 'fora' ? 'Fora' : 'Dentro'}</option>`;
             b.innerHTML = `<p class="mb-3 text-gray-400">Edite o nome (as operações já registradas acompanham), defina a classificação (usada no quadro "Dentro x fora do setup") e desmarque "Ativo" para parar de usar o setup em novas operações. Setup com operações não pode ser excluído, só inativado.</p>
                 <div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr class="text-left text-gray-400 border-b border-gray-700"><th class="py-2 pr-2">Nome do setup</th><th class="py-2 px-2">Classificação</th><th class="py-2 px-2 text-center">Ativo</th><th class="py-2 px-2 text-right">Operações</th><th class="py-2 pl-2"></th></tr></thead><tbody>`
-                + list.map(s => { const n = setupCount(s.name); return `<tr class="border-b border-gray-800"><td class="py-1.5 pr-2"><div class="flex gap-1.5 items-center"><input type="text" class="su-name w-full min-w-[15rem] bg-darkBg border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-200 ${s.active ? '' : 'opacity-60'}" data-id="${esc(s.id)}" data-orig="${esc(s.name)}" value="${esc(s.name)}" title="${esc(s.name)}"><button type="button" class="su-ren shrink-0 px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed" data-id="${esc(s.id)}" disabled>Renomear</button></div></td>
+                + list.map(s => { const n = setupCount(s.name); return `<tr class="border-b border-gray-800"><td class="py-1.5 pr-2"><div class="flex gap-1.5 items-center"><input type="text" class="su-name w-full min-w-[15rem] bg-darkBg border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-200 ${s.active ? '' : 'opacity-60'}" data-id="${esc(s.id)}" data-orig="${esc(s.name)}" value="${esc(s.name)}" title="${esc(s.name)}"><button type="button" class="su-ren ${setupIsFixed(s) ? 'su-fixed ' : ''}shrink-0 px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed" data-id="${esc(s.id)}" ${setupIsFixed(s) ? '' : 'disabled'}>Renomear</button></div></td>
                     <td class="py-1.5 px-2"><select class="su-kind bg-darkBg border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-200" data-id="${esc(s.id)}">${opt('dentro', s.kind)}${opt('fora', s.kind)}</select></td>
                     <td class="py-1.5 px-2 text-center"><label class="inline-flex items-center gap-1 cursor-pointer"><input type="checkbox" class="su-act" data-id="${esc(s.id)}" ${s.active ? 'checked' : ''}><span>${s.active ? 'Ativo' : 'Inativo'}</span></label></td>
                     <td class="py-1.5 px-2 text-right font-mono">${n}</td>
-                    <td class="py-1.5 pl-2">${n || SETUP_FIXED.includes(s.name) ? '' : `<button type="button" class="su-del px-2 py-1 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-100" data-id="${esc(s.id)}" title="Excluir setup sem operações">🗑</button>`}</td></tr>`; }).join('')
+                    <td class="py-1.5 pl-2">${`<button type="button" class="su-del px-2 py-1 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-100" data-id="${esc(s.id)}" title="Excluir setup">🗑</button>`}</td></tr>`; }).join('')
                 + `</tbody></table></div>
                 <div class="mt-4 pt-3 border-t border-gray-700"><p class="font-semibold mb-2">Novo setup</p><div class="flex flex-wrap gap-2 items-center"><input id="suNewName" type="text" placeholder="Nome do setup" class="flex-1 min-w-[14rem] bg-darkBg border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-200"><select id="suNewKind" class="bg-darkBg border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-200"><option value="dentro">Dentro</option><option value="fora">Fora</option></select><button type="button" id="suAdd" class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold">Adicionar</button></div></div>`;
             suShowNote();
@@ -1014,9 +1027,9 @@
             ov.innerHTML = `<div class="w-full max-w-3xl max-h-[88vh] flex flex-col rounded-xl border border-gray-600 bg-gray-900 text-sm text-gray-200 shadow-2xl"><div class="flex items-center justify-between px-4 py-3 border-b border-gray-700"><h3 class="text-base font-bold">🧩 Gerenciar setups</h3><button type="button" id="suClose" class="px-3 py-1 rounded-lg bg-gray-700 text-white text-xs font-semibold">Fechar</button></div><div id="suBody" class="p-4 overflow-y-auto text-xs"></div></div>`;
             document.body.appendChild(ov);
             ov.querySelector('#suClose').onclick = () => ov.remove();
-            ov.addEventListener('click', ev => { if (ev.target === ov) { ov.remove(); return; } const t = ev.target.closest('.su-del,#suAdd,.su-ren'); if (!t) return; if (t.id === 'suAdd') setupAdd(); else if (t.classList.contains('su-ren')) { const s = setupFind(t), inp = t.closest('tr').querySelector('.su-name'); if (s) setupRename(s, inp.value); } else { const s = setupFind(t); if (s) setupDelete(s); } });
+            ov.addEventListener('click', ev => { if (ev.target === ov) { ov.remove(); return; } const t = ev.target.closest('.su-del,#suAdd,.su-ren'); if (!t) return; if (t.id === 'suAdd') setupAdd(); else if (t.classList.contains('su-ren')) { const s = setupFind(t), inp = t.closest('tr').querySelector('.su-name'); if (s) { if (setupIsFixed(s)) { inp.value = s.name; askInfo(`"${s.name}" não pode ser renomeado`, 'O nome dele é usado nos relatórios e nas operações sem setup. Se não quiser usá-lo, use Inativar.'); } else setupRename(s, inp.value); } } else { const s = setupFind(t); if (s) setupDelete(s); } });
             ov.addEventListener('change', ev => { const t = ev.target, s = t.dataset && t.dataset.id ? setupFind(t) : null; if (!s) return; if (t.classList.contains('su-kind')) setupSetKind(s, t.value); else if (t.classList.contains('su-act')) setupToggle(s, t.checked); });
-            ov.addEventListener('input', ev => { const t = ev.target; if (!t.classList || !t.classList.contains('su-name')) return; t.closest('tr').querySelector('.su-ren').disabled = t.value.trim().replace(/\s+/g, ' ') === t.dataset.orig; });
+            ov.addEventListener('input', ev => { const t = ev.target; if (!t.classList || !t.classList.contains('su-name')) return; { const rb = t.closest('tr').querySelector('.su-ren'); if (!rb.classList.contains('su-fixed')) rb.disabled = t.value.trim().replace(/\s+/g, ' ') === t.dataset.orig; } });
             ov.addEventListener('keydown', ev => { const t = ev.target; if (ev.key === 'Enter' && t.classList && t.classList.contains('su-name')) { ev.preventDefault(); const bt = t.closest('tr').querySelector('.su-ren'); if (!bt.disabled) bt.click(); } });
             renderSetupsModal();
         }
