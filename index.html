@@ -467,7 +467,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V87';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V88';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -641,7 +641,7 @@
         }
         // ---- Sino de novidades ----
         let bellInit = false;
-        const NEWS_DAYS = 15, NEWS_MAX = 5, DAY_MS = 86400000;
+        const NEWS_DAYS = 15, NEWS_MAX = 5, EXCL_DAYS = 30, DAY_MS = 86400000;
         function setBellCount(n) {
             const el = $('bellCount'); if (!el) return;
             el.textContent = n > 9 ? '9+' : String(n);
@@ -707,6 +707,11 @@
             const { error } = await sb.from('tb_release_reads').upsert({ note_id: id, dismissed: true }, { onConflict: 'user_id,note_id' });
             if (error) throw error;
         }
+        async function newsRestore(id) {
+            if (MODE === 'claude') { await hmoDb.collection('release_reads').doc(id).set({ read_at: Date.now() }); return; }
+            const { error } = await sb.from('tb_release_reads').update({ dismissed: false }).eq('note_id', id);
+            if (error) throw error;
+        }
         async function newsMarkUnread(id) {
             if (MODE === 'claude') { await hmoDb.collection('release_reads').doc(id).delete(); return; }
             await sb.from('tb_release_reads').delete().eq('note_id', id);
@@ -716,7 +721,8 @@
         const newsIsUnread = (x, st, now) => !st.dismissed.has(x.id) && !st.ids.has(x.id) && newsCounts(x, st, now);
         async function refreshBell() {
             try {
-                const [notes, st] = await Promise.all([newsLoad(), newsReadState()]);
+                const [notes0, st] = await Promise.all([newsLoad(), newsReadState()]);
+                const notes = notes0.concat(darfAlerts());
                 const now = Date.now();
                 setBellCount(notes.filter(x => newsIsUnread(x, st, now)).length);
             } catch (e) { setBellCount(0); }
@@ -738,7 +744,9 @@
             try {
                 const [notes0, st] = await Promise.all([newsLoad(), newsReadState()]);
                 const now = Date.now();
+                notes0.push(...darfAlerts());
                 const notes = notes0.filter(x => !st.dismissed.has(x.id)).sort((a, b) => b.published_at - a.published_at);
+                const excluded = () => notes0.filter(x => !x.synthetic && st.dismissed.has(x.id) && Date.now() - x.published_at <= EXCL_DAYS * DAY_MS).sort((a, b) => b.published_at - a.published_at);
                 const updBell = () => setBellCount(notes.filter(x => newsIsUnread(x, st, Date.now())).length);
                 const card = x => {
                     const read = st.ids.has(x.id);
@@ -749,9 +757,10 @@
                             <span class="text-gray-400">${fmtDateTimeBR(x.published_at).replace(', ', ' - ')}</span></div>
                         <ul class="mt-1 list-disc pl-5 text-gray-300 space-y-0.5">${(x.items || []).map(i => `<li>${esc(i)}</li>`).join('')}</ul>
                         <div class="mt-2 flex flex-wrap gap-2" data-actions="${x.id}">
-                            <button type="button" data-tg="${x.id}" class="px-2.5 py-1 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700">${read ? '○ Marcar como não lida' : '✔ Marcar como lida'}</button>
-                            <button type="button" data-del="${x.id}" class="px-2.5 py-1 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700">🗑 Excluir</button></div></div>`;
+                            ${x.synthetic ? '<button type="button" data-darf class="px-2.5 py-1 rounded-lg border border-amber-400 text-amber-100 hover:bg-amber-900 font-semibold">📄 Abrir Custos e imposto (DARF)</button>' : `<button type="button" data-tg="${x.id}" class="px-2.5 py-1 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700">${read ? '○ Marcar como não lida' : '✔ Marcar como lida'}</button>
+                            <button type="button" data-del="${x.id}" class="px-2.5 py-1 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700">🗑 Excluir</button>`}</div></div>`;
                 };
+                const wireDarf = () => body.querySelectorAll('[data-darf]').forEach(b => b.onclick = () => { ov.remove(); repOpen = '1'; switchTab('report'); });
                 const wireToggles = rerender => body.querySelectorAll('[data-tg]').forEach(b => b.onclick = async () => {
                     const id = b.dataset.tg; b.disabled = true;
                     try {
@@ -779,7 +788,7 @@
                     older = regular.filter(x => !recent.includes(x));
                 };
                 recompute();
-                const unreadIds = () => notes.filter(x => newsIsUnread(x, st, Date.now())).map(x => x.id);
+                const unreadIds = () => notes.filter(x => !x.synthetic && newsIsUnread(x, st, Date.now())).map(x => x.id);
                 const markAllBar = () => unreadIds().length ? `<button type="button" id="nwAll" class="mb-3 w-full px-3 py-2 rounded-lg border border-gray-500 text-gray-100 hover:bg-gray-700 font-semibold">✔ Marcar todas como lidas (${unreadIds().length})</button>` : '';
                 const wireAll = rerender => { const b = body.querySelector('#nwAll'); if (b) b.onclick = async () => {
                     b.disabled = true; const ids = unreadIds();
@@ -788,9 +797,25 @@
                 const showMain = () => {
                     body.innerHTML = markAllBar() + important.map(card).join('')
                         + (recent.length ? recent.map(card).join('') : `<p class="text-gray-400 mb-2">Sem novidades nos últimos ${NEWS_DAYS} dias.</p>`)
-                        + (older.length ? `<button type="button" id="nwOld" class="mt-2 w-full px-3 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-semibold">Ver anteriores (${older.length})</button>` : '');
+                        + (older.length ? `<button type="button" id="nwOld" class="mt-2 w-full px-3 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-semibold">Ver anteriores (${older.length})</button>` : '')
+                        + (excluded().length ? `<button type="button" id="nwExcl" class="mt-2 w-full px-3 py-2 rounded-lg border border-gray-600 text-gray-200 hover:bg-gray-700 font-semibold">🗑 Ver excluídas (${excluded().length})</button>` : '');
                     const o = body.querySelector('#nwOld'); if (o) o.onclick = showOld;
-                    wireToggles(showMain); wireDelete(showMain); wireAll(showMain);
+                    const ex = body.querySelector('#nwExcl'); if (ex) ex.onclick = showExcl;
+                    wireToggles(showMain); wireDelete(showMain); wireAll(showMain); wireDarf();
+                };
+                const showExcl = () => {
+                    const list = excluded();
+                    body.innerHTML = '<button type="button" id="nwBack" class="mb-3 px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-semibold">← Voltar</button>'
+                        + `<p class="mb-3 text-gray-400">Novidades que você excluiu da sua tela, publicadas nos últimos ${EXCL_DAYS} dias. Restaurar traz a novidade de volta à lista, como lida.</p>`
+                        + (list.length ? list.map(x => `<div class="border border-gray-700 bg-gray-800/40 rounded-lg p-3 mb-2"><div class="flex flex-wrap justify-between gap-1"><span class="font-bold">${esc(x.title)}</span><span class="text-gray-400">${fmtDateTimeBR(x.published_at).replace(', ', ' - ')}</span></div>
+                            <ul class="mt-1 list-disc pl-5 text-gray-300 space-y-0.5">${(x.items || []).map(i => `<li>${esc(i)}</li>`).join('')}</ul>
+                            <div class="mt-2"><button type="button" data-rs="${x.id}" class="px-2.5 py-1 rounded-lg border border-blue-400 text-blue-100 hover:bg-blue-950 font-semibold">↩ Restaurar</button></div></div>`).join('') : '<p class="text-gray-400">Nenhuma novidade excluída nos últimos 30 dias.</p>');
+                    body.querySelector('#nwBack').onclick = showMain;
+                    body.querySelectorAll('[data-rs]').forEach(b => b.onclick = async () => {
+                        const id = b.dataset.rs; b.disabled = true;
+                        try { await newsRestore(id); st.dismissed.delete(id); st.ids.add(id); const x = notes0.find(n => n.id === id); if (x && !notes.includes(x)) { notes.push(x); notes.sort((a, c) => c.published_at - a.published_at); } recompute(); updBell(); showExcl(); showToast('✔ Novidade restaurada.', 'ok'); }
+                        catch (e) { b.disabled = false; showToast('Não foi possível restaurar agora.', 'err'); }
+                    });
                 };
                 let openM;
                 const showOld = () => {
@@ -801,7 +826,7 @@
                         + keys.map(k => { const [yy, mm] = k.split('-'); return `<button type="button" data-m="${k}" class="w-full text-left px-3 py-2 mb-2 rounded-lg bg-gray-800 hover:bg-gray-700 font-semibold">${openM === k ? '−' : '+'} ${mm}/${yy} – ${g[k].length} ${g[k].length === 1 ? 'novidade' : 'novidades'}</button>` + (openM === k ? g[k].map(card).join('') : ''); }).join('');
                     body.querySelector('#nwBack').onclick = showMain;
                     body.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { openM = openM === b.dataset.m ? null : b.dataset.m; showOld(); });
-                    wireToggles(showOld); wireAll(showOld); wireDelete(() => { if (older.length) showOld(); else showMain(); });
+                    wireToggles(showOld); wireAll(showOld); wireDarf(); wireDelete(() => { if (older.length) showOld(); else showMain(); });
                 };
                 showMain(); updBell();
             } catch (e) {
@@ -1305,6 +1330,7 @@ hmoDb = db;
         }
 
         function processAndRender() {
+            bellSoon();
             if (!bellInit && (MODE === 'claude' || currentUserId)) { bellInit = true; refreshBell(); }
             const sorted = rows.slice().sort((a, b) => (a.ts || 0) - (b.ts || 0));
             let accum = 0, gains = 0, losses = 0;
@@ -2407,7 +2433,38 @@ hmoDb = db;
         }
 
 
-        // Abas "Operação | Nota do dia": a mesma tela de lançamento, com a data levada de uma aba para a outra
+        // Alertas de DARF no sino: meses fechados com DARF a pagar (>= R$ 10), não marcados como pagos,
+        // com vencimento em até DARF_ALERT_DAYS dias úteis (só fins de semana; feriados não entram) ou já vencidos.
+        const DARF_ALERT_DAYS = 3;
+        function bizDaysTo(todayIso, dueIso) {
+            if (dueIso < todayIso) return -1;
+            let n = 0; const d = new Date(todayIso + 'T12:00:00');
+            for (let g = 0; g < 400; g++) {
+                const iso = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+                if (iso >= dueIso) break;
+                d.setDate(d.getDate() + 1); if (d.getDay() !== 0 && d.getDay() !== 6) n++;
+            }
+            return n;
+        }
+        function darfAlerts(todayIso) {
+            todayIso = todayIso || todayLocalISO();
+            const out = [];
+            try {
+                taxEngine(rows, notes, darfPaid, todayIso).forEach(x => {
+                    if (x.partial || x.status !== 'pay' || x.paidAt) return;
+                    const n = bizDaysTo(todayIso, x.due); if (n > DARF_ALERT_DAYS) return;
+                    const [yy, mm] = x.ym.split('-');
+                    const title = n < 0 ? `DARF de ${mm}/${yy} atrasado` : (n === 0 ? `DARF de ${mm}/${yy} vence hoje` : `DARF de ${mm}/${yy} vence em ${n} ${n === 1 ? 'dia útil' : 'dias úteis'}`);
+                    out.push({ id: 'darf:' + x.ym, title, important: true, published_at: Date.now(), expires_at: null, synthetic: true,
+                        items: [`Valor estimado: R$ ${brl(x.total)}.`, `Vencimento: ${fmtBR(x.due)} (considera só fins de semana; feriados não entram).`, 'Quando pagar, marque como pago em Relatórios → 2. Custos e imposto (DARF). O aviso some sozinho.'] });
+                });
+            } catch (e) {}
+            return out;
+        }
+        let bellT = null;
+        function bellSoon() { clearTimeout(bellT); bellT = setTimeout(() => { if (bellInit) refreshBell(); }, 1200); }
+
+        // Abas "Operação | Nota do dia\": a mesma tela de lançamento, com a data levada de uma aba para a outra
         const ENT_ON = 'px-3 py-2 rounded-lg text-xs font-semibold border border-blue-400 bg-blue-950 text-white', ENT_OFF = 'px-3 py-2 rounded-lg text-xs font-semibold border border-gray-700 text-gray-400 hover:bg-gray-800';
         function paintEntryTabs(active, editing) {
             ['t', 'n'].forEach(p => {
@@ -2495,7 +2552,7 @@ hmoDb = db;
             if (a === 'cancel') { pendingNoteDeleteId = null; renderReports(); return; }
             if (a === 'del') { pendingNoteDeleteId = null; try { const n0 = notes.find(x => x.id === id); await removeNote(id); if (n0) auditAdd({ kind: 'delete', outcome: 'Concluída', detail: `Nota do dia excluída: ${n0.date}` }); showToast('Nota excluída.', 'ok'); } catch (er) { showToast('Erro ao excluir', 'err'); } }
         }
-        async function darfToggle(ym, paid) { try { await setDarfPaid(ym, paid); auditAdd({ kind: paid ? 'darf_paid' : 'darf_unpaid', outcome: 'Concluída', detail: `DARF de ${ym.slice(5)}/${ym.slice(0,4)} ${paid ? 'marcado como pago' : 'desmarcado'}` }); } catch (er) { showToast('Erro ao salvar', 'err'); } }
+        async function darfToggle(ym, paid) { try { await setDarfPaid(ym, paid); bellSoon(); auditAdd({ kind: paid ? 'darf_paid' : 'darf_unpaid', outcome: 'Concluída', detail: `DARF de ${ym.slice(5)}/${ym.slice(0,4)} ${paid ? 'marcado como pago' : 'desmarcado'}` }); } catch (er) { showToast('Erro ao salvar', 'err'); } }
         async function darfCopy(txt) {
             try { await navigator.clipboard.writeText(txt); showToast('Valor copiado: ' + txt, 'ok'); }
             catch (e) { showToast('Copie manualmente: ' + txt, 'err'); }
