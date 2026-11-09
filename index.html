@@ -112,7 +112,8 @@
                     <button id="btnPwd" type="button" role="menuitem" onclick="optsAction(openPwdModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🔑 Trocar senha</button>
                     <button type="button" role="menuitem" onclick="optsAction(exportData)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📥 Exportar backup</button>
                     <button type="button" role="menuitem" onclick="optsAction(() => document.getElementById('importFile').click())" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📤 Importar backup</button>
-                    <button type="button" role="menuitem" onclick="optsAction(openAuditModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📋 Histórico de importações</button>
+                    <button type="button" role="menuitem" onclick="optsAction(openSetupsModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🧩 Gerenciar setups</button>
+                    <button type="button" role="menuitem" onclick="optsAction(openAuditModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📋 Histórico de auditoria</button>
                     <div id="sepLogout" class="border-t border-gray-700 my-1"></div>
                     <button id="btnLogout" type="button" role="menuitem" onclick="optsAction(lockNow)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-100 font-semibold">🚪 Sair</button>
                 </div>
@@ -122,7 +123,7 @@
     </header>
 
     <!-- Main Container -->
-    <main class="flex-1 p-3 sm:p-6 max-w-[1680px] mx-auto w-full space-y-4 sm:space-y-6">
+    <main class="flex-1 p-3 sm:p-6 pb-24 sm:pb-28 max-w-[1680px] mx-auto w-full space-y-4 sm:space-y-6">
 
         <!-- Metrics Cards Dinâmicos -->
         <h2 class="text-sm sm:text-base font-bold text-gray-200 -mb-1">Visão geral</h2>
@@ -332,19 +333,7 @@
 
                 <div>
                     <label class="block text-xs font-medium text-gray-400 mb-1">Setup Utilizado</label>
-                    <select id="tSetup" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200">
-                        <option value="Operações anteriores a 10/2026">Operações anteriores a 10/2026</option>
-                        <option value="Outras - Fora do Setup">Outras - Fora do Setup</option>
-                        <option value="Setup Topo e Fundo">Setup Topo e Fundo</option>
-                        <option value="Setup_Pullback0930_Max3int4b_PriceAction_Cpernas_operacoesCondicionadasde250e200pontos">Setup_Pullback0930_Max3int4b_PriceAction_Cpernas_operacoesCondicionadasde250e200pontos</option>
-                        <option value="Setup_Pullback1005_Max3intervalo4barras">Setup_Pullback1005_Max3intervalo4barras</option>
-                        <option value="Setup_Pullback1015_Max3">Setup_Pullback1015_Max3</option>
-                        <option value="Setup_Pullback1015_Max3COM2contratos">Setup_Pullback1015_Max3COM2contratos</option>
-                        <option value="Setup_Pullback1015_Max3intervalo4barras">Setup_Pullback1015_Max3intervalo4barras</option>
-                        <option value="Setup_Pullback250pontos0930_Max3intervalo3barras">Setup_Pullback250pontos0930_Max3intervalo3barras</option>
-                        <option value="SetupGemini_Pullback250pontosSEMprotecao1015">SetupGemini_Pullback250pontosSEMprotecao1015</option>
-                        <option value="SetupGemini_SR_Max3">SetupGemini_SR_Max3</option>
-                    </select>
+                    <select id="tSetup" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></select>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -473,12 +462,12 @@
         // Conexão com o banco de dados (a chave publishable é pública por desenho; a proteção dos dados vem das regras de acesso do banco)
         const SUPABASE_URL = 'https://xctsnutlzetvpkmbantr.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_uaAf02oEoX3itCwg3AJAQQ_4Xu8EkLH';
-        const AUTO_LOGOUT_MIN = 15;   // sai sozinho após X minutos sem uso (0 = desligado)
+        const AUTO_LOGOUT_MIN = 30;   // sai sozinho após X minutos sem uso (0 = desligado)
         // Bancos e corretoras sugeridos nos campos Origem/Destino (edite à vontade; dá para digitar outros nomes)
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V77';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V82';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -538,7 +527,37 @@
             'Pullback1015_Max3intervalo4barras': 'Setup_Pullback1015_Max3intervalo4barras'
         };
         const DEFAULT_SETUP = 'Setup_Pullback0930_Max3int4b_PriceAction_Cpernas_operacoesCondicionadasde250e200pontos';
-        const normSetup = v => SETUP_RENAME[v] || v;
+        const SETUP_DEFAULTS = [
+            { name: 'Operações anteriores a 10/2026', kind: 'fora' }, { name: 'Outras - Fora do Setup', kind: 'fora' }, { name: 'Setup Topo e Fundo', kind: 'dentro' },
+            { name: 'Setup_Pullback0930_Max3int4b_PriceAction_Cpernas_operacoesCondicionadasde250e200pontos', kind: 'dentro' }, { name: 'Setup_Pullback1005_Max3intervalo4barras', kind: 'dentro' },
+            { name: 'Setup_Pullback1015_Max3', kind: 'dentro' }, { name: 'Setup_Pullback1015_Max3COM2contratos', kind: 'dentro' }, { name: 'Setup_Pullback1015_Max3intervalo4barras', kind: 'dentro' },
+            { name: 'Setup_Pullback250pontos0930_Max3intervalo3barras', kind: 'dentro' }, { name: 'SetupGemini_Pullback250pontosSEMprotecao1015', kind: 'dentro' }, { name: 'SetupGemini_SR_Max3', kind: 'dentro' }];
+        let setups = [], setupsOk = true, setupsSeeded = false, prevMap = {};
+        const parsePrev = v => { try { const a = typeof v === 'string' ? JSON.parse(v || '[]') : v; return Array.isArray(a) ? a : []; } catch (e) { return []; } };
+        const setupFromDb = r => ({ id: r.id, name: r.name, active: r.active !== false, kind: r.kind === 'fora' ? 'fora' : 'dentro', prev: parsePrev(r.prev_names) });
+        const normSetup = v => SETUP_RENAME[v] || prevMap[v] || v;
+        const setupsView = () => (setups.length ? setups : SETUP_DEFAULTS.map(d => ({ id: null, name: d.name, active: true, kind: d.kind, prev: [] })));
+        const setupKind = n => { const s = setups.find(x => x.name === n); return s ? s.kind : ((SETUP_DEFAULTS.find(x => x.name === n) || {}).kind || 'dentro'); };
+        const setupByName = (a, b) => a.name.localeCompare(b.name, 'pt-BR');
+        function fillSetupSelect(cur) {
+            const sel = document.getElementById('tSetup'); if (!sel) return;
+            const keep = cur != null ? cur : sel.value;
+            const list = setupsView().filter(s => s.active || s.name === keep).sort(setupByName);
+            sel.innerHTML = list.map(s => `<option value="${esc(s.name)}">${esc(s.name)}</option>`).join('');
+            if (list.some(s => s.name === keep)) sel.value = keep;
+        }
+        function setupsApply(arr) {
+            setups = arr; prevMap = {};
+            arr.forEach(s => s.prev.forEach(x => { prevMap[x] = s.name; }));
+            fillSetupSelect();
+        }
+        async function seedSetupsSb() {
+            try {
+                const { error } = await sb.from('tb_setups').insert(SETUP_DEFAULTS.map(d => ({ name: d.name, active: true, kind: d.kind, prev_names: '[]' })));
+                if (!error) { const st = await fetchAll('tb_setups', ['name']); setupsApply(st.map(setupFromDb)); setupsOk = true; return; }
+            } catch (e) {}
+            setupsApply([]);
+        }
         const tradeFromDb = r => ({ id: r.id, date: isoToBr(r.trade_date), timeIn: r.time_in, timeOut: r.time_out, asset: r.asset, setup: normSetup(r.setup), contracts: r.contracts, type: r.type, points: r.points, result: Number(r.result), ts: Number(r.ts) });
         const tradeToDb = t => ({ trade_date: brToIso(t.date), time_in: t.timeIn, time_out: t.timeOut, asset: t.asset, setup: t.setup, contracts: t.contracts, type: t.type, points: t.points, result: t.result, ts: t.ts });
         const flowFromDb = r => ({ id: r.id, date: isoToBr(r.flow_date), type: r.type, amount: Number(r.amount), from: r.from_bank, to: r.to_bank, ts: Number(r.ts), createdAt: Number(r.created_ms) });
@@ -559,7 +578,8 @@
         }
         async function reloadAll(silent) {
             try {
-                const [t, f, nt, dp] = await Promise.all([fetchAll('trades', ['ts']), fetchAll('cashflow', ['ts', 'created_ms']), fetchAll('tb_day_notes', ['ts']).catch(() => []), fetchAll('tb_darf_paid', ['ym']).catch(() => [])]);
+                const [t, f, nt, dp, st] = await Promise.all([fetchAll('trades', ['ts']), fetchAll('cashflow', ['ts', 'created_ms']), fetchAll('tb_day_notes', ['ts']).catch(() => []), fetchAll('tb_darf_paid', ['ym']).catch(() => []), fetchAll('tb_setups', ['name']).catch(() => null)]);
+                if (st === null) { setupsOk = false; setupsApply([]); } else if (!st.length) { await seedSetupsSb(); } else { setupsOk = true; setupsApply(st.map(setupFromDb)); }
                 rows = t.map(tradeFromDb); flows = f.map(flowFromDb); notes = nt.map(noteFromDb); darfPaid = {}; dp.forEach(x => { darfPaid[x.ym] = Date.parse(x.paid_at) || 1; });
                 setStatus('Sincronizado ✓', 'ok');
                 processAndRender();
@@ -639,6 +659,9 @@
                 n([11, 7], 8, 0, 'Entrar ficou mais fácil', ['O ícone de olho mostra ou oculta a senha.', 'O campo de data voltou a aceitar digitação.'], false, 15),
                 n([11, 6], 23, 0, 'Nova identidade visual', ['O app ganhou o símbolo e o ícone da marca My Trade Dash.'], false, 15),
                 n([11, 7], 20, 5, 'Exemplo de aviso importante', ['Avisos importantes ficam no topo da lista até a validade acabar. Este é só uma demonstração no HMO.'], true, 7),
+                n([11, 9], 10, 0, 'Gerenciar setups', ['Em Opções, "Gerenciar setups" permite renomear (as operações acompanham), ativar, inativar e classificar cada setup como Dentro ou Fora.', 'Ao inativar um setup com operações, você pode só inativar ou mover as operações para outro setup ativo.'], false, 15),
+                n([11, 9], 10, 30, 'Histórico de auditoria', ['"Histórico de importações" agora se chama "Histórico de auditoria".', 'Além de importações e exportações, registra exclusões, troca de senha e mudanças nos setups.'], false, 15),
+                n([11, 9], 11, 0, 'Saída automática após 30 minutos', ['Sem usar o app por 30 minutos, ele volta para a tela de login (antes eram 15).'], false, 15),
                 n([9, 1], 9, 0, 'Exemplo de novidade antiga', ['Novidades com mais de 15 dias saem da lista principal e ficam em "Ver anteriores". Demonstração no HMO.'], false, 15)
             ];
         }
@@ -646,7 +669,7 @@
             if (MODE === 'claude') {
                 const col = hmoDb.collection('release_notes_v3');
                 let snap = await col.get();
-                if (!snap.docs.length) { for (const x of hmoSeedNotes()) await col.add(x); snap = await col.get(); }
+                { const have = new Set(snap.docs.map(d => d.data().title)); const miss = hmoSeedNotes().filter(x => !have.has(x.title)); if (miss.length) { await Promise.all(miss.map(x => col.add(x))); snap = await col.get(); } }
                 return snap.docs.map(d => ({ ...d.data(), id: d.id }));
             }
             const { data, error } = await sb.from('tb_release_notes').select('*').order('published_at', { ascending: false });
@@ -743,7 +766,7 @@
                         + '<button type="button" data-yes class="px-2.5 py-1 rounded-lg bg-amber-600 text-white font-bold">Excluir</button><button type="button" data-no class="px-2.5 py-1 rounded-lg border border-gray-600 text-gray-300">Cancelar</button>';
                     box.querySelector('[data-no]').onclick = rerender;
                     box.querySelector('[data-yes]').onclick = async () => {
-                        try { await newsDismiss(id); st.dismissed.add(id); const i = notes.findIndex(x => x.id === id); if (i >= 0) notes.splice(i, 1); }
+                        try { const nt0 = notes.find(x => x.id === id); await newsDismiss(id); auditAdd({ kind: 'delete', outcome: 'Concluída', detail: `Notificação excluída da tela: ${(nt0 && nt0.title) || id}` }); st.dismissed.add(id); const i = notes.findIndex(x => x.id === id); if (i >= 0) notes.splice(i, 1); }
                         catch (e) { showToast('Não foi possível excluir agora.', 'err'); }
                         recompute(); updBell(); rerender();
                     };
@@ -788,10 +811,15 @@
 
         // ---- Auditoria de importações e exportações (best-effort: nunca bloqueia a operação) ----
         async function claudeAuditAll() {
-            const snap = await hmoDb.collection('audit').get();
-            const arr = snap.docs.map(d => ({ ...d.data() })).sort((x, y) => (x.ts || 0) - (y.ts || 0));
-            arr.forEach((r, i) => { if (r.seq == null) r.seq = i + 1; });
-            return arr;
+            if (!claudeAuditAll.cache) {
+                let snap, last;
+                for (let i = 0; i < 3 && !snap; i++) { try { snap = await hmoDb.collection('audit').get(); } catch (e) { last = e; await new Promise(r => setTimeout(r, 400)); } }
+                if (!snap) throw last;
+                const arr = snap.docs.map(d => ({ ...d.data() })).sort((x, y) => (x.ts || 0) - (y.ts || 0));
+                arr.forEach((r, i) => { if (r.seq == null) r.seq = i + 1; });
+                claudeAuditAll.cache = arr;
+            }
+            return claudeAuditAll.cache.map(r => ({ ...r }));
         }
         async function auditAdd(e) {
             try {
@@ -799,9 +827,11 @@
                     file_ops: e.fileOps ?? null, file_flows: e.fileFlows ?? null,
                     before_ops: e.beforeOps ?? null, before_flows: e.beforeFlows ?? null,
                     after_ops: e.afterOps ?? null, after_flows: e.afterFlows ?? null };
+                if (e.detail) rec.detail = String(e.detail);
                 if (MODE === 'claude') {
                     const all = await claudeAuditAll();
                     rec.seq = all.reduce((m, r) => Math.max(m, r.seq || 0), 0) + 1;
+                    claudeAuditAll.cache.push({ ...rec });
                     await hmoDb.collection('audit').add(rec); return;
                 }
                 // Em produção o número (seq) é gravado pelo próprio banco (gatilho), por utilizador e sem reaproveitar números
@@ -845,13 +875,159 @@
             const [y, m] = k.split('-').map(Number);   // Brasília = UTC-3
             return [Date.UTC(y, m - 1, 1, 3, 0, 0), Date.UTC(m === 12 ? y + 1 : y, m === 12 ? 0 : m, 1, 3, 0, 0)];
         }
+
+        /* ===== Gerenciar setups ===== */
+        function askBox(title, msg, okLabel) {
+            return new Promise(res => {
+                const o = document.createElement('div');
+                o.className = 'fixed inset-0 z-[110] flex items-center justify-center p-3 bg-black/70';
+                o.innerHTML = `<div class="w-full max-w-sm rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl"><p class="font-bold mb-1 break-words">${esc(title)}</p><p class="text-xs text-gray-400 mb-4">${esc(msg)}</p><div class="flex justify-end gap-2"><button type="button" data-n class="px-3 py-1.5 rounded-lg bg-gray-700 text-white text-xs font-semibold">Cancelar</button><button type="button" data-y class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold">${esc(okLabel || 'Confirmar')}</button></div></div>`;
+                document.body.appendChild(o);
+                const end = v => { o.remove(); res(v); };
+                o.querySelector('[data-n]').onclick = () => end(false); o.querySelector('[data-y]').onclick = () => end(true);
+            });
+        }
+        async function setupDb(op, s, data) {
+            if (MODE === 'claude') { const c = hmoDb.collection('setups'); if (op === 'add') await c.add(data); else if (op === 'upd') await c.doc(s.id).update(data); else await c.doc(s.id).delete(); return; }
+            if (op === 'add') await dbRun(sb.from('tb_setups').insert(data)); else if (op === 'upd') await dbRun(sb.from('tb_setups').update(data).eq('id', s.id)); else await dbRun(sb.from('tb_setups').delete().eq('id', s.id));
+        }
+        async function setupAfter() { if (MODE !== 'claude') await reloadAll(true); renderSetupsModal(); }
+        const SETUP_FIXED = ['Operações anteriores a 10/2026', 'Outras - Fora do Setup'];   // nunca saem da lista (só inativam)
+        let suNote = null;
+        function suMsg(msg, kind) {
+            const pre = kind === 'err' ? '⚠ ' : (kind === 'wait' ? '⏳ ' : '✔ ');
+            suNote = { msg: pre + msg, kind, t: Date.now() };
+            if (kind !== 'wait') showToast(pre + msg, kind); suShowNote();
+        }
+        function suShowNote() {
+            const b = document.getElementById('suBody'); if (!b) return;
+            const old = document.getElementById('suNote'); if (old) old.remove();
+            if (!suNote || (suNote.kind !== 'wait' && Date.now() - suNote.t > 5000)) return;
+            const d = document.createElement('div'); d.id = 'suNote';
+            d.className = 'sticky top-0 z-10 mb-3 px-3 py-2.5 rounded-lg border-2 text-sm font-bold shadow-lg ' + (suNote.kind === 'err' ? 'bg-amber-950 text-amber-200 border-amber-500' : (suNote.kind === 'wait' ? 'bg-gray-800 text-gray-100 border-gray-400' : 'bg-emerald-950 text-emerald-100 border-emerald-400'));
+            d.textContent = suNote.msg; b.prepend(d);
+            const me = suNote; if (me.kind !== 'wait') setTimeout(() => { if (suNote === me) { const e = document.getElementById('suNote'); if (e) e.remove(); } }, Math.max(300, 5000 - (Date.now() - me.t)));
+        }
+        const setupCount = n => rows.filter(r => r.setup === n).length;
+        const setupFind = el => setups.find(x => String(x.id) === el.dataset.id);
+        async function setupRename(s, raw) {
+            const nn = String(raw || '').trim().replace(/\s+/g, ' ');
+            if (!nn || nn === s.name) { renderSetupsModal(); return; }
+            if (setups.some(x => x !== s && x.name.toLowerCase() === nn.toLowerCase())) { suMsg('Já existe um setup com esse nome.', 'err'); renderSetupsModal(); return; }
+            const old = s.name, n = setupCount(old);
+            const react = !s.active;
+            if (!(await askBox(react ? `Renomear e reativar "${old}" como "${nn}"?` : `Renomear "${old}" para "${nn}"?`, (react ? 'Este setup está inativo e será reativado junto com a renomeação. ' : '') + (n ? `${n} operação(ões) já registrada(s) serão atualizadas para o novo nome.` : 'Nenhuma operação usa este setup ainda.'), react ? 'Confirmar e Reativar' : 'Confirmar'))) { renderSetupsModal(); return; }
+            suMsg('Processando…', 'wait');
+            try {
+                if (n) {
+                    if (MODE === 'claude') { await Promise.all(rows.filter(r => r.setup === old).map(r => dbCol.doc(r.id).update({ setup: nn }))); }
+                    else await dbRun(sb.from('trades').update({ setup: nn }).in('setup', [old, ...s.prev]));
+                }
+                const prev = [...new Set([...s.prev, old])].filter(x => x !== nn);
+                await setupDb('upd', s, react ? { name: nn, prev_names: JSON.stringify(prev), active: true } : { name: nn, prev_names: JSON.stringify(prev) });
+                auditAdd({ kind: 'setup_rename', outcome: 'Concluída', detail: `"${old}" → "${nn}" · ${n} operação(ões) atualizada(s)` + (react ? ' · setup reativado' : '') });
+                suMsg(react ? `Setup renomeado para "${nn}" e reativado.` : `Setup renomeado para "${nn}".`, 'ok');
+            } catch (e) { suMsg('Não foi possível renomear.', 'err'); }
+            await setupAfter();
+        }
+        function askInact(s, n) {
+            return new Promise(res => {
+                const others = setups.filter(x => x !== s && x.active).sort(setupByName);
+                const o = document.createElement('div');
+                o.className = 'fixed inset-0 z-[110] flex items-center justify-center p-3 bg-black/70';
+                o.innerHTML = `<div class="w-full max-w-md rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl"><p class="font-bold mb-1 break-words">⚠ "${esc(s.name)}" tem ${n} operação(ões) registrada(s)</p>
+                    <p class="text-xs text-gray-400 mb-3">Se você só inativar, as operações continuam no histórico e nos relatórios com este setup, mas ele deixa de aparecer em novos lançamentos. Se preferir, mova as operações para outro setup ativo e inative este em seguida.</p>
+                    <label class="block text-xs text-gray-400 mb-1">Mover as operações para:</label>
+                    <select data-t class="w-full mb-4 bg-darkBg border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-200">${others.map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('') || '<option value="">(não há outro setup ativo)</option>'}</select>
+                    <div class="flex flex-wrap justify-end gap-2"><button type="button" data-c class="px-3 py-1.5 rounded-lg bg-gray-700 text-white text-xs font-semibold">Cancelar</button><button type="button" data-k class="px-3 py-1.5 rounded-lg bg-gray-600 hover:bg-gray-500 text-white text-xs font-semibold">Só inativar</button><button type="button" data-m class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold disabled:opacity-40" ${others.length ? '' : 'disabled'}>Mover e inativar</button></div></div>`;
+                document.body.appendChild(o);
+                const end = v => { o.remove(); res(v); };
+                o.querySelector('[data-c]').onclick = () => end(null);
+                o.querySelector('[data-k]').onclick = () => end({ move: null });
+                o.querySelector('[data-m]').onclick = () => end({ move: others.find(x => String(x.id) === o.querySelector('[data-t]').value) || null });
+            });
+        }
+        async function setupToggle(s, on) {
+            let moved = '', movedTo = null;
+            if (!on) {
+                const n = setupCount(s.name);
+                if (n) {
+                    const r = await askInact(s, n);
+                    if (!r) { renderSetupsModal(); return; }
+                    if (r.move) {
+                        try {
+                            suMsg('Processando…', 'wait'); if (MODE === 'claude') { await Promise.all(rows.filter(x => x.setup === s.name).map(x => dbCol.doc(x.id).update({ setup: r.move.name }))); }
+                            else await dbRun(sb.from('trades').update({ setup: r.move.name }).in('setup', [s.name, ...s.prev]));
+                            moved = ` · ${n} operação(ões) movida(s) para "${r.move.name}"`; movedTo = r.move.name;
+                        } catch (e) { suMsg('Não foi possível mover as operações. Nada foi inativado.', 'err'); await setupAfter(); return; }
+                    }
+                }
+            }
+            if (!moved) suMsg('Processando…', 'wait');
+            try { await setupDb('upd', s, { active: on }); auditAdd({ kind: on ? 'setup_active' : 'setup_inactive', outcome: 'Concluída', detail: s.name + moved }); suMsg(on ? `Setup "${s.name}" ativado: já aparece em novas operações.` : (movedTo ? `Operações movidas para "${movedTo}" e setup "${s.name}" inativado.` : `Setup "${s.name}" inativado: não aparece mais em novas operações (as já registradas continuam).`), 'ok'); }
+            catch (e) { suMsg('Erro ao salvar.', 'err'); }
+            await setupAfter();
+        }
+        async function setupSetKind(s, kind) {
+            if (kind === s.kind) return;
+            try { await setupDb('upd', s, { kind }); auditAdd({ kind: 'setup_kind', outcome: 'Concluída', detail: `${s.name}: ${s.kind === 'fora' ? 'Fora' : 'Dentro'} → ${kind === 'fora' ? 'Fora' : 'Dentro'}` }); suMsg('Classificação alterada.', 'ok'); }
+            catch (e) { suMsg('Erro ao salvar.', 'err'); }
+            await setupAfter();
+        }
+        async function setupAdd() {
+            const inp = document.getElementById('suNewName'), nn = inp.value.trim().replace(/\s+/g, ' '), kind = document.getElementById('suNewKind').value;
+            if (!nn) { suMsg('Digite o nome do novo setup.', 'err'); return; }
+            if (setups.some(x => x.name.toLowerCase() === nn.toLowerCase())) { suMsg('Já existe um setup com esse nome.', 'err'); return; }
+            try { await setupDb('add', null, { name: nn, active: true, kind, prev_names: '[]' }); auditAdd({ kind: 'setup_create', outcome: 'Concluída', detail: `${nn} (${kind === 'fora' ? 'Fora' : 'Dentro'})` }); suMsg('Setup criado.', 'ok'); }
+            catch (e) { suMsg('Não foi possível criar.', 'err'); }
+            await setupAfter();
+        }
+        async function setupDelete(s) {
+            if (SETUP_FIXED.includes(s.name)) { suMsg('Este setup fixo não pode ser excluído, só inativado.', 'err'); return; }
+            if (setupCount(s.name)) { suMsg('Este setup tem operações: só pode ser inativado.', 'err'); return; }
+            if (!(await askBox(`Excluir o setup "${s.name}"?`, 'Nenhuma operação usa este setup. Esta ação não pode ser desfeita.', 'Excluir'))) return;
+            try { await setupDb('del', s); auditAdd({ kind: 'setup_delete', outcome: 'Concluída', detail: s.name }); suMsg('Setup excluído.', 'ok'); }
+            catch (e) { suMsg('Não foi possível excluir.', 'err'); }
+            await setupAfter();
+        }
+        function renderSetupsModal() {
+            const b = document.getElementById('suBody'); if (!b) return;
+            if (!setupsOk) { b.innerHTML = '<p class="text-amber-300">A tabela de setups ainda não foi criada no banco (rode o SQL tb_setups). Enquanto isso, o app usa a lista padrão.</p>'; return; }
+            if (!setups.length) { b.innerHTML = '<p class="text-gray-400">Carregando…</p>'; return; }
+            const list = [...setups].sort(setupByName);
+            const opt = (v, k) => `<option value="${v}" ${k === v ? 'selected' : ''}>${v === 'fora' ? 'Fora' : 'Dentro'}</option>`;
+            b.innerHTML = `<p class="mb-3 text-gray-400">Edite o nome (as operações já registradas acompanham), defina a classificação (usada no quadro "Dentro x fora do setup") e desmarque "Ativo" para parar de usar o setup em novas operações. Setup com operações não pode ser excluído, só inativado.</p>
+                <div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr class="text-left text-gray-400 border-b border-gray-700"><th class="py-2 pr-2">Nome do setup</th><th class="py-2 px-2">Classificação</th><th class="py-2 px-2 text-center">Ativo</th><th class="py-2 px-2 text-right">Operações</th><th class="py-2 pl-2"></th></tr></thead><tbody>`
+                + list.map(s => { const n = setupCount(s.name); return `<tr class="border-b border-gray-800"><td class="py-1.5 pr-2"><div class="flex gap-1.5 items-center"><input type="text" class="su-name w-full min-w-[15rem] bg-darkBg border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-200 ${s.active ? '' : 'opacity-60'}" data-id="${esc(s.id)}" data-orig="${esc(s.name)}" value="${esc(s.name)}" title="${esc(s.name)}"><button type="button" class="su-ren shrink-0 px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed" data-id="${esc(s.id)}" disabled>Renomear</button></div></td>
+                    <td class="py-1.5 px-2"><select class="su-kind bg-darkBg border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-200" data-id="${esc(s.id)}">${opt('dentro', s.kind)}${opt('fora', s.kind)}</select></td>
+                    <td class="py-1.5 px-2 text-center"><label class="inline-flex items-center gap-1 cursor-pointer"><input type="checkbox" class="su-act" data-id="${esc(s.id)}" ${s.active ? 'checked' : ''}><span>${s.active ? 'Ativo' : 'Inativo'}</span></label></td>
+                    <td class="py-1.5 px-2 text-right font-mono">${n}</td>
+                    <td class="py-1.5 pl-2">${n || SETUP_FIXED.includes(s.name) ? '' : `<button type="button" class="su-del px-2 py-1 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-100" data-id="${esc(s.id)}" title="Excluir setup sem operações">🗑</button>`}</td></tr>`; }).join('')
+                + `</tbody></table></div>
+                <div class="mt-4 pt-3 border-t border-gray-700"><p class="font-semibold mb-2">Novo setup</p><div class="flex flex-wrap gap-2 items-center"><input id="suNewName" type="text" placeholder="Nome do setup" class="flex-1 min-w-[14rem] bg-darkBg border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-200"><select id="suNewKind" class="bg-darkBg border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-200"><option value="dentro">Dentro</option><option value="fora">Fora</option></select><button type="button" id="suAdd" class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold">Adicionar</button></div></div>`;
+            suShowNote();
+        }
+        function openSetupsModal() {
+            if (document.getElementById('setupsOv')) return;
+            const ov = document.createElement('div'); ov.id = 'setupsOv';
+            ov.className = 'fixed inset-0 z-[95] flex items-center justify-center p-3 bg-black/70';
+            ov.innerHTML = `<div class="w-full max-w-3xl max-h-[88vh] flex flex-col rounded-xl border border-gray-600 bg-gray-900 text-sm text-gray-200 shadow-2xl"><div class="flex items-center justify-between px-4 py-3 border-b border-gray-700"><h3 class="text-base font-bold">🧩 Gerenciar setups</h3><button type="button" id="suClose" class="px-3 py-1 rounded-lg bg-gray-700 text-white text-xs font-semibold">Fechar</button></div><div id="suBody" class="p-4 overflow-y-auto text-xs"></div></div>`;
+            document.body.appendChild(ov);
+            ov.querySelector('#suClose').onclick = () => ov.remove();
+            ov.addEventListener('click', ev => { if (ev.target === ov) { ov.remove(); return; } const t = ev.target.closest('.su-del,#suAdd,.su-ren'); if (!t) return; if (t.id === 'suAdd') setupAdd(); else if (t.classList.contains('su-ren')) { const s = setupFind(t), inp = t.closest('tr').querySelector('.su-name'); if (s) setupRename(s, inp.value); } else { const s = setupFind(t); if (s) setupDelete(s); } });
+            ov.addEventListener('change', ev => { const t = ev.target, s = t.dataset && t.dataset.id ? setupFind(t) : null; if (!s) return; if (t.classList.contains('su-kind')) setupSetKind(s, t.value); else if (t.classList.contains('su-act')) setupToggle(s, t.checked); });
+            ov.addEventListener('input', ev => { const t = ev.target; if (!t.classList || !t.classList.contains('su-name')) return; t.closest('tr').querySelector('.su-ren').disabled = t.value.trim().replace(/\s+/g, ' ') === t.dataset.orig; });
+            ov.addEventListener('keydown', ev => { const t = ev.target; if (ev.key === 'Enter' && t.classList && t.classList.contains('su-name')) { ev.preventDefault(); const bt = t.closest('tr').querySelector('.su-ren'); if (!bt.disabled) bt.click(); } });
+            renderSetupsModal();
+        }
+
         async function openAuditModal() {
             const PAGE = 50;
             const ov = document.createElement('div');
             ov.className = 'fixed inset-0 z-[95] flex items-center justify-center p-3 bg-black/70';
             ov.innerHTML = `<div class="w-full max-w-2xl max-h-[85vh] flex flex-col rounded-xl border border-gray-600 bg-gray-900 text-sm text-gray-200 shadow-2xl">
                 <div class="flex items-center justify-between px-4 py-3 border-b border-gray-700">
-                    <h3 class="text-base font-bold">📋 Histórico de importações e exportações</h3>
+                    <h3 class="text-base font-bold">📋 Histórico de auditoria</h3>
                     <button type="button" id="auClose" class="px-3 py-1 rounded-lg bg-gray-700 text-white text-xs font-semibold">Fechar</button>
                 </div>
                 <div id="auBody" class="p-4 overflow-y-auto text-xs"><p class="text-gray-400">Carregando…</p></div></div>`;
@@ -860,7 +1036,11 @@
             ov.addEventListener('click', ev => { if (ev.target === ov) ov.remove(); });
             const body = ov.querySelector('#auBody');
             const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+            const AU = { delete: '🗑 Exclusão', password: '🔑 Troca de senha', setup_rename: '✏ Setup renomeado', setup_active: '☑ Setup ativado', setup_inactive: '☐ Setup inativado', setup_create: '➕ Setup criado', setup_delete: '🗑 Setup excluído', setup_kind: '🔁 Classificação alterada', darf_paid: '💳 DARF pago', darf_unpaid: '💳 DARF desmarcado' };
             const card = x => {
+                if (x.kind !== 'import' && x.kind !== 'export') return `<div class="border border-gray-700 rounded-lg p-3 mb-2 bg-gray-800/40">
+                    <div class="flex flex-wrap justify-between gap-1"><span class="font-bold">H${x.seq ?? '?'} · ${AU[x.kind] || esc(x.kind)}</span><span class="text-gray-400">${fmtDateTimeBR(x.ts)}</span></div>
+                    <div class="mt-1 break-words text-gray-100">${esc(x.detail) || '<span class="text-gray-500">(sem detalhe)</span>'}</div></div>`;
                 const imp = x.kind === 'import';
                 const icon = imp ? '📤 Importação' : '📥 Exportação';
                 const mark = x.outcome === 'Concluída' ? '✔' : (x.outcome === 'Erro' ? '✖' : '○');
@@ -879,7 +1059,7 @@
             };
             try {
                 const tsAll = await auditTsAll();
-                if (!tsAll.length) { body.innerHTML = '<p class="text-gray-400">Nenhum evento registrado ainda. Importações e exportações feitas a partir de agora aparecem aqui.</p>'; return; }
+                if (!tsAll.length) { body.innerHTML = '<p class="text-gray-400">Nenhum evento registrado ainda. Importações, exportações, exclusões, troca de senha e alterações de setups feitas a partir de agora aparecem aqui.</p>'; return; }
                 const total = tsAll.length;
                 const counts = {}; tsAll.forEach(t => { const k = auditMonthKey(t); counts[k] = (counts[k] || 0) + 1; });
                 const keys = Object.keys(counts).sort().reverse();
@@ -979,6 +1159,11 @@ hmoDb = db;
                 processAndRender();
             }, () => {});
             db.collection('day_notes').orderBy('ts', 'asc').onSnapshot(snap => { notes = snap.docs.map(d => ({ ...d.data(), id: d.id })); processAndRender(); }, () => {});
+            db.collection('setups').onSnapshot(async snap => {
+                if (!snap.docs.length) { if (!setupsSeeded) { setupsSeeded = true; for (const d of SETUP_DEFAULTS) await db.collection('setups').add({ name: d.name, active: true, kind: d.kind, prev_names: '[]' }); } return; }
+                setupsApply(snap.docs.map(d => setupFromDb({ ...d.data(), id: d.id })));
+                processAndRender(); if (document.getElementById('setupsOv')) renderSetupsModal();
+            }, () => {});
             db.collection('darf_paid').onSnapshot(snap => { darfPaid = {}; snap.docs.forEach(d => { darfPaid[d.id] = Number((d.data() || {}).paid_at) || 1; }); processAndRender(); }, () => {});
             const timer = setTimeout(() => setStatus('Sem resposta…', 'warn'), 10000);
             dbCol.orderBy('ts', 'asc').onSnapshot(snap => {
@@ -1004,12 +1189,10 @@ hmoDb = db;
             if (!t) {
                 t = document.createElement('div');
                 t.id = 'toast';
-                t.className = 'fixed left-1/2 -translate-x-1/2 bottom-6 z-[90] px-4 py-2 rounded-lg text-xs font-semibold shadow-2xl border';
+                t.className = 'fixed left-1/2 -translate-x-1/2 bottom-6 z-[130] px-5 py-3 rounded-lg text-sm font-bold shadow-2xl border-2 max-w-[92vw] text-center';
                 document.body.appendChild(t);
             }
-            t.className = t.className.replace(/bg-\S+|text-\S+|border-\S+/g, '').trim() + (kind === 'err'
-                ? ' bg-red-950 text-red-300 border-red-800'
-                : ' bg-emerald-950 text-emerald-300 border-emerald-800');
+            t.className = 'fixed left-1/2 -translate-x-1/2 bottom-6 z-[130] px-5 py-3 rounded-lg text-sm font-bold shadow-2xl border-2 max-w-[92vw] text-center' + (kind === 'err' ? ' bg-red-950 text-red-200 border-red-500' : ' bg-emerald-950 text-emerald-100 border-emerald-400');
             t.textContent = msg;
             t.style.display = 'block';
             clearTimeout(showToast._t);
@@ -1203,7 +1386,7 @@ hmoDb = db;
             else if (act === 'confirm') {
                 const id = btn.dataset.id;
                 pendingDeleteId = null;
-                try { await removeTrade(id); }
+                try { const t0 = rows.find(r => r.id === id); await removeTrade(id); if (t0) auditAdd({ kind: 'delete', outcome: 'Concluída', detail: `Operação excluída: ${t0.date} ${t0.timeIn} · ${t0.asset} · ${t0.setup} · ${t0.type} ${brl(num(t0.result))}` }); }
                 catch (err) { setStatus('Erro ao excluir', 'err'); processAndRender(); }
             }
         });
@@ -1243,6 +1426,7 @@ hmoDb = db;
                 setField('tType', row.type);
                 setField('tPoints', Math.abs(Number(row.points) || 0));
                 setField('tMoney', fmtMoneyBR(Math.abs(Number(row.result) || 0)));
+                fillSetupSelect(row.setup);
                 const sel = document.getElementById('tSetup');
                 if (![...sel.options].some(o => o.value === row.setup)) {
                     const opt = document.createElement('option');
@@ -1259,7 +1443,8 @@ hmoDb = db;
                 setField('tType', 'Gain');
                 setField('tPoints', 300);
                 setField('tMoney', '60,00');
-                document.getElementById('tSetup').value = DEFAULT_SETUP;
+                fillSetupSelect(DEFAULT_SETUP);
+                { const sl = document.getElementById('tSetup'); sl.value = DEFAULT_SETUP; if (!sl.value) sl.selectedIndex = 0; }
             }
             paintEntryTabs('op', !!row);
             const m = document.getElementById('tradeModal');
@@ -1642,12 +1827,13 @@ hmoDb = db;
             err.textContent = '';
             if (a.length < 8) { err.textContent = 'Use pelo menos 8 caracteres.'; return; }
             if (a !== b) { err.textContent = 'As senhas não conferem.'; return; }
-            if (MODE === 'claude') { closePwdModal(); showToast('Ambiente HMO: demonstração. A senha de teste não foi alterada.', 'ok'); return; }
+            if (MODE === 'claude') { closePwdModal(); auditAdd({ kind: 'password', outcome: 'Concluída', detail: 'Senha alterada (HMO: demonstração, a senha de teste não foi alterada)' }); showToast('Ambiente HMO: demonstração. A senha de teste não foi alterada.', 'ok'); return; }
             const btn = $('pwdBtn'); btn.disabled = true;
             try {
                 const { error } = await sb.auth.updateUser({ password: a });
                 if (error) { err.textContent = 'Não foi possível trocar a senha: ' + error.message; return; }
                 closePwdModal();
+                auditAdd({ kind: 'password', outcome: 'Concluída', detail: 'Senha alterada' });
                 showToast('Senha alterada com sucesso.', 'ok');
             } catch (ex) { err.textContent = 'Sem conexão com o servidor.'; }
             finally { btn.disabled = false; }
@@ -1796,7 +1982,7 @@ hmoDb = db;
             else if (a === 'cancel') { pendingFlowDeleteId = null; processAndRender(); }
             else if (a === 'confirm') {
                 pendingFlowDeleteId = null;
-                try { await removeFlow(id); } catch (er) { showToast('Erro ao excluir', 'err'); processAndRender(); }
+                try { const f0 = flows.find(x => x.id === id); await removeFlow(id); if (f0) auditAdd({ kind: 'delete', outcome: 'Concluída', detail: `Movimentação financeira excluída: ${f0.date} · ${f0.type} · ${brl(num(f0.amount))}` }); } catch (er) { showToast('Erro ao excluir', 'err'); processAndRender(); }
             }
         });
 
@@ -2059,7 +2245,7 @@ hmoDb = db;
             return rsec('3', '4. Métricas de risco', h);
         }
         function secInOut(ops) {
-            const OUT = ['Outras - Fora do Setup', 'Operações anteriores a 10/2026'], a = ops.filter(r => !OUT.includes(r.setup)), b = ops.filter(r => OUT.includes(r.setup));
+            const a = ops.filter(r => setupKind(r.setup) !== 'fora'), b = ops.filter(r => setupKind(r.setup) === 'fora');
             return rsec('4', '5. Dentro x fora do setup', rtable(['Grupo', 'Operações', 'Win rate', 'Resultado', 'Média/op.'], simpleRows([['Dentro', a], ['Fora', b]].filter(x => x[1].length), false)));
         }
         function weekKey(iso) { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; }
@@ -2285,9 +2471,9 @@ hmoDb = db;
             if (a === 'edit') { openNoteModal(id); return; }
             if (a === 'ask') { pendingNoteDeleteId = id; renderReports(); return; }
             if (a === 'cancel') { pendingNoteDeleteId = null; renderReports(); return; }
-            if (a === 'del') { pendingNoteDeleteId = null; try { await removeNote(id); showToast('Nota excluída.', 'ok'); } catch (er) { showToast('Erro ao excluir', 'err'); } }
+            if (a === 'del') { pendingNoteDeleteId = null; try { const n0 = notes.find(x => x.id === id); await removeNote(id); if (n0) auditAdd({ kind: 'delete', outcome: 'Concluída', detail: `Nota do dia excluída: ${n0.date}` }); showToast('Nota excluída.', 'ok'); } catch (er) { showToast('Erro ao excluir', 'err'); } }
         }
-        async function darfToggle(ym, paid) { try { await setDarfPaid(ym, paid); } catch (er) { showToast('Erro ao salvar', 'err'); } }
+        async function darfToggle(ym, paid) { try { await setDarfPaid(ym, paid); auditAdd({ kind: paid ? 'darf_paid' : 'darf_unpaid', outcome: 'Concluída', detail: `DARF de ${ym.slice(5)}/${ym.slice(0,4)} ${paid ? 'marcado como pago' : 'desmarcado'}` }); } catch (er) { showToast('Erro ao salvar', 'err'); } }
         async function darfCopy(txt) {
             try { await navigator.clipboard.writeText(txt); showToast('Valor copiado: ' + txt, 'ok'); }
             catch (e) { showToast('Copie manualmente: ' + txt, 'err'); }
@@ -2533,8 +2719,34 @@ hmoDb = db;
             });
         }
 
+        fillSetupSelect();
         processAndRender();
         initApp();
+    </script>
+    <div id="fabWrap" class="fixed left-3 bottom-4 z-[70]">
+        <div id="fabMenu" role="menu" class="hidden absolute bottom-14 left-0 w-56 bg-cardBg border border-gray-600 rounded-xl shadow-2xl py-1 text-xs">
+            <button type="button" role="menuitem" data-fab="op" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">📈 Nova operação</button>
+            <button type="button" role="menuitem" data-fab="flow" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">➕ Nova movimentação</button>
+            <button type="button" role="menuitem" data-fab="rep" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">📊 Relatórios</button>
+            <button type="button" role="menuitem" data-fab="aud" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">📋 Histórico de auditoria</button>
+            <button type="button" role="menuitem" data-fab="set" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">🧩 Gerenciar setups</button>
+        </div>
+        <button type="button" id="fabBtn" aria-haspopup="menu" aria-expanded="false" class="h-12 px-4 rounded-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-2xl border-2 border-blue-300 flex items-center gap-1.5">⚡ Atalhos</button>
+    </div>
+    <script>
+    (function () {
+        const btn = document.getElementById('fabBtn'), menu = document.getElementById('fabMenu');
+        const close = () => { menu.classList.add('hidden'); btn.setAttribute('aria-expanded', 'false'); };
+        btn.addEventListener('click', e => { e.stopPropagation(); const open = menu.classList.toggle('hidden') === false; btn.setAttribute('aria-expanded', String(open)); });
+        document.addEventListener('click', e => { if (!e.target.closest('#fabWrap')) close(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+        menu.addEventListener('click', e => {
+            const b = e.target.closest('[data-fab]'); if (!b) return; close();
+            const k = b.dataset.fab;
+            if (k === 'op') openModal(); else if (k === 'flow') openFlowModal(); else if (k === 'rep') switchTab('report');
+            else if (k === 'aud') openAuditModal(); else if (k === 'set') openSetupsModal();
+        });
+    })();
     </script>
 </body>
 </html>
