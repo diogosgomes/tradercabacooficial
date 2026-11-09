@@ -467,7 +467,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V85';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V87';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -942,20 +942,20 @@
             } catch (e) { suMsg('Não foi possível renomear.', 'err'); }
             await setupAfter();
         }
-        function askInact(s, n) {
+        function askInact(s, n, del) {
             return new Promise(res => {
                 const others = setups.filter(x => x !== s && x.active).sort(setupByName);
                 const o = document.createElement('div');
                 o.className = 'fixed inset-0 z-[110] flex items-center justify-center p-3 bg-black/70';
                 o.innerHTML = `<div class="w-full max-w-md rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl"><p class="font-bold mb-1 break-words">⚠ "${esc(s.name)}" tem ${n} operação(ões) registrada(s)</p>
-                    <p class="text-xs text-gray-400 mb-3">Se você só inativar, as operações continuam no histórico e nos relatórios com este setup, mas ele deixa de aparecer em novos lançamentos. Se preferir, mova as operações para outro setup ativo e inative este em seguida.</p>
+                    <p class="text-xs text-gray-400 mb-3">${del ? 'Para excluir este setup, as operações precisam ir para outro setup ativo. Elas passam a aparecer com o setup escolhido e a ação não pode ser desfeita.' : 'Se você só inativar, as operações continuam no histórico e nos relatórios com este setup, mas ele deixa de aparecer em novos lançamentos. Se preferir, mova as operações para outro setup ativo e inative este em seguida.'}</p>
                     <label class="block text-xs text-gray-400 mb-1">Mover as operações para:</label>
                     <select data-t class="w-full mb-4 bg-darkBg border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-200">${others.map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('') || '<option value="">(não há outro setup ativo)</option>'}</select>
-                    <div class="flex flex-wrap justify-end gap-2"><button type="button" data-c class="px-3 py-1.5 rounded-lg bg-gray-700 text-white text-xs font-semibold">Cancelar</button><button type="button" data-k class="px-3 py-1.5 rounded-lg bg-gray-600 hover:bg-gray-500 text-white text-xs font-semibold">Só inativar</button><button type="button" data-m class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold disabled:opacity-40" ${others.length ? '' : 'disabled'}>Mover e inativar</button></div></div>`;
+                    <div class="flex flex-wrap justify-end gap-2"><button type="button" data-c class="px-3 py-1.5 rounded-lg bg-gray-700 text-white text-xs font-semibold">Cancelar</button>${del ? '' : '<button type="button" data-k class="px-3 py-1.5 rounded-lg bg-gray-600 hover:bg-gray-500 text-white text-xs font-semibold">Só inativar</button>'}<button type="button" data-m class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold disabled:opacity-40" ${others.length ? '' : 'disabled'}>${del ? 'Mover e excluir' : 'Mover e inativar'}</button></div></div>`;
                 document.body.appendChild(o);
                 const end = v => { o.remove(); res(v); };
                 o.querySelector('[data-c]').onclick = () => end(null);
-                o.querySelector('[data-k]').onclick = () => end({ move: null });
+                const kb = o.querySelector('[data-k]'); if (kb) kb.onclick = () => end({ move: null });
                 o.querySelector('[data-m]').onclick = () => end({ move: others.find(x => String(x.id) === o.querySelector('[data-t]').value) || null });
             });
         }
@@ -997,9 +997,18 @@
         async function setupDelete(s) {
             if (setupIsFixed(s)) { await askInfo(`"${s.name}" não pode ser excluído`, 'Ele é o destino das operações feitas fora de qualquer setup e dos relatórios "Dentro x fora". Se não quiser usá-lo, use Inativar.'); return; }
             const nOps = setupCount(s.name);
-            if (nOps) { await askInfo(`"${s.name}" não pode ser excluído`, `Ele tem ${nOps} operação(ões) registrada(s). Mova as operações para outro setup (desmarque "Ativo" e escolha "Mover e inativar") e depois exclua.`); return; }
-            if (!(await askBox(`Excluir o setup "${s.name}"?`, 'Nenhuma operação usa este setup. Esta ação não pode ser desfeita.', 'Excluir'))) return;
-            try { await setupDb('del', s); auditAdd({ kind: 'setup_delete', outcome: 'Concluída', detail: s.name }); suMsg('Setup excluído.', 'ok'); }
+            let moved = '', movedTo = null;
+            if (nOps) {
+                const r = await askInact(s, nOps, true);
+                if (!r || !r.move) return;
+                suMsg('Processando…', 'wait');
+                try {
+                    if (MODE === 'claude') { await Promise.all(rows.filter(x => x.setup === s.name).map(x => dbCol.doc(x.id).update({ setup: r.move.name }))); }
+                    else await dbRun(sb.from('trades').update({ setup: r.move.name }).in('setup', [s.name, ...s.prev]));
+                    moved = ` · ${nOps} operação(ões) movida(s) para "${r.move.name}"`; movedTo = r.move.name;
+                } catch (e) { suMsg('Não foi possível mover as operações. Nada foi excluído.', 'err'); await setupAfter(); return; }
+            } else if (!(await askBox(`Excluir o setup "${s.name}"?`, 'Nenhuma operação usa este setup. Esta ação não pode ser desfeita.', 'Excluir'))) return;
+            try { await setupDb('del', s); auditAdd({ kind: 'setup_delete', outcome: 'Concluída', detail: s.name + moved }); suMsg(movedTo ? `Operações movidas para "${movedTo}" e setup "${s.name}" excluído.` : `Setup "${s.name}" excluído.`, 'ok'); }
             catch (e) { suMsg('Não foi possível excluir.', 'err'); }
             await setupAfter();
         }
@@ -1009,7 +1018,7 @@
             if (!setups.length) { b.innerHTML = '<p class="text-gray-400">Carregando…</p>'; return; }
             const list = [...setups].sort(setupByName);
             const opt = (v, k) => `<option value="${v}" ${k === v ? 'selected' : ''}>${v === 'fora' ? 'Fora' : 'Dentro'}</option>`;
-            b.innerHTML = `<p class="mb-3 text-gray-400">Edite o nome (as operações já registradas acompanham), defina a classificação (usada no quadro "Dentro x fora do setup") e desmarque "Ativo" para parar de usar o setup em novas operações. Setup com operações não pode ser excluído, só inativado.</p>
+            b.innerHTML = `<p class="mb-3 text-gray-400">Edite o nome (as operações já registradas acompanham), defina a classificação (usada no quadro "Dentro x fora do setup") e desmarque "Ativo" para parar de usar o setup em novas operações. Para inativar ou excluir um setup com operações, escolha para onde movê-las.</p>
                 <div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr class="text-left text-gray-400 border-b border-gray-700"><th class="py-2 pr-2">Nome do setup</th><th class="py-2 px-2">Classificação</th><th class="py-2 px-2 text-center">Ativo</th><th class="py-2 px-2 text-right">Operações</th><th class="py-2 pl-2"></th></tr></thead><tbody>`
                 + list.map(s => { const n = setupCount(s.name); return `<tr class="border-b border-gray-800"><td class="py-1.5 pr-2"><div class="flex gap-1.5 items-center"><input type="text" class="su-name w-full min-w-[15rem] bg-darkBg border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-200 ${s.active ? '' : 'opacity-60'}" data-id="${esc(s.id)}" data-orig="${esc(s.name)}" value="${esc(s.name)}" title="${esc(s.name)}"><button type="button" class="su-ren ${setupIsFixed(s) ? 'su-fixed ' : ''}shrink-0 px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed" data-id="${esc(s.id)}" ${setupIsFixed(s) ? '' : 'disabled'}>Renomear</button></div></td>
                     <td class="py-1.5 px-2"><select class="su-kind bg-darkBg border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-200" data-id="${esc(s.id)}">${opt('dentro', s.kind)}${opt('fora', s.kind)}</select></td>
