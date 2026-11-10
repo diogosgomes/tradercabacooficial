@@ -551,7 +551,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V96';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V97';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -2961,6 +2961,7 @@ hmoDb = db;
             <button type="button" role="menuitem" data-fab="set" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">🧩 Gerenciar setups</button>
             <div class="border-t border-gray-600 my-1"></div>
             <button type="button" role="menuitem" data-fab="theme" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">🌓 Tema</button>
+            <button type="button" role="menuitem" data-fab="exit" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100 font-semibold">🚪 Sair</button>
             <p class="px-3 pb-2 pt-0.5 text-[10px] leading-tight text-gray-400">arraste o botão Atalhos para onde preferir</p>
         </div>
         <button type="button" id="fabBtn" aria-haspopup="menu" aria-expanded="false" class="h-12 px-4 rounded-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-2xl border-2 border-blue-300 flex items-center gap-1.5">⚡ Atalhos</button>
@@ -3007,7 +3008,7 @@ hmoDb = db;
             const b = e.target.closest('[data-fab]'); if (!b) return; close();
             const k = b.dataset.fab;
             if (k === 'op') openModal(); else if (k === 'flow') openFlowModal(); else if (k === 'rep') switchTab('report');
-            else if (k === 'aud') openAuditModal(); else if (k === 'set') openSetupsModal(); else if (k === 'theme') openThemeModal();
+            else if (k === 'aud') openAuditModal(); else if (k === 'set') openSetupsModal(); else if (k === 'theme') openThemeModal(); else if (k === 'exit') lockNow();
         });
     })();
     </script>
