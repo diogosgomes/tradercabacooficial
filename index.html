@@ -14,6 +14,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
     <link rel="apple-touch-icon" href="apple-touch-icon-180.png">
     <meta name="theme-color" content="#0b0f19">
+    <script>(function(){try{var t=localStorage.getItem('mtd_theme')||'dark';var l=t==='light'||(t==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme: light)').matches);document.documentElement.setAttribute('data-theme',l?'light':'dark');}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="MyTradeDash">
@@ -43,12 +44,92 @@
         html { scroll-padding-top: env(safe-area-inset-top, 0px); overflow-x: hidden; }
         body { background: #0b0f19; overflow-x: hidden; }
         img, a { -webkit-user-drag: none; }
+        /* ===== Tema claro/escuro (V92): cores do guia de marca; ganho = azul, perda = âmbar ===== */
+        :root{color-scheme:dark}
+        html .gl-pos{color:#60A5FA} html .gl-neg{color:#FBBF24}
+        html .chip-pos{background:#1E3A8A;color:#DBEAFE;border:1px solid #60A5FA}
+        html .chip-neg{background:#0B0F19;color:#FCD34D;border:1px dashed #F59E0B}
+        html .svg-tx{fill:#e5e7eb} html .svg-mu{fill:#9ca3af} html .svg-ln{stroke:#374151}
+        html[data-theme="light"]{color-scheme:light}
+        html[data-theme="light"] body{background:#F3F4F6}
+        html[data-theme="light"] .gl-pos{color:#1D4ED8} html[data-theme="light"] .gl-neg{color:#92400E}
+        html[data-theme="light"] .chip-pos{background:#1E3A8A;color:#fff;border:1px solid #1E3A8A}
+        html[data-theme="light"] .chip-neg{background:#FFFBEB;color:#78350F;border:1px dashed #B45309}
+        html[data-theme="light"] .svg-tx{fill:#111827} html[data-theme="light"] .svg-mu{fill:#4B5563} html[data-theme="light"] .svg-ln{stroke:#CBD5E1}
+        html[data-theme="light"] {--logo-tx:#111827;--logo-sub:#4B5563;--logo-dash:#2563EB}
+        html[data-theme="light"] .shadow-2xl{box-shadow:0 20px 40px -12px rgba(15,23,42,.25)}
+        html[data-theme="light"] .bg-darkBg{background-color:#F3F4F6}
+        html[data-theme="light"] .bg-cardBg{background-color:#FFFFFF}
+        html[data-theme="light"] .bg-cardHover{background-color:#E5E7EB}
+        html[data-theme="light"] .bg-gray-900{background-color:#FFFFFF}
+        html[data-theme="light"] .bg-gray-800{background-color:#E5E7EB}
+        html[data-theme="light"] .bg-gray-700{background-color:#E5E7EB}
+        html[data-theme="light"] .bg-gray-600{background-color:#CBD5E1}
+        html[data-theme="light"] .bg-gray-800\/40{background-color:rgba(226,232,240,.55)}
+        html[data-theme="light"] .bg-gray-900\/60{background-color:rgba(255,255,255,.7)}
+        html[data-theme="light"] .bg-gray-900\/50{background-color:rgba(255,255,255,.6)}
+        html[data-theme="light"] .bg-gray-900\/30{background-color:rgba(255,255,255,.4)}
+        html[data-theme="light"] .bg-emerald-950{background-color:#DBEAFE}
+        html[data-theme="light"] .bg-red-950{background-color:#FEF3C7}
+        html[data-theme="light"] .bg-amber-950{background-color:#FFFBEB}
+        html[data-theme="light"] .bg-blue-950{background-color:#DBEAFE}
+        html[data-theme="light"] .bg-indigo-950\/30{background-color:#E0E7FF}
+        html[data-theme="light"] .bg-amber-950\/30{background-color:#FFFBEB}
+        html[data-theme="light"] .hover\:bg-gray-700:hover{background-color:#E5E7EB}
+        html[data-theme="light"] .hover\:bg-gray-600:hover{background-color:#CBD5E1}
+        html[data-theme="light"] .hover\:bg-gray-500:hover{background-color:#94A3B8}
+        html[data-theme="light"] .hover\:bg-gray-800:hover{background-color:#E5E7EB}
+        html[data-theme="light"] .hover\:bg-cardHover:hover{background-color:#E5E7EB}
+        html[data-theme="light"] .hover\:bg-blue-950:hover{background-color:#DBEAFE}
+        html[data-theme="light"] .hover\:bg-amber-900:hover{background-color:#FDE68A}
+        html[data-theme="light"] .text-gray-100{color:#111827}
+        html[data-theme="light"] .text-gray-200{color:#1F2937}
+        html[data-theme="light"] .text-gray-300{color:#374151}
+        html[data-theme="light"] .text-gray-400{color:#4B5563}
+        html[data-theme="light"] .text-gray-500{color:#4B5563}
+        html[data-theme="light"] .text-white{color:#111827}
+        html[data-theme="light"] .text-emerald-400{color:#047857}
+        html[data-theme="light"] .text-emerald-300{color:#047857}
+        html[data-theme="light"] .text-emerald-100{color:#064E3B}
+        html[data-theme="light"] .text-red-400{color:#B91C1C}
+        html[data-theme="light"] .text-red-300{color:#B91C1C}
+        html[data-theme="light"] .text-red-200{color:#7F1D1D}
+        html[data-theme="light"] .text-amber-400{color:#92400E}
+        html[data-theme="light"] .text-amber-300{color:#92400E}
+        html[data-theme="light"] .text-amber-200{color:#78350F}
+        html[data-theme="light"] .text-amber-100{color:#78350F}
+        html[data-theme="light"] .text-blue-400{color:#1D4ED8}
+        html[data-theme="light"] .text-blue-300{color:#1D4ED8}
+        html[data-theme="light"] .text-blue-200{color:#1E3A8A}
+        html[data-theme="light"] .text-blue-100{color:#1E3A8A}
+        html[data-theme="light"] .text-indigo-300{color:#4338CA}
+        html[data-theme="light"] .hover\:text-gray-200:hover{color:#111827}
+        html[data-theme="light"] .hover\:text-red-300:hover{color:#991B1B}
+        html[data-theme="light"] .hover\:text-emerald-300:hover{color:#065F46}
+        html[data-theme="light"] .hover\:text-blue-300:hover{color:#1E40AF}
+        html[data-theme="light"] .border-gray-800{border-color:#E2E8F0}
+        html[data-theme="light"] .border-gray-800\/60{border-color:rgba(203,213,225,.6)}
+        html[data-theme="light"] .border-gray-700{border-color:#CBD5E1}
+        html[data-theme="light"] .border-gray-600{border-color:#94A3B8}
+        html[data-theme="light"] .border-gray-500{border-color:#94A3B8}
+        html[data-theme="light"] .border-gray-400{border-color:#64748B}
+        html[data-theme="light"] .border-emerald-800{border-color:#93C5FD}
+        html[data-theme="light"] .border-emerald-400{border-color:#2563EB}
+        html[data-theme="light"] .border-red-800{border-color:#FCD34D}
+        html[data-theme="light"] .border-red-500{border-color:#B45309}
+        html[data-theme="light"] .border-blue-800{border-color:#93C5FD}
+        html[data-theme="light"] .border-amber-800{border-color:#FCD34D}
+        html[data-theme="light"] .border-blue-300{border-color:#2563EB}
+        html[data-theme="light"] .divide-gray-800>:not([hidden])~:not([hidden]){border-color:#E2E8F0}
+        html[data-theme="light"] .bg-black\/70{background-color:rgba(15,23,42,.5)}
+        html[data-theme="light"] :is(.bg-blue-600,.bg-emerald-600,.bg-amber-600,.bg-red-700,.bg-violet-700).text-white{color:#fff}
+        
         @media print { body * { display: none !important; } body::before { content: "Impressão desativada"; display: block; color: #000; } }
     </style>
 </head>
 <body class="bg-darkBg text-gray-100 font-sans min-h-screen flex flex-col w-full">
     <!-- Logomarca My Trade Dash (opção A) -->
-    <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="logoMTD" viewBox="0 0 269.7 80"><rect x="8" y="8" width="64" height="64" rx="16" fill="#3B82F6"/><polyline points="20,54 33,40 43,47 57,27" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="47,26 57,26 57,36" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20" cy="54" r="4.5" fill="#F59E0B"/><path d="M106.67 42.0V30.53Q106.67 28.62 106.78 26.86Q106.19 29.05 105.71 30.28L101.27 42.0H99.63L95.13 30.28L94.44 28.21L94.04 26.86L94.08 28.22L94.13 30.53V42.0H92.05V24.8H95.11L99.69 36.73Q99.94 37.45 100.16 38.27Q100.39 39.09 100.46 39.46Q100.56 38.97 100.87 37.98Q101.18 36.98 101.29 36.73L105.78 24.8H108.77V42.0Z M113.16 47.19Q112.25 47.19 111.64 47.05V45.41Q112.11 45.48 112.67 45.48Q114.72 45.48 115.92 42.46L116.12 41.94L110.89 28.79H113.23L116.01 36.09Q116.07 36.26 116.16 36.5Q116.25 36.74 116.71 38.09Q117.17 39.45 117.21 39.61L118.06 37.2L120.96 28.79H123.28L118.2 42.0Q117.38 44.11 116.67 45.14Q115.96 46.17 115.1 46.68Q114.24 47.19 113.16 47.19Z M139.06 26.7V42.0H136.74V26.7H130.83V24.8H144.97V26.7Z M147.28 42.0V31.87Q147.28 30.48 147.2 28.79H149.28Q149.38 31.04 149.38 31.49H149.42Q149.95 29.79 150.63 29.17Q151.32 28.55 152.56 28.55Q153 28.55 153.45 28.67V30.68Q153.01 30.56 152.28 30.56Q150.91 30.56 150.19 31.74Q149.47 32.92 149.47 35.12V42.0Z M158.92 42.24Q156.93 42.24 155.93 41.19Q154.93 40.14 154.93 38.31Q154.93 36.26 156.28 35.16Q157.63 34.07 160.63 33.99L163.6 33.94V33.22Q163.6 31.61 162.91 30.92Q162.23 30.22 160.76 30.22Q159.29 30.22 158.62 30.72Q157.94 31.22 157.81 32.32L155.52 32.11Q156.08 28.55 160.81 28.55Q163.3 28.55 164.56 29.69Q165.82 30.83 165.82 32.99V38.68Q165.82 39.66 166.07 40.15Q166.33 40.65 167.05 40.65Q167.37 40.65 167.77 40.56V41.93Q166.94 42.12 166.07 42.12Q164.85 42.12 164.3 41.48Q163.74 40.84 163.67 39.47H163.6Q162.75 40.99 161.64 41.62Q160.52 42.24 158.92 42.24ZM159.42 40.6Q160.63 40.6 161.57 40.05Q162.51 39.5 163.05 38.54Q163.6 37.58 163.6 36.57V35.48L161.19 35.53Q159.64 35.55 158.84 35.85Q158.04 36.14 157.61 36.75Q157.19 37.36 157.19 38.35Q157.19 39.42 157.77 40.01Q158.35 40.6 159.42 40.6Z M177.79 39.88Q177.18 41.15 176.18 41.69Q175.17 42.24 173.68 42.24Q171.18 42.24 170 40.56Q168.82 38.88 168.82 35.46Q168.82 28.55 173.68 28.55Q175.18 28.55 176.18 29.1Q177.18 29.65 177.79 30.84H177.82L177.79 29.37V23.88H179.99V39.28Q179.99 41.34 180.06 42.0H177.96Q177.93 41.8 177.88 41.1Q177.84 40.39 177.84 39.88ZM171.13 35.38Q171.13 38.15 171.86 39.35Q172.59 40.55 174.24 40.55Q176.11 40.55 176.95 39.25Q177.79 37.96 177.79 35.24Q177.79 32.61 176.95 31.39Q176.11 30.17 174.27 30.17Q172.6 30.17 171.87 31.4Q171.13 32.62 171.13 35.38Z M185.04 35.86Q185.04 38.13 185.98 39.36Q186.92 40.6 188.73 40.6Q190.16 40.6 191.02 40.02Q191.88 39.45 192.19 38.57L194.11 39.12Q192.93 42.24 188.73 42.24Q185.8 42.24 184.27 40.5Q182.74 38.75 182.74 35.31Q182.74 32.04 184.27 30.29Q185.8 28.55 188.65 28.55Q194.47 28.55 194.47 35.57V35.86ZM192.2 34.18Q192.01 32.09 191.14 31.13Q190.26 30.17 188.61 30.17Q187.01 30.17 186.08 31.24Q185.14 32.31 185.07 34.18Z" fill="#F3F4F6"/><path d="M219.53 33.27Q219.53 35.93 218.49 37.92Q217.44 39.9 215.53 40.95Q213.62 42.0 211.15 42.0H204.2V24.8H210.42Q214.77 24.8 217.15 26.99Q219.53 29.18 219.53 33.27ZM215.9 33.27Q215.9 30.5 214.46 29.04Q213.02 27.58 210.35 27.58H207.8V39.22H210.85Q213.17 39.22 214.54 37.62Q215.9 36.02 215.9 33.27Z M225.38 42.24Q223.46 42.24 222.39 41.2Q221.31 40.16 221.31 38.26Q221.31 36.21 222.65 35.14Q223.98 34.07 226.52 34.04L229.37 33.99V33.32Q229.37 32.03 228.92 31.4Q228.46 30.77 227.44 30.77Q226.49 30.77 226.04 31.2Q225.6 31.64 225.49 32.64L221.91 32.47Q222.24 30.54 223.67 29.54Q225.11 28.55 227.59 28.55Q230.09 28.55 231.44 29.78Q232.8 31.01 232.8 33.28V38.09Q232.8 39.2 233.05 39.63Q233.3 40.05 233.88 40.05Q234.27 40.05 234.64 39.97V41.83Q234.34 41.9 234.09 41.96Q233.85 42.02 233.6 42.06Q233.36 42.1 233.08 42.12Q232.81 42.15 232.44 42.15Q231.15 42.15 230.53 41.51Q229.92 40.88 229.79 39.64H229.72Q228.28 42.24 225.38 42.24ZM229.37 35.88 227.61 35.91Q226.41 35.96 225.91 36.17Q225.41 36.38 225.15 36.82Q224.89 37.26 224.89 38Q224.89 38.94 225.32 39.39Q225.75 39.85 226.47 39.85Q227.28 39.85 227.95 39.41Q228.61 38.97 228.99 38.2Q229.37 37.42 229.37 36.56Z M247.36 38.14Q247.36 40.06 245.79 41.15Q244.22 42.24 241.45 42.24Q238.73 42.24 237.28 41.38Q235.84 40.52 235.36 38.7L238.38 38.25Q238.63 39.19 239.26 39.58Q239.89 39.97 241.45 39.97Q242.89 39.97 243.55 39.61Q244.21 39.24 244.21 38.46Q244.21 37.83 243.68 37.45Q243.15 37.08 241.88 36.82Q238.97 36.25 237.96 35.76Q236.95 35.26 236.42 34.47Q235.89 33.69 235.89 32.54Q235.89 30.65 237.34 29.59Q238.8 28.54 241.48 28.54Q243.83 28.54 245.27 29.45Q246.7 30.37 247.06 32.1L244.02 32.42Q243.87 31.61 243.3 31.22Q242.72 30.82 241.48 30.82Q240.26 30.82 239.65 31.13Q239.04 31.44 239.04 32.17Q239.04 32.75 239.51 33.08Q239.98 33.42 241.09 33.64Q242.64 33.96 243.84 34.29Q245.04 34.63 245.77 35.09Q246.49 35.55 246.93 36.28Q247.36 37.01 247.36 38.14Z M253.51 31.43Q254.21 29.92 255.26 29.23Q256.31 28.55 257.76 28.55Q259.86 28.55 260.98 29.84Q262.11 31.14 262.11 33.63V42.0H258.69V34.6Q258.69 31.12 256.33 31.12Q255.09 31.12 254.32 32.19Q253.56 33.26 253.56 34.93V42.0H250.13V23.88H253.56V28.83Q253.56 30.16 253.46 31.43Z" fill="#3B82F6"/><path d="M98.42 58.14Q98.42 59.31 97.96 60.19Q97.5 61.07 96.67 61.53Q95.83 62.0 94.73 62.0H91.9V54.43H94.41Q96.33 54.43 97.37 55.4Q98.42 56.36 98.42 58.14ZM97.39 58.14Q97.39 56.73 96.62 55.99Q95.84 55.25 94.38 55.25H92.93V61.18H94.61Q95.45 61.18 96.08 60.81Q96.71 60.45 97.05 59.76Q97.39 59.07 97.39 58.14Z M101.16 62.0V54.43H102.18V62.0Z M110.67 62.0 109.8 59.79H106.36L105.48 62.0H104.42L107.51 54.43H108.68L111.72 62.0ZM108.08 55.21 108.03 55.36Q107.9 55.8 107.63 56.5L106.67 58.99H109.5L108.53 56.49Q108.37 56.12 108.22 55.65ZM107.34 53.78V53.67L108.5 52.46H109.62V52.62L107.95 53.78Z M119.19 62.0 117.22 58.86H114.87V62.0H113.84V54.43H117.4Q118.68 54.43 119.37 55Q120.07 55.58 120.07 56.6Q120.07 57.44 119.58 58.01Q119.09 58.59 118.22 58.74L120.37 62.0ZM119.04 56.61Q119.04 55.95 118.59 55.6Q118.14 55.25 117.3 55.25H114.87V58.05H117.34Q118.15 58.05 118.6 57.67Q119.04 57.29 119.04 56.61Z M123.1 62.0V54.43H124.12V62.0Z M134.37 58.18Q134.37 59.37 133.91 60.26Q133.46 61.15 132.61 61.63Q131.76 62.11 130.61 62.11Q129.44 62.11 128.6 61.63Q127.75 61.16 127.3 60.27Q126.86 59.37 126.86 58.18Q126.86 56.37 127.85 55.34Q128.85 54.32 130.62 54.32Q131.77 54.32 132.62 54.78Q133.47 55.24 133.92 56.11Q134.37 56.99 134.37 58.18ZM133.32 58.18Q133.32 56.77 132.61 55.96Q131.91 55.16 130.62 55.16Q129.32 55.16 128.61 55.95Q127.9 56.75 127.9 58.18Q127.9 59.6 128.62 60.44Q129.33 61.27 130.61 61.27Q131.92 61.27 132.62 60.47Q133.32 59.66 133.32 58.18Z M147.77 58.14Q147.77 59.31 147.31 60.19Q146.85 61.07 146.02 61.53Q145.18 62.0 144.08 62.0H141.25V54.43H143.75Q145.68 54.43 146.72 55.4Q147.77 56.36 147.77 58.14ZM146.74 58.14Q146.74 56.73 145.96 55.99Q145.19 55.25 143.73 55.25H142.28V61.18H143.96Q144.8 61.18 145.43 60.81Q146.06 60.45 146.4 59.76Q146.74 59.07 146.74 58.14Z M150.4 62.0V54.43H156.14V55.27H151.42V57.7H155.81V58.52H151.42V61.16H156.36V62.0Z M170.32 58.18Q170.32 59.37 169.86 60.26Q169.41 61.15 168.56 61.63Q167.71 62.11 166.56 62.11Q165.39 62.11 164.54 61.63Q163.7 61.16 163.25 60.27Q162.81 59.37 162.81 58.18Q162.81 56.37 163.8 55.34Q164.79 54.32 166.57 54.32Q167.72 54.32 168.57 54.78Q169.42 55.24 169.87 56.11Q170.32 56.99 170.32 58.18ZM169.27 58.18Q169.27 56.77 168.56 55.96Q167.86 55.16 166.57 55.16Q165.27 55.16 164.56 55.95Q163.85 56.75 163.85 58.18Q163.85 59.6 164.57 60.44Q165.28 61.27 166.56 61.27Q167.87 61.27 168.57 60.47Q169.27 59.66 169.27 58.18Z M178.8 56.71Q178.8 57.78 178.1 58.42Q177.4 59.05 176.19 59.05H173.97V62.0H172.94V54.43H176.13Q177.4 54.43 178.1 55.03Q178.8 55.62 178.8 56.71ZM177.77 56.72Q177.77 55.25 176.01 55.25H173.97V58.24H176.05Q177.77 58.24 177.77 56.72Z M181.48 62.0V54.43H187.22V55.27H182.51V57.7H186.9V58.52H182.51V61.16H187.44V62.0Z M195.37 62.0 193.4 58.86H191.04V62.0H190.02V54.43H193.58Q194.86 54.43 195.55 55Q196.25 55.58 196.25 56.6Q196.25 57.44 195.76 58.01Q195.27 58.59 194.4 58.74L196.55 62.0ZM195.22 56.61Q195.22 55.95 194.77 55.6Q194.32 55.25 193.48 55.25H191.04V58.05H193.52Q194.33 58.05 194.77 57.67Q195.22 57.29 195.22 56.61Z M204.53 62.0 203.66 59.79H200.22L199.34 62.0H198.28L201.37 54.43H202.54L205.58 62.0ZM201.94 55.21 201.89 55.36Q201.76 55.8 201.49 56.5L200.53 58.99H203.36L202.38 56.49Q202.23 56.12 202.08 55.65Z M211.05 55.16Q209.79 55.16 209.1 55.97Q208.4 56.77 208.4 58.18Q208.4 59.57 209.13 60.42Q209.85 61.26 211.09 61.26Q212.68 61.26 213.48 59.69L214.32 60.11Q213.85 61.09 213.01 61.6Q212.16 62.11 211.05 62.11Q209.9 62.11 209.07 61.63Q208.23 61.16 207.79 60.27Q207.36 59.39 207.36 58.18Q207.36 56.37 208.33 55.35Q209.31 54.32 211.04 54.32Q212.25 54.32 213.06 54.79Q213.87 55.26 214.25 56.19L213.28 56.52Q213.02 55.86 212.43 55.51Q211.85 55.16 211.05 55.16ZM212.13 63.36Q212.13 64.33 210.66 64.33Q210.35 64.33 210.18 64.31V63.78Q210.44 63.82 210.64 63.82Q211.43 63.82 211.43 63.38Q211.43 62.97 210.71 62.97Q210.48 62.97 210.41 62.98L210.76 62.0H211.33L211.12 62.54Q211.63 62.55 211.88 62.77Q212.13 62.99 212.13 63.36Z M223.97 58.18Q223.97 59.37 223.52 60.26Q223.06 61.15 222.21 61.63Q221.37 62.11 220.21 62.11Q219.05 62.11 218.2 61.63Q217.35 61.16 216.91 60.27Q216.46 59.37 216.46 58.18Q216.46 56.37 217.46 55.34Q218.45 54.32 220.22 54.32Q221.38 54.32 222.22 54.78Q223.07 55.24 223.52 56.11Q223.97 56.99 223.97 58.18ZM222.92 58.18Q222.92 56.77 222.22 55.96Q221.51 55.16 220.22 55.16Q218.92 55.16 218.21 55.95Q217.5 56.75 217.5 58.18Q217.5 59.6 218.22 60.44Q218.94 61.27 220.21 61.27Q221.52 61.27 222.22 60.47Q222.92 59.66 222.92 58.18ZM220.99 53.78Q220.77 53.78 220.54 53.68Q220.32 53.58 220.11 53.46Q219.9 53.34 219.71 53.24Q219.52 53.14 219.35 53.14Q219.06 53.14 218.91 53.31Q218.77 53.48 218.72 53.78H218.23Q218.29 53.23 218.42 52.95Q218.55 52.67 218.76 52.51Q218.98 52.34 219.32 52.34Q219.56 52.34 219.78 52.44Q220.01 52.54 220.22 52.66Q220.43 52.78 220.61 52.88Q220.8 52.98 220.96 52.98Q221.49 52.98 221.59 52.34H222.08Q221.99 53.14 221.72 53.46Q221.45 53.78 220.99 53.78Z M226.6 62.0V54.43H232.34V55.27H227.63V57.7H232.02V58.52H227.63V61.16H232.56V62.0Z M241.07 59.91Q241.07 60.96 240.25 61.53Q239.43 62.11 237.94 62.11Q235.17 62.11 234.73 60.18L235.73 59.99Q235.9 60.67 236.46 60.99Q237.02 61.31 237.98 61.31Q238.97 61.31 239.51 60.97Q240.05 60.62 240.05 59.96Q240.05 59.59 239.88 59.36Q239.71 59.13 239.41 58.98Q239.1 58.83 238.68 58.73Q238.25 58.63 237.74 58.51Q236.84 58.31 236.37 58.11Q235.91 57.91 235.64 57.67Q235.37 57.42 235.23 57.1Q235.09 56.77 235.09 56.34Q235.09 55.37 235.83 54.85Q236.58 54.32 237.96 54.32Q239.25 54.32 239.93 54.71Q240.61 55.11 240.89 56.06L239.88 56.24Q239.71 55.64 239.25 55.36Q238.78 55.09 237.95 55.09Q237.04 55.09 236.56 55.39Q236.09 55.69 236.09 56.29Q236.09 56.64 236.27 56.87Q236.46 57.1 236.81 57.25Q237.16 57.41 238.2 57.64Q238.55 57.72 238.89 57.81Q239.24 57.89 239.56 58.01Q239.87 58.12 240.15 58.28Q240.43 58.43 240.63 58.66Q240.83 58.88 240.95 59.19Q241.07 59.5 241.07 59.91Z" fill="#9CA3AF"/></symbol><symbol id="escudoMTD" viewBox="0 0 200 200"><path d="M100 10 L170 34 V98 C170 142 138 172 100 190 C62 172 30 142 30 98 V34 Z" fill="#3B82F6"/><path d="M100 22 L158 42 V98 C158 134 132 160 100 176 C68 160 42 134 42 98 V42 Z" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="2"/><polyline points="62,86 78,68 90,76 112,50" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><polyline points="100,50 112,50 112,62" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="62" cy="86" r="5.5" fill="#F59E0B"/><path d="M81.99 134.0V118.99Q81.99 118.48 82 117.97Q82 117.46 82.16 113.59Q80.91 118.32 80.32 120.18L75.85 134.0H72.16L67.7 120.18L65.81 113.59Q66.03 117.67 66.03 118.99V134.0H61.42V109.23H68.36L72.79 123.08L73.18 124.42L74.02 127.74L75.13 123.77L79.68 109.23H86.59V134.0Z M104.59 113.24V134.0H99.4V113.24H91.4V109.23H112.6V113.24Z M139.48 121.43Q139.48 125.26 137.97 128.12Q136.47 130.98 133.72 132.49Q130.97 134.0 127.42 134.0H117.4V109.23H126.36Q132.62 109.23 136.05 112.39Q139.48 115.54 139.48 121.43ZM134.26 121.43Q134.26 117.44 132.18 115.34Q130.11 113.24 126.26 113.24H122.58V129.99H126.98Q130.32 129.99 132.29 127.69Q134.26 125.39 134.26 121.43Z" fill="#FFFFFF"/><rect x="78" y="144" width="44" height="6" rx="3" fill="#F59E0B"/></symbol></defs></svg>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="logoMTD" viewBox="0 0 269.7 80"><rect x="8" y="8" width="64" height="64" rx="16" fill="#3B82F6"/><polyline points="20,54 33,40 43,47 57,27" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="47,26 57,26 57,36" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20" cy="54" r="4.5" fill="#F59E0B"/><path d="M106.67 42.0V30.53Q106.67 28.62 106.78 26.86Q106.19 29.05 105.71 30.28L101.27 42.0H99.63L95.13 30.28L94.44 28.21L94.04 26.86L94.08 28.22L94.13 30.53V42.0H92.05V24.8H95.11L99.69 36.73Q99.94 37.45 100.16 38.27Q100.39 39.09 100.46 39.46Q100.56 38.97 100.87 37.98Q101.18 36.98 101.29 36.73L105.78 24.8H108.77V42.0Z M113.16 47.19Q112.25 47.19 111.64 47.05V45.41Q112.11 45.48 112.67 45.48Q114.72 45.48 115.92 42.46L116.12 41.94L110.89 28.79H113.23L116.01 36.09Q116.07 36.26 116.16 36.5Q116.25 36.74 116.71 38.09Q117.17 39.45 117.21 39.61L118.06 37.2L120.96 28.79H123.28L118.2 42.0Q117.38 44.11 116.67 45.14Q115.96 46.17 115.1 46.68Q114.24 47.19 113.16 47.19Z M139.06 26.7V42.0H136.74V26.7H130.83V24.8H144.97V26.7Z M147.28 42.0V31.87Q147.28 30.48 147.2 28.79H149.28Q149.38 31.04 149.38 31.49H149.42Q149.95 29.79 150.63 29.17Q151.32 28.55 152.56 28.55Q153 28.55 153.45 28.67V30.68Q153.01 30.56 152.28 30.56Q150.91 30.56 150.19 31.74Q149.47 32.92 149.47 35.12V42.0Z M158.92 42.24Q156.93 42.24 155.93 41.19Q154.93 40.14 154.93 38.31Q154.93 36.26 156.28 35.16Q157.63 34.07 160.63 33.99L163.6 33.94V33.22Q163.6 31.61 162.91 30.92Q162.23 30.22 160.76 30.22Q159.29 30.22 158.62 30.72Q157.94 31.22 157.81 32.32L155.52 32.11Q156.08 28.55 160.81 28.55Q163.3 28.55 164.56 29.69Q165.82 30.83 165.82 32.99V38.68Q165.82 39.66 166.07 40.15Q166.33 40.65 167.05 40.65Q167.37 40.65 167.77 40.56V41.93Q166.94 42.12 166.07 42.12Q164.85 42.12 164.3 41.48Q163.74 40.84 163.67 39.47H163.6Q162.75 40.99 161.64 41.62Q160.52 42.24 158.92 42.24ZM159.42 40.6Q160.63 40.6 161.57 40.05Q162.51 39.5 163.05 38.54Q163.6 37.58 163.6 36.57V35.48L161.19 35.53Q159.64 35.55 158.84 35.85Q158.04 36.14 157.61 36.75Q157.19 37.36 157.19 38.35Q157.19 39.42 157.77 40.01Q158.35 40.6 159.42 40.6Z M177.79 39.88Q177.18 41.15 176.18 41.69Q175.17 42.24 173.68 42.24Q171.18 42.24 170 40.56Q168.82 38.88 168.82 35.46Q168.82 28.55 173.68 28.55Q175.18 28.55 176.18 29.1Q177.18 29.65 177.79 30.84H177.82L177.79 29.37V23.88H179.99V39.28Q179.99 41.34 180.06 42.0H177.96Q177.93 41.8 177.88 41.1Q177.84 40.39 177.84 39.88ZM171.13 35.38Q171.13 38.15 171.86 39.35Q172.59 40.55 174.24 40.55Q176.11 40.55 176.95 39.25Q177.79 37.96 177.79 35.24Q177.79 32.61 176.95 31.39Q176.11 30.17 174.27 30.17Q172.6 30.17 171.87 31.4Q171.13 32.62 171.13 35.38Z M185.04 35.86Q185.04 38.13 185.98 39.36Q186.92 40.6 188.73 40.6Q190.16 40.6 191.02 40.02Q191.88 39.45 192.19 38.57L194.11 39.12Q192.93 42.24 188.73 42.24Q185.8 42.24 184.27 40.5Q182.74 38.75 182.74 35.31Q182.74 32.04 184.27 30.29Q185.8 28.55 188.65 28.55Q194.47 28.55 194.47 35.57V35.86ZM192.2 34.18Q192.01 32.09 191.14 31.13Q190.26 30.17 188.61 30.17Q187.01 30.17 186.08 31.24Q185.14 32.31 185.07 34.18Z" style="fill:var(--logo-tx,#F3F4F6)"/><path d="M219.53 33.27Q219.53 35.93 218.49 37.92Q217.44 39.9 215.53 40.95Q213.62 42.0 211.15 42.0H204.2V24.8H210.42Q214.77 24.8 217.15 26.99Q219.53 29.18 219.53 33.27ZM215.9 33.27Q215.9 30.5 214.46 29.04Q213.02 27.58 210.35 27.58H207.8V39.22H210.85Q213.17 39.22 214.54 37.62Q215.9 36.02 215.9 33.27Z M225.38 42.24Q223.46 42.24 222.39 41.2Q221.31 40.16 221.31 38.26Q221.31 36.21 222.65 35.14Q223.98 34.07 226.52 34.04L229.37 33.99V33.32Q229.37 32.03 228.92 31.4Q228.46 30.77 227.44 30.77Q226.49 30.77 226.04 31.2Q225.6 31.64 225.49 32.64L221.91 32.47Q222.24 30.54 223.67 29.54Q225.11 28.55 227.59 28.55Q230.09 28.55 231.44 29.78Q232.8 31.01 232.8 33.28V38.09Q232.8 39.2 233.05 39.63Q233.3 40.05 233.88 40.05Q234.27 40.05 234.64 39.97V41.83Q234.34 41.9 234.09 41.96Q233.85 42.02 233.6 42.06Q233.36 42.1 233.08 42.12Q232.81 42.15 232.44 42.15Q231.15 42.15 230.53 41.51Q229.92 40.88 229.79 39.64H229.72Q228.28 42.24 225.38 42.24ZM229.37 35.88 227.61 35.91Q226.41 35.96 225.91 36.17Q225.41 36.38 225.15 36.82Q224.89 37.26 224.89 38Q224.89 38.94 225.32 39.39Q225.75 39.85 226.47 39.85Q227.28 39.85 227.95 39.41Q228.61 38.97 228.99 38.2Q229.37 37.42 229.37 36.56Z M247.36 38.14Q247.36 40.06 245.79 41.15Q244.22 42.24 241.45 42.24Q238.73 42.24 237.28 41.38Q235.84 40.52 235.36 38.7L238.38 38.25Q238.63 39.19 239.26 39.58Q239.89 39.97 241.45 39.97Q242.89 39.97 243.55 39.61Q244.21 39.24 244.21 38.46Q244.21 37.83 243.68 37.45Q243.15 37.08 241.88 36.82Q238.97 36.25 237.96 35.76Q236.95 35.26 236.42 34.47Q235.89 33.69 235.89 32.54Q235.89 30.65 237.34 29.59Q238.8 28.54 241.48 28.54Q243.83 28.54 245.27 29.45Q246.7 30.37 247.06 32.1L244.02 32.42Q243.87 31.61 243.3 31.22Q242.72 30.82 241.48 30.82Q240.26 30.82 239.65 31.13Q239.04 31.44 239.04 32.17Q239.04 32.75 239.51 33.08Q239.98 33.42 241.09 33.64Q242.64 33.96 243.84 34.29Q245.04 34.63 245.77 35.09Q246.49 35.55 246.93 36.28Q247.36 37.01 247.36 38.14Z M253.51 31.43Q254.21 29.92 255.26 29.23Q256.31 28.55 257.76 28.55Q259.86 28.55 260.98 29.84Q262.11 31.14 262.11 33.63V42.0H258.69V34.6Q258.69 31.12 256.33 31.12Q255.09 31.12 254.32 32.19Q253.56 33.26 253.56 34.93V42.0H250.13V23.88H253.56V28.83Q253.56 30.16 253.46 31.43Z" style="fill:var(--logo-dash,#3B82F6)"/><path d="M98.42 58.14Q98.42 59.31 97.96 60.19Q97.5 61.07 96.67 61.53Q95.83 62.0 94.73 62.0H91.9V54.43H94.41Q96.33 54.43 97.37 55.4Q98.42 56.36 98.42 58.14ZM97.39 58.14Q97.39 56.73 96.62 55.99Q95.84 55.25 94.38 55.25H92.93V61.18H94.61Q95.45 61.18 96.08 60.81Q96.71 60.45 97.05 59.76Q97.39 59.07 97.39 58.14Z M101.16 62.0V54.43H102.18V62.0Z M110.67 62.0 109.8 59.79H106.36L105.48 62.0H104.42L107.51 54.43H108.68L111.72 62.0ZM108.08 55.21 108.03 55.36Q107.9 55.8 107.63 56.5L106.67 58.99H109.5L108.53 56.49Q108.37 56.12 108.22 55.65ZM107.34 53.78V53.67L108.5 52.46H109.62V52.62L107.95 53.78Z M119.19 62.0 117.22 58.86H114.87V62.0H113.84V54.43H117.4Q118.68 54.43 119.37 55Q120.07 55.58 120.07 56.6Q120.07 57.44 119.58 58.01Q119.09 58.59 118.22 58.74L120.37 62.0ZM119.04 56.61Q119.04 55.95 118.59 55.6Q118.14 55.25 117.3 55.25H114.87V58.05H117.34Q118.15 58.05 118.6 57.67Q119.04 57.29 119.04 56.61Z M123.1 62.0V54.43H124.12V62.0Z M134.37 58.18Q134.37 59.37 133.91 60.26Q133.46 61.15 132.61 61.63Q131.76 62.11 130.61 62.11Q129.44 62.11 128.6 61.63Q127.75 61.16 127.3 60.27Q126.86 59.37 126.86 58.18Q126.86 56.37 127.85 55.34Q128.85 54.32 130.62 54.32Q131.77 54.32 132.62 54.78Q133.47 55.24 133.92 56.11Q134.37 56.99 134.37 58.18ZM133.32 58.18Q133.32 56.77 132.61 55.96Q131.91 55.16 130.62 55.16Q129.32 55.16 128.61 55.95Q127.9 56.75 127.9 58.18Q127.9 59.6 128.62 60.44Q129.33 61.27 130.61 61.27Q131.92 61.27 132.62 60.47Q133.32 59.66 133.32 58.18Z M147.77 58.14Q147.77 59.31 147.31 60.19Q146.85 61.07 146.02 61.53Q145.18 62.0 144.08 62.0H141.25V54.43H143.75Q145.68 54.43 146.72 55.4Q147.77 56.36 147.77 58.14ZM146.74 58.14Q146.74 56.73 145.96 55.99Q145.19 55.25 143.73 55.25H142.28V61.18H143.96Q144.8 61.18 145.43 60.81Q146.06 60.45 146.4 59.76Q146.74 59.07 146.74 58.14Z M150.4 62.0V54.43H156.14V55.27H151.42V57.7H155.81V58.52H151.42V61.16H156.36V62.0Z M170.32 58.18Q170.32 59.37 169.86 60.26Q169.41 61.15 168.56 61.63Q167.71 62.11 166.56 62.11Q165.39 62.11 164.54 61.63Q163.7 61.16 163.25 60.27Q162.81 59.37 162.81 58.18Q162.81 56.37 163.8 55.34Q164.79 54.32 166.57 54.32Q167.72 54.32 168.57 54.78Q169.42 55.24 169.87 56.11Q170.32 56.99 170.32 58.18ZM169.27 58.18Q169.27 56.77 168.56 55.96Q167.86 55.16 166.57 55.16Q165.27 55.16 164.56 55.95Q163.85 56.75 163.85 58.18Q163.85 59.6 164.57 60.44Q165.28 61.27 166.56 61.27Q167.87 61.27 168.57 60.47Q169.27 59.66 169.27 58.18Z M178.8 56.71Q178.8 57.78 178.1 58.42Q177.4 59.05 176.19 59.05H173.97V62.0H172.94V54.43H176.13Q177.4 54.43 178.1 55.03Q178.8 55.62 178.8 56.71ZM177.77 56.72Q177.77 55.25 176.01 55.25H173.97V58.24H176.05Q177.77 58.24 177.77 56.72Z M181.48 62.0V54.43H187.22V55.27H182.51V57.7H186.9V58.52H182.51V61.16H187.44V62.0Z M195.37 62.0 193.4 58.86H191.04V62.0H190.02V54.43H193.58Q194.86 54.43 195.55 55Q196.25 55.58 196.25 56.6Q196.25 57.44 195.76 58.01Q195.27 58.59 194.4 58.74L196.55 62.0ZM195.22 56.61Q195.22 55.95 194.77 55.6Q194.32 55.25 193.48 55.25H191.04V58.05H193.52Q194.33 58.05 194.77 57.67Q195.22 57.29 195.22 56.61Z M204.53 62.0 203.66 59.79H200.22L199.34 62.0H198.28L201.37 54.43H202.54L205.58 62.0ZM201.94 55.21 201.89 55.36Q201.76 55.8 201.49 56.5L200.53 58.99H203.36L202.38 56.49Q202.23 56.12 202.08 55.65Z M211.05 55.16Q209.79 55.16 209.1 55.97Q208.4 56.77 208.4 58.18Q208.4 59.57 209.13 60.42Q209.85 61.26 211.09 61.26Q212.68 61.26 213.48 59.69L214.32 60.11Q213.85 61.09 213.01 61.6Q212.16 62.11 211.05 62.11Q209.9 62.11 209.07 61.63Q208.23 61.16 207.79 60.27Q207.36 59.39 207.36 58.18Q207.36 56.37 208.33 55.35Q209.31 54.32 211.04 54.32Q212.25 54.32 213.06 54.79Q213.87 55.26 214.25 56.19L213.28 56.52Q213.02 55.86 212.43 55.51Q211.85 55.16 211.05 55.16ZM212.13 63.36Q212.13 64.33 210.66 64.33Q210.35 64.33 210.18 64.31V63.78Q210.44 63.82 210.64 63.82Q211.43 63.82 211.43 63.38Q211.43 62.97 210.71 62.97Q210.48 62.97 210.41 62.98L210.76 62.0H211.33L211.12 62.54Q211.63 62.55 211.88 62.77Q212.13 62.99 212.13 63.36Z M223.97 58.18Q223.97 59.37 223.52 60.26Q223.06 61.15 222.21 61.63Q221.37 62.11 220.21 62.11Q219.05 62.11 218.2 61.63Q217.35 61.16 216.91 60.27Q216.46 59.37 216.46 58.18Q216.46 56.37 217.46 55.34Q218.45 54.32 220.22 54.32Q221.38 54.32 222.22 54.78Q223.07 55.24 223.52 56.11Q223.97 56.99 223.97 58.18ZM222.92 58.18Q222.92 56.77 222.22 55.96Q221.51 55.16 220.22 55.16Q218.92 55.16 218.21 55.95Q217.5 56.75 217.5 58.18Q217.5 59.6 218.22 60.44Q218.94 61.27 220.21 61.27Q221.52 61.27 222.22 60.47Q222.92 59.66 222.92 58.18ZM220.99 53.78Q220.77 53.78 220.54 53.68Q220.32 53.58 220.11 53.46Q219.9 53.34 219.71 53.24Q219.52 53.14 219.35 53.14Q219.06 53.14 218.91 53.31Q218.77 53.48 218.72 53.78H218.23Q218.29 53.23 218.42 52.95Q218.55 52.67 218.76 52.51Q218.98 52.34 219.32 52.34Q219.56 52.34 219.78 52.44Q220.01 52.54 220.22 52.66Q220.43 52.78 220.61 52.88Q220.8 52.98 220.96 52.98Q221.49 52.98 221.59 52.34H222.08Q221.99 53.14 221.72 53.46Q221.45 53.78 220.99 53.78Z M226.6 62.0V54.43H232.34V55.27H227.63V57.7H232.02V58.52H227.63V61.16H232.56V62.0Z M241.07 59.91Q241.07 60.96 240.25 61.53Q239.43 62.11 237.94 62.11Q235.17 62.11 234.73 60.18L235.73 59.99Q235.9 60.67 236.46 60.99Q237.02 61.31 237.98 61.31Q238.97 61.31 239.51 60.97Q240.05 60.62 240.05 59.96Q240.05 59.59 239.88 59.36Q239.71 59.13 239.41 58.98Q239.1 58.83 238.68 58.73Q238.25 58.63 237.74 58.51Q236.84 58.31 236.37 58.11Q235.91 57.91 235.64 57.67Q235.37 57.42 235.23 57.1Q235.09 56.77 235.09 56.34Q235.09 55.37 235.83 54.85Q236.58 54.32 237.96 54.32Q239.25 54.32 239.93 54.71Q240.61 55.11 240.89 56.06L239.88 56.24Q239.71 55.64 239.25 55.36Q238.78 55.09 237.95 55.09Q237.04 55.09 236.56 55.39Q236.09 55.69 236.09 56.29Q236.09 56.64 236.27 56.87Q236.46 57.1 236.81 57.25Q237.16 57.41 238.2 57.64Q238.55 57.72 238.89 57.81Q239.24 57.89 239.56 58.01Q239.87 58.12 240.15 58.28Q240.43 58.43 240.63 58.66Q240.83 58.88 240.95 59.19Q241.07 59.5 241.07 59.91Z" style="fill:var(--logo-sub,#9CA3AF)"/></symbol><symbol id="escudoMTD" viewBox="0 0 200 200"><path d="M100 10 L170 34 V98 C170 142 138 172 100 190 C62 172 30 142 30 98 V34 Z" fill="#3B82F6"/><path d="M100 22 L158 42 V98 C158 134 132 160 100 176 C68 160 42 134 42 98 V42 Z" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="2"/><polyline points="62,86 78,68 90,76 112,50" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><polyline points="100,50 112,50 112,62" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="62" cy="86" r="5.5" fill="#F59E0B"/><path d="M81.99 134.0V118.99Q81.99 118.48 82 117.97Q82 117.46 82.16 113.59Q80.91 118.32 80.32 120.18L75.85 134.0H72.16L67.7 120.18L65.81 113.59Q66.03 117.67 66.03 118.99V134.0H61.42V109.23H68.36L72.79 123.08L73.18 124.42L74.02 127.74L75.13 123.77L79.68 109.23H86.59V134.0Z M104.59 113.24V134.0H99.4V113.24H91.4V109.23H112.6V113.24Z M139.48 121.43Q139.48 125.26 137.97 128.12Q136.47 130.98 133.72 132.49Q130.97 134.0 127.42 134.0H117.4V109.23H126.36Q132.62 109.23 136.05 112.39Q139.48 115.54 139.48 121.43ZM134.26 121.43Q134.26 117.44 132.18 115.34Q130.11 113.24 126.26 113.24H122.58V129.99H126.98Q130.32 129.99 132.29 127.69Q134.26 125.39 134.26 121.43Z" fill="#FFFFFF"/><rect x="78" y="144" width="44" height="6" rx="3" fill="#F59E0B"/></symbol></defs></svg>
 
     <!-- Tela de acesso -->
     <div id="lockScreen" class="fixed inset-0 z-[100] bg-darkBg flex flex-col items-center justify-center p-4">
@@ -75,7 +156,7 @@
             <svg viewBox="0 0 200 200" role="img" aria-label="Escudo My Trade Dash" class="h-12 w-12 shrink-0"><use href="#escudoMTD"/></svg>
             <p class="text-[11px] text-gray-400 leading-snug">Seus dados protegidos por login e regras de acesso.</p>
         </div>
-        <p class="mt-3 text-center text-[11px] text-gray-500">© 2026 Diogo Gomes · Todos os direitos reservados.</p>
+        <p class="mt-3 text-center text-[11px] text-gray-500">© 2026 My Trade Dash · Todos os direitos reservados.</p>
     </div>
 
     <!-- Top Navbar -->
@@ -114,6 +195,7 @@
                     <button type="button" role="menuitem" onclick="optsAction(() => document.getElementById('importFile').click())" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📤 Importar backup</button>
                     <button type="button" role="menuitem" onclick="optsAction(openSetupsModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🧩 Gerenciar setups</button>
                     <button type="button" role="menuitem" onclick="optsAction(openAuditModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📋 Histórico de auditoria</button>
+                    <button id="btnTheme" type="button" role="menuitem" onclick="optsAction(openThemeModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🌓 Tema</button>
                     <div id="sepLogout" class="border-t border-gray-700 my-1"></div>
                     <button id="btnLogout" type="button" role="menuitem" onclick="optsAction(lockNow)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-100 font-semibold">🚪 Sair</button>
                 </div>
@@ -135,17 +217,17 @@
             </div>
             <div class="bg-cardBg border border-gray-800 p-2 sm:p-5 rounded-xl shadow-lg">
                 <p class="text-[9px] sm:text-xs font-medium text-gray-400 uppercase tracking-tight sm:tracking-wider truncate">Total Net Profit</p>
-                <div class="mt-1 sm:mt-2"><span id="metricNetProfit" class="text-sm sm:text-3xl leading-tight font-extrabold text-emerald-400">R$ 0,00</span></div>
+                <div class="mt-1 sm:mt-2"><span id="metricNetProfit" class="text-sm sm:text-3xl leading-tight font-extrabold gl-pos">R$ 0,00</span></div>
                 <p class="mt-1 hidden sm:block text-[10px] sm:text-[11px] text-gray-500">Ganhos líquidos das operações</p>
             </div>
             <div class="bg-cardBg border-2 border-blue-500/60 p-2 sm:p-5 rounded-xl shadow-lg">
                 <p class="text-[9px] sm:text-xs font-medium text-gray-400 uppercase tracking-tight sm:tracking-wider truncate">Capital Atual</p>
-                <div class="mt-1 sm:mt-2"><span id="metricCapital" class="text-sm sm:text-3xl leading-tight font-extrabold text-emerald-400">R$ 0,00</span></div>
+                <div class="mt-1 sm:mt-2"><span id="metricCapital" class="text-sm sm:text-3xl leading-tight font-extrabold gl-pos">R$ 0,00</span></div>
                 <p id="metricCapitalSub" class="mt-1 hidden sm:block text-[10px] sm:text-[11px] text-gray-500">0,00 investido + 0,00 de lucro</p>
             </div>
             <div class="bg-cardBg border border-gray-800 p-2 sm:p-5 rounded-xl shadow-lg">
                 <p class="text-[9px] sm:text-xs font-medium text-gray-400 uppercase tracking-tight sm:tracking-wider truncate">Total Gain / Loss</p>
-                <div class="mt-1 sm:mt-2"><span id="metricGainLoss" class="text-[11px] sm:text-2xl font-bold leading-tight text-emerald-400">Gain: 0 | Loss: 0</span></div>
+                <div class="mt-1 sm:mt-2"><span id="metricGainLoss" class="text-[11px] sm:text-2xl font-bold leading-tight text-gray-100">▲ Gain 0 | ▼ Loss 0</span></div>
             </div>
             <div class="bg-cardBg border border-gray-800 p-2 sm:p-5 rounded-xl shadow-lg">
                 <p class="text-[9px] sm:text-xs font-medium text-gray-400 uppercase tracking-tight sm:tracking-wider truncate">Win Rate</p>
@@ -278,7 +360,7 @@
 
     </main>
 
-    <footer class="w-full text-center py-6 px-3 text-[11px] text-gray-500">© 2026 Diogo Gomes · Todos os direitos reservados.</footer>
+    <footer class="w-full text-center py-6 px-3 text-[11px] text-gray-500">© 2026 My Trade Dash · Todos os direitos reservados.</footer>
 
     <div id="bestTip" role="tooltip" class="hidden fixed z-[70] w-72 max-w-[calc(100vw-16px)] pointer-events-none bg-cardBg border border-gray-600 rounded-lg shadow-2xl px-3 py-2 text-xs">
         <p class="text-[10px] text-gray-500 uppercase tracking-wider">Best Setup</p>
@@ -445,6 +527,8 @@
                 <button onclick="closePwdModal()" class="text-gray-400 hover:text-gray-200 text-xl font-bold">&times;</button>
             </div>
             <form id="pwdForm" class="space-y-3" autocomplete="off">
+                <div><label class="block text-xs font-medium text-gray-400 mb-1">Senha atual</label>
+                    <input type="password" id="pwdCur" autocomplete="current-password" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200"></div>
                 <div><label class="block text-xs font-medium text-gray-400 mb-1">Nova senha (mínimo 8 caracteres)</label>
                     <input type="password" id="pwdNew" autocomplete="new-password" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200"></div>
                 <div><label class="block text-xs font-medium text-gray-400 mb-1">Repita a nova senha</label>
@@ -467,7 +551,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V88';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V96';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -775,7 +859,7 @@
                         + '<button type="button" data-yes class="px-2.5 py-1 rounded-lg bg-amber-600 text-white font-bold">Excluir</button><button type="button" data-no class="px-2.5 py-1 rounded-lg border border-gray-600 text-gray-300">Cancelar</button>';
                     box.querySelector('[data-no]').onclick = rerender;
                     box.querySelector('[data-yes]').onclick = async () => {
-                        try { const nt0 = notes.find(x => x.id === id); await newsDismiss(id); auditAdd({ kind: 'delete', outcome: 'Concluída', detail: `Notificação excluída da tela: ${(nt0 && nt0.title) || id}` }); st.dismissed.add(id); const i = notes.findIndex(x => x.id === id); if (i >= 0) notes.splice(i, 1); }
+                        try { await newsDismiss(id); st.dismissed.add(id); const i = notes.findIndex(x => x.id === id); if (i >= 0) notes.splice(i, 1); }
                         catch (e) { showToast('Não foi possível excluir agora.', 'err'); }
                         recompute(); updBell(); rerender();
                     };
@@ -1348,12 +1432,12 @@ hmoDb = db;
 
             const total = gains + losses;
             const winRate = total > 0 ? ((gains / total) * 100).toFixed(1) : '0.0';
-            document.getElementById('metricGainLoss').innerText = `Gain: ${gains} | Loss: ${losses}`;
+            document.getElementById('metricGainLoss').innerText = `▲ Gain ${gains} | ▼ Loss ${losses}`;
             document.getElementById('metricWinRate').innerText = `${winRate.replace('.', ',')}%`;
 
             const net = document.getElementById('metricNetProfit');
             net.innerText = `R$ ${brl(accum)}`;
-            net.className = 'text-sm sm:text-3xl leading-tight font-extrabold ' + (accum >= 0 ? 'text-emerald-400' : 'text-red-400');
+            net.className = 'text-sm sm:text-3xl leading-tight font-extrabold ' + (accum >= 0 ? 'gl-pos' : 'gl-neg');
 
             let bestSetup = 'N/A', maxProfit = -Infinity;
             for (const s in setupProfits) {
@@ -1402,11 +1486,11 @@ hmoDb = db;
                     <td class="py-3 px-2 truncate max-w-xs" data-tip="${esc(row.setup)}">${esc(row.setup)}</td>
                     <td class="py-3 px-2 text-center font-mono">${esc(row.contracts)}</td>
                     <td class="py-3 px-2 text-center">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${row.type === 'Gain' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-red-950 text-red-400 border border-red-800'}">${esc(row.type)}</span>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${row.type === 'Gain' ? 'chip-pos' : 'chip-neg'}">${row.type === 'Gain' ? '▲ ' : '▼ '}${esc(row.type)}</span>
                     </td>
-                    <td class="py-3 px-2 text-right font-mono ${isGain ? 'text-emerald-400' : 'text-red-400'}">${points > 0 ? '+' + points : points} pts</td>
-                    <td class="py-3 px-2 text-right font-mono font-bold ${isGain ? 'text-emerald-400' : 'text-red-400'}">${isGain ? '+R$ ' + brl(row.result) : '-R$ ' + brl(Math.abs(row.result))}</td>
-                    <td class="py-3 px-2 text-right font-mono font-semibold ${row.accum >= 0 ? 'text-emerald-300' : 'text-red-300'}">R$ ${brl(row.accum)}</td>
+                    <td class="py-3 px-2 text-right font-mono ${isGain ? 'gl-pos' : 'gl-neg'}">${points > 0 ? '+' + points : points} pts</td>
+                    <td class="py-3 px-2 text-right font-mono font-bold ${isGain ? 'gl-pos' : 'gl-neg'}">${isGain ? '▲ +R$ ' + brl(row.result) : '▼ -R$ ' + brl(Math.abs(row.result))}</td>
+                    <td class="py-3 px-2 text-right font-mono font-semibold ${row.accum >= 0 ? 'gl-pos' : 'gl-neg'}">R$ ${brl(row.accum)}</td>
                     <td class="py-3 px-2 text-center whitespace-nowrap">
                         ${confirming
                             ? `<span class="text-[10px] text-gray-400 mr-1">Excluir?</span>
@@ -1617,6 +1701,46 @@ hmoDb = db;
                 }
             }
         });
+
+        /* ---------- Tema: Claro, Escuro ou Automático (lembrado neste aparelho) ---------- */
+        const THEME_KEY = 'mtd_theme', THEME_NAMES = { light: 'Claro', dark: 'Escuro', auto: 'Automático' };
+        const themeGet = () => { try { const t = localStorage.getItem(THEME_KEY); return THEME_NAMES[t] ? t : 'dark'; } catch (e) { return 'dark'; } };
+        const themeResolved = t => (t === 'light' || (t === 'auto' && window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches)) ? 'light' : 'dark';
+        function chartTheme() {
+            try {
+                if (!capitalCurveChart) return;
+                const L = document.documentElement.getAttribute('data-theme') === 'light', sc = capitalCurveChart.options.scales, ds = capitalCurveChart.data.datasets[0];
+                sc.x.grid.color = sc.y.grid.color = L ? 'rgba(17, 24, 39, 0.10)' : 'rgba(255, 255, 255, 0.05)';
+                sc.x.ticks.color = sc.y.ticks.color = L ? '#4B5563' : '#9ca3af';
+                ds.borderColor = ds.pointBackgroundColor = L ? '#2563EB' : '#3b82f6';
+                ds.backgroundColor = L ? 'rgba(37, 99, 235, 0.10)' : 'rgba(59, 130, 246, 0.1)';
+                capitalCurveChart.update('none');
+            } catch (e) {}
+        }
+        function themeApply() {
+            const r = themeResolved(themeGet());
+            document.documentElement.setAttribute('data-theme', r);
+            const m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute('content', r === 'light' ? '#F3F4F6' : '#0b0f19');
+            chartTheme();
+        }
+        function themeSet(t) { try { localStorage.setItem(THEME_KEY, t); } catch (e) {} themeApply(); }
+        try { matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (themeGet() === 'auto') themeApply(); }); } catch (e) {}
+        function openThemeModal() {
+            const ov = document.createElement('div');
+            ov.className = 'fixed inset-0 z-[95] flex items-center justify-center p-3 bg-black/70';
+            const cur = themeGet();
+            const opt = (v, ic, sub) => `<label class="flex items-start gap-3 p-3 rounded-lg border ${cur === v ? 'border-blue-500 bg-blue-950' : 'border-gray-700'} cursor-pointer mb-2"><input type="radio" name="thSel" value="${v}" ${cur === v ? 'checked' : ''} class="mt-1"><span><span class="font-bold text-gray-100">${ic} ${THEME_NAMES[v]}</span><span class="block text-xs text-gray-400">${sub}</span></span></label>`;
+            ov.innerHTML = `<div class="w-full max-w-sm rounded-xl border border-gray-600 bg-gray-900 text-sm text-gray-200 shadow-2xl">
+                <div class="flex items-center justify-between px-4 py-3 border-b border-gray-700"><h3 class="text-base font-bold">🌓 Tema</h3><button type="button" id="thClose" class="px-3 py-1 rounded-lg bg-gray-700 text-white text-xs font-semibold">Fechar</button></div>
+                <div class="p-4">${opt('light', '☀', 'Fundo claro, com as cores da marca.')}${opt('dark', '🌙', 'Fundo escuro (padrão).')}${opt('auto', '🖥', 'Segue o tema do aparelho.')}
+                <p class="text-[11px] text-gray-400 mt-2">A escolha vale só para este aparelho. Ganho aparece em azul (▲) e perda em âmbar (▼), nos dois temas. Os arquivos exportados (PDF, Word, Excel e CSV) não mudam.</p></div></div>`;
+            document.body.appendChild(ov);
+            const close = () => ov.remove();
+            ov.querySelector('#thClose').onclick = close;
+            ov.addEventListener('click', ev => { if (ev.target === ov) close(); });
+            ov.querySelectorAll('input[name="thSel"]').forEach(r => r.addEventListener('change', () => { themeSet(r.value); close(); showToast('Tema: ' + THEME_NAMES[r.value], 'ok'); }));
+        }
+        themeApply();
 
         const $ = id => document.getElementById(id);
         let failCount = 0, blockedUntil = 0, idleTimer = null;
@@ -1861,23 +1985,49 @@ hmoDb = db;
             wrap.appendChild(b);
         }
         function resetEyes() { eyes.forEach((e) => setEye(e, false)); }
-        ['lockPass', 'pwdNew', 'pwdNew2'].forEach(addEye);
+        ['lockPass', 'pwdCur', 'pwdNew', 'pwdNew2'].forEach(addEye);
 
         function openPwdModal() {
             resetEyes();
-            $('pwdError').textContent = ''; $('pwdNew').value = ''; $('pwdNew2').value = '';
+            $('pwdError').textContent = ''; $('pwdCur').value = ''; $('pwdNew').value = ''; $('pwdNew2').value = '';
             $('pwdModal').classList.remove('hidden'); $('pwdModal').classList.add('flex');
         }
         function closePwdModal() { resetEyes(); $('pwdModal').classList.remove('flex'); $('pwdModal').classList.add('hidden'); }
+        let pwdFails = 0, pwdBlockedUntil = 0;
         $('pwdForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const err = $('pwdError'), a = $('pwdNew').value, b = $('pwdNew2').value;
+            const err = $('pwdError'), cur = $('pwdCur').value, a = $('pwdNew').value, b = $('pwdNew2').value, now = Date.now();
             err.textContent = '';
+            if (now < pwdBlockedUntil) { err.textContent = `Muitas tentativas. Aguarde ${Math.ceil((pwdBlockedUntil - now) / 1000)} s.`; return; }
+            if (!cur) { err.textContent = 'Informe a senha atual.'; return; }
             if (a.length < 8) { err.textContent = 'Use pelo menos 8 caracteres.'; return; }
             if (a !== b) { err.textContent = 'As senhas não conferem.'; return; }
-            if (MODE === 'claude') { closePwdModal(); auditAdd({ kind: 'password', outcome: 'Concluída', detail: 'Senha alterada (HMO: demonstração, a senha de teste não foi alterada)' }); showToast('Ambiente HMO: demonstração. A senha de teste não foi alterada.', 'ok'); return; }
+            if (a === cur) { err.textContent = 'A nova senha deve ser diferente da atual.'; return; }
             const btn = $('pwdBtn'); btn.disabled = true;
+            // senha atual errada: conta a tentativa, bloqueia 30 s após 5 erros e registra na auditoria
+            const wrongCur = () => {
+                pwdFails++; $('pwdCur').value = '';
+                if (pwdFails >= 5) { pwdFails = 0; pwdBlockedUntil = Date.now() + 30000; err.textContent = 'Muitas tentativas. Aguarde 30 s.'; }
+                else err.textContent = 'Senha atual incorreta.';
+                auditAdd({ kind: 'password', outcome: 'Erro', detail: 'Troca de senha recusada: senha atual incorreta' });
+            };
             try {
+                if (MODE === 'claude') {
+                    const h = await sha256Hex(`${hmoCred.salt}:${hmoCred.userNorm}:${cur}`);
+                    if (h !== hmoCred.hash) { wrongCur(); return; }
+                    pwdFails = 0; closePwdModal(); auditAdd({ kind: 'password', outcome: 'Concluída', detail: 'Senha alterada (HMO: demonstração, a senha de teste não foi alterada)' }); showToast('Ambiente HMO: demonstração. A senha de teste não foi alterada.', 'ok'); return;
+                }
+                // produção: confere a senha atual num cliente temporário (não troca nem grava a sessão aberta)
+                const { data: ud } = await sb.auth.getUser();
+                const email = ud && ud.user && ud.user.email;
+                if (!email) { err.textContent = 'Sessão expirada. Entre novamente.'; return; }
+                const tmp = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
+                const chk = await tmp.auth.signInWithPassword({ email, password: cur });
+                if (chk.error) {
+                    if (chk.error.status === 400 || /invalid/i.test(chk.error.message || '')) { wrongCur(); return; }
+                    err.textContent = 'Não foi possível conferir a senha atual agora. Tente novamente.'; return;
+                }
+                pwdFails = 0;
                 const { error } = await sb.auth.updateUser({ password: a });
                 if (error) { err.textContent = 'Não foi possível trocar a senha: ' + error.message; return; }
                 closePwdModal();
@@ -2125,11 +2275,11 @@ hmoDb = db;
                 let g = '';
                 mk.forEach((k, i) => {
                     const x0 = 10 + i * gw, d = months[k].d, sv = months[k].s, hd = Math.round(d / max * H), hs = Math.round(sv / max * H);
-                    if (d > 0) g += `<rect x="${x0 + 6}" y="${115 - hd}" width="30" height="${Math.max(hd, 1)}" rx="3" fill="#3b82f6"/><text x="${x0 + 21}" y="${109 - hd}" text-anchor="middle" font-size="10" fill="#e5e7eb">↓${Math.round(d)}</text>`;
-                    if (sv > 0) g += `<rect x="${x0 + 42}" y="${115 - hs}" width="30" height="${Math.max(hs, 1)}" rx="3" fill="#f59e0b"/><text x="${x0 + 57}" y="${109 - hs}" text-anchor="middle" font-size="10" fill="#e5e7eb">↑${Math.round(sv)}</text>`;
-                    g += `<text x="${x0 + 39}" y="132" text-anchor="middle" font-size="10" fill="#9ca3af">${k.slice(5)}/${k.slice(0, 4)}</text>`;
+                    if (d > 0) g += `<rect x="${x0 + 6}" y="${115 - hd}" width="30" height="${Math.max(hd, 1)}" rx="3" fill="#3b82f6"/><text x="${x0 + 21}" y="${109 - hd}" text-anchor="middle" font-size="10" class="svg-tx">↓${Math.round(d)}</text>`;
+                    if (sv > 0) g += `<rect x="${x0 + 42}" y="${115 - hs}" width="30" height="${Math.max(hs, 1)}" rx="3" fill="#f59e0b"/><text x="${x0 + 57}" y="${109 - hs}" text-anchor="middle" font-size="10" class="svg-tx">↑${Math.round(sv)}</text>`;
+                    g += `<text x="${x0 + 39}" y="132" text-anchor="middle" font-size="10" class="svg-mu">${k.slice(5)}/${k.slice(0, 4)}</text>`;
                 });
-                chart = `<div class="overflow-x-auto p-3"><svg viewBox="0 0 ${W} 140" width="${W}" height="140" role="img" aria-label="Depósitos e saques por mês"><title>Depósitos e saques por mês</title><line x1="0" y1="115" x2="${W}" y2="115" stroke="#374151" stroke-width="1"/>${g}</svg><p class="text-[10px] text-gray-500">Azul = depósito (↓) · Âmbar = saque (↑) · valores arredondados</p></div>`;
+                chart = `<div class="overflow-x-auto p-3"><svg viewBox="0 0 ${W} 140" width="${W}" height="140" role="img" aria-label="Depósitos e saques por mês"><title>Depósitos e saques por mês</title><line x1="0" y1="115" x2="${W}" y2="115" class="svg-ln" stroke-width="1"/>${g}</svg><p class="text-[10px] text-gray-500">Azul = depósito (↓) · Âmbar = saque (↑) · valores arredondados</p></div>`;
             }
             $('flowChart').innerHTML = rcard('Depósitos x saques por mês (R$)', chart);
         }
@@ -2144,7 +2294,7 @@ hmoDb = db;
             $('metricInvestedSub').innerText = (invested === 0 && dep > 0) ? 'Capital recuperado: operando com o lucro' : `${brl(dep)} depositados − ${brl(saq - profitOut)} já recuperados`;
             const capEl = $('metricCapital');
             capEl.innerText = `R$ ${brl(capital)}`;
-            capEl.className = 'text-sm sm:text-3xl leading-tight font-extrabold ' + (avail >= 0 ? 'text-emerald-400' : 'text-red-400');
+            capEl.className = 'text-sm sm:text-3xl leading-tight font-extrabold ' + (avail >= 0 ? 'gl-pos' : 'gl-neg');
             $('metricCapitalSub').innerText = `${brl(invested)} investido ${avail >= 0 ? '+' : '−'} ${brl(Math.abs(avail))} de ${avail >= 0 ? 'lucro' : 'prejuízo'}` + (profitOut > 0 ? ` (lucro ${brl(net)} − ${brl(profitOut)} já sacado)` : '');
 
             const tb = $('flowTableBody');
@@ -2214,9 +2364,9 @@ hmoDb = db;
         const pct = v => v.toFixed(1).replace('.', ',') + '%';
         const fx = v => (v === null || v === undefined || !isFinite(v)) ? '—' : brl(v);
         const money = v => `${v >= 0 ? '+' : '−'} R$ ${brl(Math.abs(v))}`;
-        const mcls = v => v >= 0 ? 'text-emerald-400' : 'text-red-400';
+        const mcls = v => v >= 0 ? 'gl-pos' : 'gl-neg';
         const td = (v, c = '') => `<td class="py-2 px-3 text-right font-mono ${c}">${v}</td>`;
-        const tdm = v => td(money(v), mcls(v));
+        const tdm = v => td((v >= 0 ? '▲ ' : '▼ ') + money(v), mcls(v));
 
         function group(list, fn) { const m = new Map(); list.forEach(r => { const k = fn(r); if (!m.has(k)) m.set(k, []); m.get(k).push(r); }); return m; }
         function stats(list) {
@@ -2809,6 +2959,9 @@ hmoDb = db;
             <button type="button" role="menuitem" data-fab="rep" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">📊 Relatórios</button>
             <button type="button" role="menuitem" data-fab="aud" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">📋 Histórico de auditoria</button>
             <button type="button" role="menuitem" data-fab="set" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">🧩 Gerenciar setups</button>
+            <div class="border-t border-gray-600 my-1"></div>
+            <button type="button" role="menuitem" data-fab="theme" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">🌓 Tema</button>
+            <p class="px-3 pb-2 pt-0.5 text-[10px] leading-tight text-gray-400">arraste o botão Atalhos para onde preferir</p>
         </div>
         <button type="button" id="fabBtn" aria-haspopup="menu" aria-expanded="false" class="h-12 px-4 rounded-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-2xl border-2 border-blue-300 flex items-center gap-1.5">⚡ Atalhos</button>
     </div>
@@ -2816,14 +2969,45 @@ hmoDb = db;
     (function () {
         const btn = document.getElementById('fabBtn'), menu = document.getElementById('fabMenu');
         const close = () => { menu.classList.add('hidden'); btn.setAttribute('aria-expanded', 'false'); };
-        btn.addEventListener('click', e => { e.stopPropagation(); const open = menu.classList.toggle('hidden') === false; btn.setAttribute('aria-expanded', String(open)); });
+        const wrap = document.getElementById('fabWrap'), POS_KEY = 'mtd_fab_pos';
+        const clampPos = (l, t) => ({ l: Math.max(8, Math.min(innerWidth - wrap.offsetWidth - 8, l)), t: Math.max(8, Math.min(innerHeight - wrap.offsetHeight - 8, t)) });
+        const placeMenu = () => {
+            const r = wrap.getBoundingClientRect(), right = (r.left + r.width / 2) > innerWidth / 2, down = (r.top + r.height / 2) < innerHeight / 2;
+            menu.style.left = right ? 'auto' : '0'; menu.style.right = right ? '0' : 'auto';
+            menu.style.top = down ? '3.5rem' : 'auto'; menu.style.bottom = down ? 'auto' : '3.5rem';
+        };
+        const setPos = (l, t, save) => {
+            const c = clampPos(l, t);
+            wrap.style.left = c.l + 'px'; wrap.style.top = c.t + 'px'; wrap.style.bottom = 'auto'; wrap.style.right = 'auto';
+            placeMenu();
+            if (save) { try { localStorage.setItem(POS_KEY, JSON.stringify({ x: c.l / innerWidth, y: c.t / innerHeight })); } catch (x) {} }
+        };
+        const restore = () => { try { const v = JSON.parse(localStorage.getItem(POS_KEY) || 'null'); if (v && isFinite(v.x) && isFinite(v.y)) { setPos(v.x * innerWidth, v.y * innerHeight, false); return; } } catch (x) {} placeMenu(); };
+        restore(); addEventListener('resize', restore);
+        let drag = null, moved = false;
+        btn.style.touchAction = 'none'; btn.style.cursor = 'grab';
+        btn.addEventListener('pointerdown', e => { const r = wrap.getBoundingClientRect(); drag = { x: e.clientX, y: e.clientY, l: r.left, t: r.top }; moved = false; btn.style.cursor = 'grabbing'; document.body.style.cursor = 'grabbing'; try { btn.setPointerCapture(e.pointerId); } catch (x) {} });
+        btn.addEventListener('pointermove', e => {
+            if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+            if (!moved && Math.hypot(dx, dy) > 8) { moved = true; close(); }
+            if (moved) setPos(drag.l + dx, drag.t + dy, false);
+        });
+        const endDrag = () => {
+            if (!drag) return; drag = null; btn.style.cursor = 'grab'; document.body.style.cursor = '';
+            if (!moved) { toggleMenu(); return; }
+            if (moved) { const r = wrap.getBoundingClientRect(); setPos(r.left, r.top, true); lastToggle = Date.now(); setTimeout(() => { moved = false; }, 0); }
+        };
+        btn.addEventListener('pointerup', endDrag); btn.addEventListener('pointercancel', () => { if (moved) endDrag(); else { drag = null; btn.style.cursor = 'grab'; document.body.style.cursor = ''; } });
+        let lastToggle = 0;
+        const toggleMenu = () => { lastToggle = Date.now(); placeMenu(); const open = menu.classList.toggle('hidden') === false; btn.setAttribute('aria-expanded', String(open)); };
+        btn.addEventListener('click', e => { e.stopPropagation(); if (Date.now() - lastToggle < 500) return; toggleMenu(); });
         document.addEventListener('click', e => { if (!e.target.closest('#fabWrap')) close(); });
         document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
         menu.addEventListener('click', e => {
             const b = e.target.closest('[data-fab]'); if (!b) return; close();
             const k = b.dataset.fab;
             if (k === 'op') openModal(); else if (k === 'flow') openFlowModal(); else if (k === 'rep') switchTab('report');
-            else if (k === 'aud') openAuditModal(); else if (k === 'set') openSetupsModal();
+            else if (k === 'aud') openAuditModal(); else if (k === 'set') openSetupsModal(); else if (k === 'theme') openThemeModal();
         });
     })();
     </script>
