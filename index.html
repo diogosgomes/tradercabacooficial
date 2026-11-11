@@ -226,7 +226,7 @@
                     <button type="button" role="menuitem" onclick="optsAction(openSetupsModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🧩 Gerenciar setups</button>
                     <button type="button" role="menuitem" onclick="optsAction(openAuditModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📋 Histórico de auditoria</button>
                     <button type="button" role="menuitem" onclick="optsAction(() => openTermsModal())" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📄 Termos e privacidade</button>
-                    <button type="button" role="menuitem" onclick="optsAction(() => openGuide())" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🧭 Guia de primeiro acesso</button>
+                    <button type="button" role="menuitem" onclick="optsAction(() => openGuide())" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🧭 Guia do My Trade Dash</button>
                     <button id="btnInvites" type="button" role="menuitem" onclick="optsAction(openInvitesModal)" class="hidden w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📨 Pedidos de convite <span id="invBadge" class="hidden ml-1 px-1.5 py-0.5 rounded-full bg-amber-600 text-white text-[10px] font-bold"></span></button>
                     <button id="btnTheme" type="button" role="menuitem" onclick="optsAction(openThemeModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🌓 Tema</button>
                     <div id="sepLogout" class="border-t border-gray-700 my-1"></div>
@@ -242,6 +242,7 @@
 
         <!-- Metrics Cards Dinâmicos -->
         <h2 class="text-sm sm:text-base font-bold text-gray-200 -mb-1">Visão geral</h2>
+        <div id="fsBlock" class="hidden bg-cardBg border-2 border-blue-500/60 rounded-xl shadow-lg p-3 sm:p-4"></div>
         <div class="grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
             <div class="bg-cardBg border-2 border-blue-500/60 p-2 sm:p-5 rounded-xl shadow-lg">
                 <p class="text-[9px] sm:text-xs font-medium text-gray-400 uppercase tracking-tight sm:tracking-wider truncate">Valor Investido</p>
@@ -599,7 +600,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V119';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V121';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -862,7 +863,7 @@
             try {
                 const [notes0, st] = await Promise.all([newsLoad(), newsReadState()]);
                 try { await invLoadCache(); } catch (e) {}
-                const notes = notes0.concat(darfAlerts(), invAlerts());
+                const notes = notes0.concat(darfAlerts(), invAlerts(), fridayAlerts());
                 const now = Date.now();
                 setBellCount(notes.filter(x => newsIsUnread(x, st, now)).length);
             } catch (e) { setBellCount(0); }
@@ -885,7 +886,7 @@
                 const [notes0, st] = await Promise.all([newsLoad(), newsReadState()]);
                 const now = Date.now();
                 try { await invLoadCache(); } catch (e) {}
-                notes0.push(...darfAlerts(), ...invAlerts());
+                notes0.push(...darfAlerts(), ...invAlerts(), ...fridayAlerts());
                 const notes = notes0.filter(x => !st.dismissed.has(x.id)).sort((a, b) => b.published_at - a.published_at);
                 const excluded = () => notes0.filter(x => !x.synthetic && st.dismissed.has(x.id) && !st.purged.has(x.id) && Date.now() - x.published_at <= EXCL_DAYS * DAY_MS).sort((a, b) => b.published_at - a.published_at);
                 const updBell = () => setBellCount(notes.filter(x => newsIsUnread(x, st, Date.now())).length);
@@ -898,7 +899,7 @@
                             <span class="text-gray-400">${fmtDateTimeBR(x.published_at).replace(', ', ' - ')}</span></div>
                         <ul class="mt-1 list-disc pl-5 text-gray-300 space-y-0.5">${(x.items || []).map(i => `<li>${esc(i)}</li>`).join('')}</ul>
                         <div class="mt-2 flex flex-wrap gap-2" data-actions="${x.id}">
-                            ${x.synthetic && x.action === 'inv' ? '<button type="button" data-inv class="px-2.5 py-1 rounded-lg border border-amber-400 text-amber-100 hover:bg-amber-900 font-semibold">📨 Abrir Pedidos de convite</button>' : x.synthetic ? '<button type="button" data-darf class="px-2.5 py-1 rounded-lg border border-amber-400 text-amber-100 hover:bg-amber-900 font-semibold">📄 Abrir Custos e imposto (DARF)</button>' : `<button type="button" data-tg="${x.id}" class="px-2.5 py-1 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700">${read ? '○ Marcar como não lida' : '✔ Marcar como lida'}</button>
+                            ${x.synthetic && x.action === 'none' ? '' : x.synthetic && x.action === 'inv' ? '<button type="button" data-inv class="px-2.5 py-1 rounded-lg border border-amber-400 text-amber-100 hover:bg-amber-900 font-semibold">📨 Abrir Pedidos de convite</button>' : x.synthetic ? '<button type="button" data-darf class="px-2.5 py-1 rounded-lg border border-amber-400 text-amber-100 hover:bg-amber-900 font-semibold">📄 Abrir Custos e imposto (DARF)</button>' : `<button type="button" data-tg="${x.id}" class="px-2.5 py-1 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700">${read ? '○ Marcar como não lida' : '✔ Marcar como lida'}</button>
                             <button type="button" data-del="${x.id}" class="px-2.5 py-1 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700">🗑 Excluir</button>`}</div></div>`;
                 };
                 const wireDarf = () => body.querySelectorAll('[data-darf]').forEach(b => b.onclick = () => { ov.remove(); repOpen = '1'; switchTab('report'); });
@@ -1564,6 +1565,7 @@ hmoDb = db;
         function processAndRender() {
             bellSoon();
             mcRender();
+            if (window.fsRender) fsRender();
             if (!bellInit && (MODE === 'claude' || currentUserId)) { bellInit = true; refreshBell(); }
             const sorted = rows.slice().sort((a, b) => (a.ts || 0) - (b.ts || 0));
             let accum = 0, gains = 0, losses = 0;
@@ -2141,6 +2143,14 @@ hmoDb = db;
             invIsAdmin = !!on;
             ['btnInvites', 'fabInv'].forEach(i => { const b = $(i); if (b) b.classList.toggle('hidden', !invIsAdmin); });
             if (!invIsAdmin) { invCache = []; invCacheAt = 0; ['invBadge', 'fabInvBadge'].forEach(i => { const c = $(i); if (c) c.classList.add('hidden'); }); }
+        }
+        // Lembrete semanal (sextas, só administrador): abrir o app evita a pausa do Supabase após 7 dias sem atividade
+        function fridayAlerts() {
+            if (!invIsAdmin) return [];
+            let wd = ''; try { wd = new Date().toLocaleDateString('en-US', { timeZone: 'America/Sao_Paulo', weekday: 'short' }); } catch (e) {}
+            if (wd !== 'Fri') return [];
+            return [{ id: 'fri:' + todayLocalISO(), title: 'Sexta-feira: movimente o app', important: true, published_at: Date.now(), expires_at: null, synthetic: true, action: 'none',
+                items: ['Faça um lançamento ou navegue pelas telas hoje.', 'O Supabase pausa o projeto depois de 7 dias seguidos sem atividade, e o app sairia do ar.', 'Este lembrete aparece toda sexta-feira, só para o administrador.'] }];
         }
         function invAlerts() {
             if (!invIsAdmin) return [];
@@ -3533,64 +3543,100 @@ hmoDb = db;
             });
         }
 
-        /* ---- primeiro acesso guiado ---- */
+        /* ---- Guia do My Trade Dash (passo a passo) ---- */
         const gKey = () => 'mtd_guide_done_' + uidNow();
         const gDone = () => { try { return localStorage.getItem(gKey()) === '1'; } catch (e) { return false; } };
         const gMark = () => { try { localStorage.setItem(gKey(), '1'); } catch (e) {} };
+        const G_TOT = 10;
         function openGuide(auto) {
             if ($('guideOv')) return;
             const o = document.createElement('div'); o.id = 'guideOv';
             o.className = 'fixed inset-0 z-[95] flex items-center justify-center p-3 bg-black/70';
             document.body.appendChild(o);
-            let step = 1, saved1 = false;
+            let step = 1, saved1 = false, pill = null;
             const today = todayLocalISO();
-            const end = () => { gMark(); o.remove(); };
-            const frame = (title, inner, btns) => `<div role="dialog" aria-modal="true" class="w-full max-w-md max-h-[92vh] overflow-y-auto rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl">
-                <p class="text-[11px] text-gray-400">🧭 Primeiro acesso · passo ${step} de 4</p><h3 class="text-base font-bold mb-2">${title}</h3>${inner}
-                <p id="gdMsg" class="text-xs min-h-[1rem] mt-2" role="status"></p><div class="mt-2 flex flex-wrap justify-end gap-2">${btns}</div></div>`;
-            const B = (attr, label, cls) => `<button type="button" ${attr} class="px-3 py-1.5 rounded-lg text-xs font-semibold ${cls || 'bg-gray-700 text-white'}">${label}</button>`;
-            const msg = (t, bad) => { const m = o.querySelector('#gdMsg'); m.className = 'text-xs min-h-[1rem] mt-2 ' + (bad ? 'text-red-400' : 'text-emerald-300'); m.textContent = t; };
+            const end = () => { gMark(); if (pill) pill.remove(); o.remove(); };
             const IN = 'w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200';
-            const TOT = 4;
-            const draw = () => {
-                if (step === 1) {
-                    const act = (typeof setups !== 'undefined' ? setups : []).filter(s => s.active).map(s => s.name);
-                    o.innerHTML = frame('Cadastre seus setups', `<p class="text-xs text-gray-400 mb-2">Setup é a estratégia que você usa em cada operação (por exemplo, pullback ou rompimento). Cada operação é ligada a um setup, e os relatórios mostram qual rende mais. ${act.length ? 'Estes já estão ativos:' : 'Ainda não há setups ativos.'}</p>
-                        ${act.length ? `<p class="text-xs mb-3 break-words">${act.map(esc).join(' · ')}</p>` : ''}
-                        <label class="block text-xs text-gray-400 mb-1" for="gdSetup">Novo setup (opcional)</label>
-                        <div class="flex flex-wrap gap-2"><input id="gdSetup" maxlength="60" autocomplete="off" placeholder="Nome do setup" class="${IN} flex-1 min-w-[10rem]"><select id="gdKind" class="${IN} w-auto"><option value="dentro">Dentro do plano</option><option value="fora">Fora do plano</option></select><button type="button" data-addset class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold">Adicionar</button></div>`,
-                        B('data-skipall', 'Pular tudo') + B('data-next', 'Continuar', 'bg-blue-600 text-white'));
-                } else if (step === 2) {
-                    o.innerHTML = frame('Capital investido', `<p class="text-xs text-gray-400 mb-3"><b class="text-gray-200">Capital investido</b> é o seu dinheiro que está na corretora: a soma dos depósitos menos os saques. Não inclui lucro nem prejuízo das operações. Cada depósito ou saque é uma <b class="text-gray-200">movimentação financeira</b>. Registre a primeira agora ou depois, em Gestão financeira.</p>${saved1 ? '<p class="text-xs text-amber-300 mb-3">Você já registrou uma movimentação aqui. Salvar de novo cria outro lançamento; use Pular para seguir sem repetir.</p>' : ''}
-                        <label class="block text-xs text-gray-400 mb-1" for="gdType">Tipo</label><select id="gdType" class="${IN} mb-2"><option value="Depósito">Depósito (do banco para a corretora)</option><option value="Saque">Saque (da corretora para o banco)</option></select>
+            const B = (attr, label, cls) => `<button type="button" ${attr} class="px-3 py-1.5 rounded-lg text-xs font-semibold ${cls || 'bg-gray-700 text-white'}">${label}</button>`;
+            const P = 'bg-blue-600 text-white';
+            const msg = (t, bad) => { const m = o.querySelector('#gdMsg'); if (!m) return; m.className = 'text-xs min-h-[1rem] mt-2 ' + (bad ? 'text-red-400' : 'text-emerald-300'); m.textContent = t; };
+            const g = id => { const e = document.getElementById(id); return e ? e.textContent.trim() : 'R$ 0,00'; };
+            const panel = t => `<p class="mt-3 rounded-lg border border-gray-700 bg-gray-800/40 px-3 py-2 text-[11px] text-gray-300"><b class="text-gray-100">No painel:</b> ${t}</p>`;
+            const lead = t => `<p class="text-xs text-gray-400">${t}</p>`;
+            const STEPS = {
+                1: { t: 'Bem-vindo ao My Trade Dash', h: () => lead('O My Trade Dash é o seu diário de day trade. Você lança operações, movimentações e notas do dia, e o app calcula resultado, indicadores, gráficos, relatórios e DARF.') + `<p class="mt-2 text-xs text-gray-200"><b>Regra de ouro:</b> os indicadores vêm do que você lança. Sem lançamentos, a Visão geral fica zerada.</p><p class="mt-2 text-xs text-gray-400">Este guia mostra cada tela e leva você ao formulário certo. Dá para voltar, pular e reabrir quando quiser em ⚙ Opções &gt; 🧭 Guia do My Trade Dash.</p>`, b: B('data-next', 'Começar', P) },
+                2: { t: 'Seus setups', h: () => { const act = (typeof setups !== 'undefined' ? setups : []).filter(s => s.active).map(s => s.name);
+                    return lead('Setup é a estratégia de cada operação (por exemplo, pullback ou rompimento). Cada operação é ligada a um setup, e os relatórios mostram qual rende mais. ' + (act.length ? `Há ${act.length} setup(s) ativo(s). Você pode inativar, renomear ou criar outros em 🧩 Gerenciar setups.` : 'Ainda não há setups ativos.'))
+                        + `<label class="block text-xs text-gray-400 mt-3 mb-1" for="gdSetup">Novo setup (opcional)</label><div class="flex flex-wrap gap-2"><input id="gdSetup" maxlength="60" autocomplete="off" placeholder="Nome do setup" class="${IN} flex-1 min-w-[10rem]"><select id="gdKind" class="${IN} w-auto"><option value="dentro">Dentro do plano</option><option value="fora">Fora do plano</option></select><button type="button" data-addset class="px-3 py-1.5 rounded-lg ${P} text-xs font-semibold">Adicionar</button></div>`
+                        + panel('Best Setup e os relatórios Desempenho por setup e Dentro × fora.'); },
+                    b: B('data-act="setups"', '🧩 Gerenciar setups') + B('data-next', 'Continuar', P) },
+                3: { t: 'Capital investido', h: () => lead('<b class="text-gray-200">Capital investido</b> é o seu dinheiro que está na corretora: a soma dos depósitos menos os saques, sem lucro nem prejuízo. Cada depósito ou saque é uma <b class="text-gray-200">movimentação financeira</b> (em Gestão financeira). Se quiser, registre a primeira aqui; se preferir, deixe em branco e clique em Continuar para fazer depois.')
+                        + (saved1 ? '<p class="mt-2 text-xs text-amber-300">Você já registrou uma movimentação aqui. Salvar de novo cria outro lançamento; clique em Continuar com os campos vazios para seguir sem repetir.</p>' : '')
+                        + `<label class="block text-xs text-gray-400 mt-3 mb-1" for="gdType">Tipo</label><select id="gdType" class="${IN} mb-2"><option value="Depósito">Depósito (do banco para a corretora)</option><option value="Saque">Saque (da corretora para o banco)</option></select>
                         <label class="block text-xs text-gray-400 mb-1" for="gdAmount">Valor (R$)</label><input id="gdAmount" inputmode="decimal" autocomplete="off" placeholder="0,00" class="${IN} mb-2">
                         <label class="block text-xs text-gray-400 mb-1" for="gdDate">Data</label><input id="gdDate" type="date" max="${today}" value="${today}" class="${IN} mb-2">
-                        <label class="block text-xs text-gray-400 mb-1" for="gdBank" id="gdBankLb">Banco de origem</label><input id="gdBank" maxlength="40" autocomplete="off" placeholder="Ex.: Nubank" class="${IN}">`,
-                        B('data-back', '← Voltar') + B('data-skipall', 'Pular tudo') + B('data-skip', 'Pular') + B('data-save', 'Salvar e continuar', 'bg-blue-600 text-white'));
+                        <label class="block text-xs text-gray-400 mb-1" for="gdBank" id="gdBankLb">Banco de origem</label><input id="gdBank" maxlength="40" autocomplete="off" placeholder="Ex.: Nubank" class="${IN}">` + panel('Valor Investido e Capital Atual.'),
+                    b: B('data-save', 'Continuar', P) },
+                4: { t: 'Capital atual', h: () => lead('<b class="text-gray-200">Capital atual</b> é quanto você tem hoje na corretora: o capital investido mais o lucro (ou menos o prejuízo) das operações. Ele muda a cada operação lançada.')
+                        + `<div class="mt-3 rounded-lg border border-gray-700 bg-gray-800/40 px-3 py-2 text-xs space-y-1"><p>Capital investido hoje: <b class="text-gray-100">${esc(g('metricInvested'))}</b></p><p>Capital atual hoje: <b class="text-gray-100">${esc(g('metricCapital'))}</b></p></div>` + panel('Capital Atual e a curva Capital Curve (Evolução Patrimonial).'),
+                    b: B('data-next', 'Continuar', P) },
+                5: { t: 'Suas operações', h: () => lead('Cada operação vai em <b class="text-gray-200">📈 Nova operação</b> (ou no ⚡ Atalhos): data, horários, ativo, contratos, setup, tipo (Gain ou Loss), pontos e resultado em R$. No histórico, abra o mês para ver, editar ou excluir cada linha.') + panel('Total Net Profit, Capital Atual, Gain/Loss, Win Rate, Best Setup, Capital Curve e o bloco Mês atual × mês anterior.'),
+                    b: B('data-act="op"', '📈 Lançar minha primeira operação') + B('data-next', 'Continuar', P) },
+                6: { t: 'Notas do dia', h: () => lead('A <b class="text-gray-200">nota do dia</b> traz o valor líquido, o IRRF e os custos do dia, como na nota de corretagem. Com ela o DARF fica exato; sem ela, o app estima a partir das operações. Fica em <b class="text-gray-200">Mais lançamentos &gt; 🧾 Nota do dia</b>.') + panel('o card DARF do bloco do mês e os alertas de vencimento.'),
+                    b: B('data-act="note"', '🧾 Lançar nota do dia') + B('data-next', 'Continuar', P) },
+                7: { t: 'DARF e impostos', h: () => lead('Em <b class="text-gray-200">Relatórios &gt; 2. Custos e imposto (DARF)</b> o app apura o IR de 20% do day trade mês a mês, compensa prejuízos e abate o IRRF. O DARF (código 6015) vence no último dia útil do mês seguinte. Quando faltam 3 dias úteis, o sino 🔔 avisa. Marque como pago quando pagar.') + panel('card DARF e alerta importante no sino.'),
+                    b: B('data-act="darf"', '📄 Abrir Custos e imposto') + B('data-next', 'Continuar', P) },
+                8: { t: 'Relatórios', h: () => lead('Em <b class="text-gray-200">Relatórios</b> você filtra por período, setup e ativo e vê: custos e imposto, desempenho por setup, métricas de risco, dentro × fora do setup, resumo mensal e semanal, por horário, por dia da semana, fluxo financeiro e calendário de resultados. Dá para exportar em PDF, Word, Excel ou CSV.'),
+                    b: B('data-act="rep"', '📊 Abrir Relatórios') + B('data-next', 'Continuar', P) },
+                9: { t: 'Mês atual × mês anterior', h: () => lead('Abaixo da Visão geral, o bloco compara o mês atual (até hoje) com o mês anterior fechado: <b class="text-gray-200">Gain</b>, <b class="text-gray-200">Loss</b> e a <b class="text-gray-200">DARF</b> estimada. Use ◀ ▶ para ver outros meses e Hoje para voltar. Em Loss e DARF, a seta para baixo é melhora.'),
+                    b: B('data-act="mc"', '📆 Ver o bloco') + B('data-next', 'Continuar', P) },
+                10: { t: 'Para acompanhar', h: () => `<ul class="list-disc pl-5 text-xs text-gray-400 space-y-1"><li><b class="text-gray-200">🔔 Sino:</b> novidades e alertas, como o vencimento do DARF.</li><li><b class="text-gray-200">⚡ Atalhos:</b> lançar e navegar rápido; arraste o botão para onde preferir.</li><li><b class="text-gray-200">⚙ Opções:</b> trocar senha, exportar e importar backup, histórico de auditoria, tema e termos.</li><li><b class="text-gray-200">Celular:</b> o gesto de voltar fecha janelas e volta as abas.</li></ul><p class="mt-2 text-xs text-gray-400">Para reabrir este guia: ⚙ Opções &gt; 🧭 Guia do My Trade Dash.</p>`,
+                    b: B('data-flow', '➕ Registrar movimentação') + B('data-skipall', 'Concluir', P) }
+            };
+            const frame = (inner, btns) => `<div role="dialog" aria-modal="true" class="w-full max-w-md max-h-[92vh] overflow-y-auto rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl">
+                <p class="text-[11px] text-gray-400">🧭 Guia do My Trade Dash · passo ${step} de ${G_TOT}</p><div class="h-1 rounded bg-gray-700 my-2 overflow-hidden"><div class="h-1 bg-blue-500" style="width:${step * 100 / G_TOT}%"></div></div>
+                <h3 class="text-base font-bold mb-2">${STEPS[step].t}</h3>${inner}<p id="gdMsg" class="text-xs min-h-[1rem] mt-2" role="status"></p>
+                <div class="mt-2 flex flex-wrap justify-end gap-2">${step > 1 ? B('data-back', '← Voltar') : ''}${step < G_TOT ? B('data-skipall', 'Pular tudo') : ''}${STEPS[step].b}</div></div>`;
+            const draw = () => {
+                o.innerHTML = frame(STEPS[step].h(), '');
+                if (step === 3) {
                     o.querySelector('#gdAmount').addEventListener('blur', e => { const v = parseMoney(e.target.value); if (v > 0) e.target.value = fmtMoneyBR(v); });
                     o.querySelector('#gdType').addEventListener('change', e => { o.querySelector('#gdBankLb').textContent = e.target.value === 'Saque' ? 'Banco de destino' : 'Banco de origem'; });
-                } else if (step === 3) {
-                    const g = id => { const e = document.getElementById(id); return e ? e.textContent.trim() : 'R$ 0,00'; };
-                    o.innerHTML = frame('Capital atual', `<p class="text-xs text-gray-400 mb-3"><b class="text-gray-200">Capital atual</b> é quanto você tem hoje na corretora: o capital investido mais o lucro (ou menos o prejuízo) das suas operações. Ele muda a cada operação lançada e é o que a curva Capital Curve acompanha.</p>
-                        <div class="rounded-lg border border-gray-700 bg-gray-800/40 px-3 py-2 text-xs space-y-1"><p>Capital investido hoje: <b class="text-gray-100">${esc(g('metricInvested'))}</b></p><p>Capital atual hoje: <b class="text-gray-100">${esc(g('metricCapital'))}</b></p></div>`,
-                        B('data-back', '← Voltar') + B('data-skipall', 'Pular tudo') + B('data-next', 'Continuar', 'bg-blue-600 text-white'));
-                } else {
-                    o.innerHTML = frame('Registre suas operações', `<p class="text-xs text-gray-400">Cada operação vai em <b class="text-gray-200">📈 Nova operação</b>: data, horários, ativo, setup, contratos, tipo (Gain ou Loss), pontos e resultado em R$. Ela entra no histórico, nos relatórios e no Capital atual. Depósitos e saques ficam em <b class="text-gray-200">➕ Nova movimentação</b>. Os dois também estão no botão ⚡ Atalhos. Para reabrir este guia: ⚙ Opções &gt; 🧭 Guia de primeiro acesso.</p>`,
-                        B('data-back', '← Voltar') + B('data-skipall', 'Concluir') + B('data-flow', '➕ Registrar movimentação') + B('data-op', '📈 Registrar operação', 'bg-blue-600 text-white'));
                 }
                 wire();
             };
+            /* abre uma tela do app por cima do guia e volta ao mesmo passo */
+            const hide = still => {
+                o.classList.add('hidden');
+                pill = document.createElement('button'); pill.type = 'button'; pill.id = 'guidePill';
+                pill.className = 'fixed left-1/2 -translate-x-1/2 bottom-20 z-[96] px-4 py-2 rounded-full bg-blue-600 text-white text-xs font-bold shadow-2xl border-2 border-blue-300';
+                pill.textContent = `🧭 Voltar ao guia (passo ${step} de ${G_TOT})`;
+                const back = () => { clearInterval(iv); if (pill) { pill.remove(); pill = null; } o.classList.remove('hidden'); draw(); };
+                pill.onclick = back; document.body.appendChild(pill);
+                let iv = null; if (still) iv = setInterval(() => { if (!still()) back(); }, 300);
+            };
+            const ACT = {
+                setups: () => { hide(() => !!$('setupsOv')); openSetupsModal(); },
+                op: () => { hide(() => isOpenM('tradeModal')); openModal(); },
+                note: () => { hide(() => isOpenM('noteModal')); openNoteModal(); },
+                flow: () => { end(); openFlowModal(); },
+                darf: () => { hide(); repOpen = '1'; switchTab('report'); },
+                rep: () => { hide(); switchTab('report'); },
+                mc: () => { hide(); switchTab('ops'); const e = $('mcBlock'); if (e) e.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+            };
+            const isOpenM = id => { const m = $(id); return !!m && m.classList.contains('flex'); };
             const wire = () => {
                 const q = s => o.querySelector(s);
                 q('[data-skipall]').onclick = end;
                 const bk = q('[data-back]'); if (bk) bk.onclick = () => { step--; draw(); };
                 const sk = q('[data-skip]'); if (sk) sk.onclick = () => { step++; draw(); };
                 const nx = q('[data-next]'); if (nx) nx.onclick = () => { step++; draw(); };
-                const op = q('[data-op]'); if (op) op.onclick = () => { end(); openModal(); };
-                const fl = q('[data-flow]'); if (fl) fl.onclick = () => { end(); openFlowModal(); };
+                const fl = q('[data-flow]'); if (fl) fl.onclick = ACT.flow;
+                const ac = q('[data-act]'); if (ac) ac.onclick = () => ACT[ac.dataset.act]();
                 const sv = q('[data-save]'); if (sv) sv.onclick = async () => {
                     const amount = parseMoney(q('#gdAmount').value), iso = q('#gdDate').value || today, bank = q('#gdBank').value.trim() || 'Banco', type = q('#gdType').value;
-                    if (!(amount > 0)) return msg('Informe um valor maior que zero ou use Pular.', true);
+                    if (!q('#gdAmount').value.trim()) { step++; draw(); return; }   /* sem valor: só segue, é opcional */
+                    if (!(amount > 0)) return msg('Valor inválido. Corrija ou apague o campo para seguir sem registrar.', true);
                     if (iso > today) return msg('A data não pode ser futura.', true);
                     const date = iso.split('-').reverse().join('/');
                     sv.disabled = true;
@@ -3609,6 +3655,32 @@ hmoDb = db;
             draw();
         }
         window.openGuide = () => openGuide(false);
+
+        /* ---- card "Primeiros passos" no topo da Visão geral ---- */
+        const fsKey = () => 'mtd_fs_dismiss_' + uidNow();
+        window.fsRender = function () {
+            const box = $('fsBlock'); if (!box) return;
+            const uid = uidNow(); let dismissed = false;
+            try { dismissed = localStorage.getItem(fsKey()) === '1'; } catch (e) {}
+            if (!uid || dismissed || typeof setups === 'undefined') { box.classList.add('hidden'); return; }
+            const defs = new Set(SETUP_DEFAULTS.map(d => d.name));
+            const items = [
+                { ok: setups.some(s => !defs.has(s.name)) || setups.some(s => !s.active), label: 'Revisar ou criar seus setups', fn: 'openSetupsModal()' },
+                { ok: flows.length > 0, label: 'Registrar o capital investido (primeira movimentação)', fn: 'openFlowModal()' },
+                { ok: rows.length > 0, label: 'Lançar a primeira operação', fn: 'openModal()' },
+                { ok: notes.length > 0, label: 'Lançar uma nota do dia (DARF exato)', fn: 'openNoteModal()' }
+            ];
+            const done = items.filter(i => i.ok).length;
+            if (done === items.length) { box.classList.add('hidden'); return; }
+            box.classList.remove('hidden');
+            box.innerHTML = `<div class="flex flex-wrap items-center justify-between gap-2"><h3 class="text-sm font-bold text-gray-100">🧭 Primeiros passos <span class="ml-1 text-xs font-semibold text-gray-400">${done} de ${items.length} concluídos</span></h3>
+                <div class="flex gap-2 text-[11px]"><button type="button" data-fs="guide" class="px-2.5 py-1 rounded-lg border border-gray-600 text-gray-200 hover:bg-gray-700 font-semibold">Abrir guia</button><button type="button" data-fs="hide" class="px-2.5 py-1 rounded-lg border border-gray-600 text-gray-400 hover:bg-gray-700 font-semibold">Dispensar</button></div></div>
+                <div class="mt-2 h-1.5 rounded bg-gray-700 overflow-hidden"><div class="h-1.5 bg-blue-500" style="width:${done * 100 / items.length}%"></div></div>
+                <ul class="mt-2 space-y-1">${items.map((i, k) => i.ok ? `<li class="text-xs text-gray-500"><span class="gl-pos font-bold">✓</span> ${esc(i.label)}</li>` : `<li><button type="button" data-fs-open="${k}" class="text-left text-xs text-gray-100 hover:underline">☐ ${esc(i.label)} <span class="text-blue-300">→</span></button></li>`).join('')}</ul>`;
+            box.querySelector('[data-fs=guide]').onclick = () => openGuide(false);
+            box.querySelector('[data-fs=hide]').onclick = () => { try { localStorage.setItem(fsKey(), '1'); } catch (e) {} fsRender(); };
+            box.querySelectorAll('[data-fs-open]').forEach(b => b.onclick = () => { const f = items[+b.dataset.fsOpen].fn; ({ 'openSetupsModal()': openSetupsModal, 'openFlowModal()': () => openFlowModal(), 'openModal()': () => openModal(), 'openNoteModal()': () => openNoteModal() })[f](); });
+        };
 
         /* ---- gatilho: ao entrar (tela de acesso some) ---- */
         let running = false;
