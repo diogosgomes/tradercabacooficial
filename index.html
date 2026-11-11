@@ -49,6 +49,10 @@
         html .gl-pos{color:#60A5FA} html .gl-neg{color:#FBBF24}
         html .chip-pos{background:#1E3A8A;color:#DBEAFE;border:1px solid #60A5FA}
         html .chip-neg{background:#0B0F19;color:#FCD34D;border:1px dashed #F59E0B}
+        html .mc-good{background:#14264a;color:#60A5FA} html .mc-bad{background:#3a2a07;color:#FBBF24} html .mc-neu{background:#1B2434;color:#9CA3AF}
+        html .mc-past{background:rgba(27,36,52,.45)} html .mc-dim{color:#7B8597}
+        html[data-theme="light"] .mc-good{background:#DBEAFE;color:#1D4ED8} html[data-theme="light"] .mc-bad{background:#FEF3C7;color:#92400E} html[data-theme="light"] .mc-neu{background:#E6EAF2;color:#5B6577}
+        html[data-theme="light"] .mc-past{background:rgba(230,234,242,.55)} html[data-theme="light"] .mc-dim{color:#7A8497}
         html .svg-tx{fill:#e5e7eb} html .svg-mu{fill:#9ca3af} html .svg-ln{stroke:#374151}
         html[data-theme="light"]{color-scheme:light}
         html[data-theme="light"] body{background:#F3F4F6}
@@ -221,6 +225,8 @@
                     <button type="button" role="menuitem" onclick="optsAction(() => document.getElementById('importFile').click())" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📤 Importar backup</button>
                     <button type="button" role="menuitem" onclick="optsAction(openSetupsModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🧩 Gerenciar setups</button>
                     <button type="button" role="menuitem" onclick="optsAction(openAuditModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📋 Histórico de auditoria</button>
+                    <button type="button" role="menuitem" onclick="optsAction(() => openTermsModal())" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📄 Termos e privacidade</button>
+                    <button type="button" role="menuitem" onclick="optsAction(() => openGuide())" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🧭 Guia de primeiro acesso</button>
                     <button id="btnInvites" type="button" role="menuitem" onclick="optsAction(openInvitesModal)" class="hidden w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📨 Pedidos de convite <span id="invBadge" class="hidden ml-1 px-1.5 py-0.5 rounded-full bg-amber-600 text-white text-[10px] font-bold"></span></button>
                     <button id="btnTheme" type="button" role="menuitem" onclick="optsAction(openThemeModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🌓 Tema</button>
                     <div id="sepLogout" class="border-t border-gray-700 my-1"></div>
@@ -265,6 +271,21 @@
                 <div class="mt-1 sm:mt-2"><span id="metricBestSetup" class="text-xs font-bold text-indigo-300 block truncate">N/A</span></div>
                 <p id="metricBestSetupSub" class="mt-1 text-[9px] sm:text-[11px] text-gray-400 min-h-[1rem] truncate"></p>
             </div>
+        </div>
+
+        <!-- Mês atual × mês anterior (Gain, Loss, DARF estimada) -->
+        <div id="mcBlock" class="space-y-2">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <h2 class="text-sm sm:text-base font-bold text-gray-200">Mês atual × mês anterior</h2>
+                <div class="flex items-center gap-1 text-xs">
+                    <button type="button" id="mcPrev" aria-label="Mês anterior" class="px-2.5 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-semibold disabled:opacity-40">◀</button>
+                    <span id="mcLab" class="min-w-[7.5rem] text-center font-bold text-gray-200"></span>
+                    <button type="button" id="mcNext" aria-label="Próximo mês" class="px-2.5 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-semibold disabled:opacity-40">▶</button>
+                    <button type="button" id="mcNow" aria-label="Voltar ao mês atual" class="px-2.5 py-1.5 rounded-lg border border-gray-600 text-gray-200 hover:bg-gray-700 font-semibold">Hoje</button>
+                </div>
+            </div>
+            <div id="mcGrid" class="grid grid-cols-3 gap-1.5 sm:gap-4"></div>
+            <p id="mcNote" class="text-[10px] sm:text-[11px] text-gray-500 leading-snug"></p>
         </div>
 
         <!-- Capital Curve Chart Section -->
@@ -578,7 +599,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V105';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V119';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -796,16 +817,16 @@
         async function newsReadState() {
             if (MODE === 'claude') {
                 const snap = await hmoDb.collection('release_reads').get();
-                return { baseline: 0, ids: new Set(snap.docs.map(d => d.id)), dismissed: new Set(snap.docs.filter(d => d.data().dismissed).map(d => d.id)) };   // no HMO começa em 0 para você ver o sino
+                return { baseline: 0, ids: new Set(snap.docs.map(d => d.id)), dismissed: new Set(snap.docs.filter(d => d.data().dismissed).map(d => d.id)), purged: new Set(snap.docs.filter(d => d.data().purged).map(d => d.id)) };   // no HMO começa em 0 para você ver o sino
             }
             const [r, p] = await Promise.all([
-                sb.from('tb_release_reads').select('note_id, dismissed'),
+                sb.from('tb_release_reads').select('note_id, dismissed, purged'),
                 sb.from('profiles').select('created_at').maybeSingle()
             ]);
             if (r.error) throw r.error;
             // pessoa nova não vê como "não lidas" as novidades anteriores ao cadastro
             const baseline = p.data && p.data.created_at ? Date.parse(p.data.created_at) : Date.now();
-            return { baseline, ids: new Set(r.data.map(x => x.note_id)), dismissed: new Set(r.data.filter(x => x.dismissed).map(x => x.note_id)) };
+            return { baseline, ids: new Set(r.data.map(x => x.note_id)), dismissed: new Set(r.data.filter(x => x.dismissed).map(x => x.note_id)), purged: new Set(r.data.filter(x => x.purged).map(x => x.note_id)) };
         }
         async function newsMarkRead(ids) {
             if (!ids.length) return;
@@ -821,6 +842,13 @@
         async function newsRestore(id) {
             if (MODE === 'claude') { await hmoDb.collection('release_reads').doc(id).set({ read_at: Date.now() }); return; }
             const { error } = await sb.from('tb_release_reads').update({ dismissed: false }).eq('note_id', id);
+            if (error) throw error;
+        }
+        // Esvaziar a lixeira = apagar de vez da tela desta pessoa (continua só no sistema, para os outros)
+        async function newsPurge(ids) {
+            if (!ids.length) return;
+            if (MODE === 'claude') { for (const id of ids) await hmoDb.collection('release_reads').doc(id).set({ read_at: Date.now(), dismissed: true, purged: true }); return; }
+            const { error } = await sb.from('tb_release_reads').update({ purged: true }).in('note_id', ids).eq('dismissed', true);
             if (error) throw error;
         }
         async function newsMarkUnread(id) {
@@ -859,7 +887,7 @@
                 try { await invLoadCache(); } catch (e) {}
                 notes0.push(...darfAlerts(), ...invAlerts());
                 const notes = notes0.filter(x => !st.dismissed.has(x.id)).sort((a, b) => b.published_at - a.published_at);
-                const excluded = () => notes0.filter(x => !x.synthetic && st.dismissed.has(x.id) && Date.now() - x.published_at <= EXCL_DAYS * DAY_MS).sort((a, b) => b.published_at - a.published_at);
+                const excluded = () => notes0.filter(x => !x.synthetic && st.dismissed.has(x.id) && !st.purged.has(x.id) && Date.now() - x.published_at <= EXCL_DAYS * DAY_MS).sort((a, b) => b.published_at - a.published_at);
                 const updBell = () => setBellCount(notes.filter(x => newsIsUnread(x, st, Date.now())).length);
                 const card = x => {
                     const read = st.ids.has(x.id);
@@ -908,23 +936,43 @@
                     b.disabled = true; const ids = unreadIds();
                     try { await newsMarkRead(ids); ids.forEach(id => st.ids.add(id)); } catch (e) { showToast('Não foi possível atualizar agora.', 'err'); }
                     updBell(); rerender(); }; };
+                let infoOpen = false;
+                const INFO = ['A lista mostra até ' + NEWS_MAX + ' novidades dos últimos ' + NEWS_DAYS + ' dias. As mais antigas ficam em Ver anteriores.',
+                    'Avisos ⚠ IMPORTANTE ficam no topo até a data de validade (ou por 7 dias, se não tiverem data).',
+                    'O número do sino conta só as não lidas desses ' + NEWS_DAYS + ' dias e os avisos importantes válidos.',
+                    '🗑 Excluir tira a novidade só da sua tela. Ela fica ' + EXCL_DAYS + ' dias em Ver excluídas, onde você pode restaurar ou esvaziar de vez.',
+                    'Novidades publicadas antes do seu cadastro aparecem na lista, mas não entram na contagem do sino.',
+                    'Alertas automáticos (como o de DARF) são calculados pelo app e não vão para a lixeira.'];
+                if (invIsAdmin) INFO.push('Pedidos de convite novos e aniversários também aparecem aqui, e somem sozinhos quando resolvidos.');
+                const infoBlock = () => `<button type="button" id="nwInfo" aria-expanded="${infoOpen}" class="mb-3 text-[11px] text-blue-300 hover:text-blue-200 underline">ℹ Como funcionam as novidades</button>`
+                    + `<ul id="nwInfoBox" class="${infoOpen ? '' : 'hidden '}mb-3 list-disc pl-5 text-[11px] text-gray-300 space-y-1 rounded-lg border border-gray-700 bg-gray-800/40 py-2 pr-2">${INFO.map(t => `<li>${esc(t)}</li>`).join('')}</ul>`;
+                const wireInfo = () => { const b = body.querySelector('#nwInfo'), bx = body.querySelector('#nwInfoBox'); if (b) b.onclick = () => { infoOpen = !infoOpen; bx.classList.toggle('hidden', !infoOpen); b.setAttribute('aria-expanded', String(infoOpen)); }; };
                 const showMain = () => {
-                    body.innerHTML = markAllBar() + important.map(card).join('')
+                    body.innerHTML = markAllBar() + infoBlock() + important.map(card).join('')
                         + (recent.length ? recent.map(card).join('') : `<p class="text-gray-400 mb-2">Sem novidades nos últimos ${NEWS_DAYS} dias.</p>`)
                         + (older.length ? `<button type="button" id="nwOld" class="mt-2 w-full px-3 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-semibold">Ver anteriores (${older.length})</button>` : '')
                         + (excluded().length ? `<button type="button" id="nwExcl" class="mt-2 w-full px-3 py-2 rounded-lg border border-gray-600 text-gray-200 hover:bg-gray-700 font-semibold">🗑 Ver excluídas (${excluded().length})</button>` : '');
                     const o = body.querySelector('#nwOld'); if (o) o.onclick = showOld;
                     const ex = body.querySelector('#nwExcl'); if (ex) ex.onclick = showExcl;
-                    wireToggles(showMain); wireDelete(showMain); wireAll(showMain); wireDarf(); wireInv();
+                    wireToggles(showMain); wireDelete(showMain); wireAll(showMain); wireDarf(); wireInv(); wireInfo();
                 };
                 const showExcl = () => {
                     const list = excluded();
-                    body.innerHTML = '<button type="button" id="nwBack" class="mb-3 px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-semibold">← Voltar</button>'
+                    body.innerHTML = '<div class="mb-3 flex items-center justify-between gap-2"><button type="button" id="nwBack" class="px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-semibold">← Voltar</button>'
+                        + (list.length ? `<button type="button" id="nwEmpty" class="px-3 py-1.5 rounded-lg border border-amber-500 text-amber-100 hover:bg-amber-950 font-semibold">🗑 Esvaziar (${list.length})</button>` : '') + '</div>'
+                        + `<h4 class="font-bold text-sm mb-1">🗑 Novidades excluídas</h4><p class="mb-2 text-amber-200">As novidades ficam aqui por ${EXCL_DAYS} dias. Esvaziar apaga de vez.</p>`
                         + `<p class="mb-3 text-gray-400">Novidades que você excluiu da sua tela, publicadas nos últimos ${EXCL_DAYS} dias. Restaurar traz a novidade de volta à lista, como lida.</p>`
                         + (list.length ? list.map(x => `<div class="border border-gray-700 bg-gray-800/40 rounded-lg p-3 mb-2"><div class="flex flex-wrap justify-between gap-1"><span class="font-bold">${esc(x.title)}</span><span class="text-gray-400">${fmtDateTimeBR(x.published_at).replace(', ', ' - ')}</span></div>
                             <ul class="mt-1 list-disc pl-5 text-gray-300 space-y-0.5">${(x.items || []).map(i => `<li>${esc(i)}</li>`).join('')}</ul>
                             <div class="mt-2"><button type="button" data-rs="${x.id}" class="px-2.5 py-1 rounded-lg border border-blue-400 text-blue-100 hover:bg-blue-950 font-semibold">↩ Restaurar</button></div></div>`).join('') : '<p class="text-gray-400">Nenhuma novidade excluída nos últimos 30 dias.</p>');
                     body.querySelector('#nwBack').onclick = showMain;
+                    const em = body.querySelector('#nwEmpty'); if (em) em.onclick = async () => {
+                        const ok = await askBox('Esvaziar as novidades excluídas?', `As ${list.length} novidade(s) excluída(s) serão apagadas de vez da sua tela e não poderão ser restauradas. Esta exclusão é permanente.`, 'Confirmar esvaziar', 'Cancelar esvaziar');
+                        if (!ok) return;
+                        em.disabled = true;
+                        try { await newsPurge(list.map(x => x.id)); list.forEach(x => st.purged.add(x.id)); showExcl(); showToast('✔ Lixeira esvaziada.', 'ok'); }
+                        catch (e) { em.disabled = false; showToast('Não foi possível esvaziar agora.', 'err'); }
+                    };
                     body.querySelectorAll('[data-rs]').forEach(b => b.onclick = async () => {
                         const id = b.dataset.rs; b.disabled = true;
                         try { await newsRestore(id); st.dismissed.delete(id); st.ids.add(id); const x = notes0.find(n => n.id === id); if (x && !notes.includes(x)) { notes.push(x); notes.sort((a, c) => c.published_at - a.published_at); } recompute(); updBell(); showExcl(); showToast('✔ Novidade restaurada.', 'ok'); }
@@ -1027,11 +1075,11 @@
                 o.addEventListener('click', ev => { if (ev.target === o) end(); });
             });
         }
-        function askBox(title, msg, okLabel) {
+        function askBox(title, msg, okLabel, cancelLabel) {
             return new Promise(res => {
                 const o = document.createElement('div');
                 o.className = 'fixed inset-0 z-[110] flex items-center justify-center p-3 bg-black/70';
-                o.innerHTML = `<div class="w-full max-w-sm rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl"><p class="font-bold mb-1 break-words">${esc(title)}</p><p class="text-xs text-gray-400 mb-4">${esc(msg)}</p><div class="flex justify-end gap-2"><button type="button" data-n class="px-3 py-1.5 rounded-lg bg-gray-700 text-white text-xs font-semibold">Cancelar</button><button type="button" data-y class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold">${esc(okLabel || 'Confirmar')}</button></div></div>`;
+                o.innerHTML = `<div class="w-full max-w-sm rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl"><p class="font-bold mb-1 break-words">${esc(title)}</p><p class="text-xs text-gray-400 mb-4">${esc(msg)}</p><div class="flex justify-end gap-2"><button type="button" data-n class="px-3 py-1.5 rounded-lg bg-gray-700 text-white text-xs font-semibold">${esc(cancelLabel || 'Cancelar')}</button><button type="button" data-y class="px-3 py-1.5 rounded-lg ${okLabel && /esvaziar|excluir/i.test(okLabel) ? 'bg-amber-600' : 'bg-blue-600'} text-white text-xs font-semibold">${esc(okLabel || 'Confirmar')}</button></div></div>`;
                 document.body.appendChild(o);
                 const end = v => { o.remove(); res(v); };
                 o.querySelector('[data-n]').onclick = () => end(false); o.querySelector('[data-y]').onclick = () => end(true);
@@ -1197,7 +1245,7 @@
             ov.addEventListener('click', ev => { if (ev.target === ov) ov.remove(); });
             const body = ov.querySelector('#auBody');
             const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-            const AU = { delete: '🗑 Exclusão', password: '🔑 Troca de senha', setup_rename: '✏ Setup renomeado', setup_active: '☑ Setup ativado', setup_inactive: '☐ Setup inativado', setup_create: '➕ Setup criado', setup_delete: '🗑 Setup excluído', setup_kind: '🔁 Classificação alterada', darf_paid: '💳 DARF pago', darf_unpaid: '💳 DARF desmarcado' };
+            const AU = { delete: '🗑 Exclusão', password: '🔑 Troca de senha', setup_rename: '✏ Setup renomeado', setup_active: '☑ Setup ativado', setup_inactive: '☐ Setup inativado', setup_create: '➕ Setup criado', setup_delete: '🗑 Setup excluído', setup_kind: '🔁 Classificação alterada', darf_paid: '💳 DARF pago', darf_unpaid: '💳 DARF desmarcado', terms_accept: '📄 Aceite dos termos', terms_decline: '📄 Termos não aceitos' };
             const card = x => {
                 if (x.kind !== 'import' && x.kind !== 'export') return `<div class="border border-gray-700 rounded-lg p-3 mb-2 bg-gray-800/40">
                     <div class="flex flex-wrap justify-between gap-1"><span class="font-bold">H${x.seq ?? '?'} · ${AU[x.kind] || esc(x.kind)}</span><span class="text-gray-400">${fmtDateTimeBR(x.ts)}</span></div>
@@ -1443,8 +1491,79 @@ hmoDb = db;
             auditAdd({ kind: 'export', filename: backupName(), outcome: 'Concluída', fileOps: rows.length, fileFlows: flows.length });
         }
 
+        /* ===== Bloco Mês atual × mês anterior (só operações) ===== */
+        const MC_MON = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+        const MC_LONG = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        let mcYm = null;
+        const mcCur = () => todayLocalISO().slice(0, 7);
+        const mcPrevYm = ym => { const [y, m] = ym.split('-').map(Number); return m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`; };
+        const mcNextYm = ym => { const [y, m] = ym.split('-').map(Number); return m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`; };
+        const mcRowYm = r => { const d = String(r.date).split('/'); return d.length === 3 ? { ym: `${d[2]}-${d[1]}`, day: +d[0] } : null; };
+        function mcAgg(ym, maxDay) {
+            const o = { g: 0, gn: 0, l: 0, ln: 0, set: {} };
+            rows.forEach(r => {
+                const k = mcRowYm(r); if (!k || k.ym !== ym || k.day > maxDay) return;
+                const v = Number(r.result) || 0;
+                if (r.type === 'Gain') { o.g += Math.abs(v); o.gn++; } else { o.l += Math.abs(v); o.ln++; }
+                o.set[r.setup] = (o.set[r.setup] || 0) + v;
+            });
+            let bn = null, bv = -Infinity;
+            for (const n in o.set) if (o.set[n] > bv) { bv = o.set[n]; bn = n; }
+            o.best = bn === null ? null : { name: bn, v: Math.round(bv * 100) / 100 };
+            return o;
+        }
+        function mcChip(c, p, upGood) {
+            if (p === null || p === undefined || p === 0) return '<span class="mc-neu inline-flex items-center rounded-full px-2 py-0.5 text-[9px] sm:text-[11px] font-extrabold whitespace-nowrap">— sem base</span>';
+            const d = (c - p) / Math.abs(p) * 100;
+            if (Math.abs(d) < 0.5) return '<span class="mc-neu inline-flex items-center rounded-full px-2 py-0.5 text-[9px] sm:text-[11px] font-extrabold whitespace-nowrap">= igual</span>';
+            const up = d > 0, good = upGood ? up : !up;
+            return `<span class="${good ? 'mc-good' : 'mc-bad'} inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[9px] sm:text-[11px] font-extrabold whitespace-nowrap" title="${good ? 'Melhor' : 'Pior'} que o mês anterior">${up ? '▲ +' : '▼ −'}${Math.abs(d).toFixed(0)}%</span>`;
+        }
+        function mcRender() {
+            const g = document.getElementById('mcGrid'); if (!g) return;
+            const cur = mcCur(), today = +todayLocalISO().slice(8, 10);
+            if (!mcYm || mcYm > cur) mcYm = cur;
+            const part = mcYm === cur, maxDay = part ? today : 31, py = mcPrevYm(mcYm);
+            const A = mcAgg(mcYm, maxDay), B = mcAgg(py, 31);
+            const mm = ym => MC_MON[+ym.slice(5) - 1];
+            const a1 = part ? `até ${today}` : 'mês todo', a2 = 'mês todo';
+            const ops = n => n === 1 ? '1 operação' : n + ' operações';
+            const R = v => 'R$ ' + brl(v);
+            const card = o => `<div class="bg-cardBg border border-gray-800 rounded-xl shadow-lg overflow-hidden min-w-0">
+                <div class="px-1 py-2 sm:p-4 text-center flex flex-col items-center gap-0.5"><span class="text-[8px] sm:text-xs font-semibold uppercase tracking-tight text-gray-400 leading-tight"><b class="${o.cls}">${o.name}</b> · ${mm(mcYm)} ${a1}</span>
+                    <span class="${o.cls} text-[12px] sm:text-2xl font-extrabold leading-tight max-w-full truncate">${o.cv}</span><span class="text-[9px] sm:text-[11px] text-gray-400 max-w-full truncate">${o.cs}</span></div>
+                <div class="relative border-t border-gray-700 mx-1.5 sm:mx-4"><div class="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2">${o.chip}</div></div>
+                <div class="mc-past px-1 pt-3 pb-2 sm:px-4 sm:pt-4 sm:pb-3 text-center flex flex-col items-center gap-0.5"><span class="mc-dim text-[8px] sm:text-xs font-semibold uppercase tracking-tight leading-tight">${mm(py)} · ${a2}</span>
+                    <span class="mc-dim text-[10px] sm:text-base font-bold max-w-full truncate">${o.pv}</span><span class="mc-dim text-[9px] sm:text-[11px] max-w-full truncate">${o.ps}</span></div></div>`;
+            let tx = []; try { tx = taxEngine(rows, notes, darfPaid, todayLocalISO()); } catch (e) {}
+            const tA = tx.find(x => x.ym === mcYm), tB = tx.find(x => x.ym === py);
+            const dd = iso => iso.slice(8) + '/' + iso.slice(5, 7);
+            const dsub = x => {
+                if (!x) return 'sem movimento';
+                if (x.status === 'pay') return x.paidAt ? '✔ pago' : (todayLocalISO() > x.due ? '✖ atrasado · ' + dd(x.due) : 'vence ' + dd(x.due));
+                if (x.status === 'acc') return 'abaixo de R$ 10';
+                if (x.status === 'neg') return 'mês negativo';
+                if (x.status === 'comp') return 'compensado';
+                if (x.status === 'irrf') return 'coberto pelo IRRF';
+                return 'sem movimento';
+            };
+            const dv = x => R(x ? x.total : 0);
+            g.innerHTML = card({ name: 'Gain', cls: 'gl-pos', cv: R(A.g), cs: ops(A.gn), pv: R(B.g), ps: ops(B.gn), chip: mcChip(A.g, B.g, true) })
+                + card({ name: 'Loss', cls: 'gl-neg', cv: R(A.l), cs: ops(A.ln), pv: R(B.l), ps: ops(B.ln), chip: mcChip(A.l, B.l, false) })
+                + card({ name: 'DARF', cls: 'text-gray-100', cv: dv(tA), cs: part && tA && tA.status === 'pay' ? 'estimativa · ' + dsub(tA) : (part ? 'estimativa' : dsub(tA)), pv: dv(tB), ps: dsub(tB), chip: mcChip(tA ? tA.total : 0, tB ? tB.total : 0, false) });
+            document.getElementById('mcLab').textContent = `${MC_LONG[+mcYm.slice(5) - 1]} ${mcYm.slice(0, 4)}${part ? ' (atual)' : ''}`;
+            let first = cur; rows.forEach(r => { const k = mcRowYm(r); if (k && k.ym < first) first = k.ym; });
+            document.getElementById('mcPrev').disabled = mcYm <= first;
+            document.getElementById('mcNext').disabled = mcYm >= cur;
+            document.getElementById('mcNote').textContent = (part ? `No mês corrente, a porcentagem compara o que foi feito até o dia ${today} com o mês anterior fechado. ` : 'Em mês fechado, compara o mês todo com o mês anterior todo. ')
+                + 'Em Loss e DARF, ▼ é melhora. Gain e Loss usam só operações. A DARF é uma estimativa com base nas notas do dia (ou nas operações, se não houver nota); no mês aberto é o imposto até hoje, não o do mês todo. Não substitui o contador. Tudo acompanha os lançamentos, inclusive os retroativos.';
+        }
+        document.getElementById('mcPrev').onclick = () => { mcYm = mcPrevYm(mcYm || mcCur()); mcRender(); };
+        document.getElementById('mcNext').onclick = () => { mcYm = mcNextYm(mcYm || mcCur()); mcRender(); };
+        document.getElementById('mcNow').onclick = () => { mcYm = mcCur(); mcRender(); };
         function processAndRender() {
             bellSoon();
+            mcRender();
             if (!bellInit && (MODE === 'claude' || currentUserId)) { bellInit = true; refreshBell(); }
             const sorted = rows.slice().sort((a, b) => (a.ts || 0) - (b.ts || 0));
             let accum = 0, gains = 0, losses = 0;
@@ -3329,6 +3448,191 @@ hmoDb = db;
     })();
     </script>
     <script>
+    /* ===== Termos de uso, Política de privacidade e Primeiro acesso guiado (V112) ===== */
+    (function () {
+        const $ = id => document.getElementById(id);
+        const TERMS_VER = '2026-11-11', TERMS_DATE = '11/11/2026', TERMS_DOC = 'termos_privacidade';
+        const LEGAL_EMAIL = 'mytradedash@gmail.com';
+        const TERMS_HTML = `<h4 class="font-bold text-sm mb-1">Termos de uso do My Trade Dash</h4><p class="text-gray-400 mb-3">Versão de ${TERMS_DATE}</p>
+<p class="mb-2"><b>1. O que é o My Trade Dash.</b> Um diário para quem opera day trade (mini-índice e mini-dólar): registra operações, movimentações financeiras e notas do dia, e mostra indicadores, gráficos, relatórios e alertas de DARF.</p>
+<p class="mb-2"><b>2. Quem pode usar.</b> Somente maiores de 18 anos (Código Civil, art. 5º), com acesso liberado por convite. A conta é pessoal: login e senha não devem ser compartilhados.</p>
+<p class="mb-2"><b>3. Responsabilidade pelas informações.</b> Os valores mostrados vêm do que você lança. Os cálculos de resultado, DARF e indicadores são estimativas de apoio e não substituem a orientação de um profissional de Contabilidade nem os sistemas oficiais da Receita Federal (como o Sicalc). O My Trade Dash não é corretora, não executa ordens e não faz recomendação de investimento.</p>
+<p class="mb-2"><b>4. Disponibilidade.</b> Seus dados ficam guardados em um banco de dados na nuvem: não se perdem se você trocar de celular ou se o app ficar fora do ar por um tempo. O app pode ter pausas rápidas para manutenção. O backup (⚙ Opções &gt; Exportar backup) é uma cópia extra, útil para guardar um retrato dos seus dados ou recuperar algo excluído por engano.</p>
+<p class="mb-2"><b>5. Segurança dos dados.</b> O My Trade Dash adota medidas técnicas para proteger seus dados contra acessos não autorizados, como conexão criptografada e acesso restrito a cada conta, conforme a LGPD (Lei nº 13.709/2018, art. 46).</p>
+<p class="mb-2"><b>6. Propriedade.</b> A marca, o nome, a identidade visual e o código do My Trade Dash pertencem ao seu responsável. Os dados que você lança são seus.</p>
+<p class="mb-2"><b>7. Encerramento.</b> Você pode pedir a exclusão da conta e dos dados a qualquer momento pelo e-mail ${LEGAL_EMAIL}.</p>
+<p class="mb-2"><b>8. Mudanças.</b> Estes termos podem ser atualizados. Quando isso acontecer, o app pedirá um novo aceite.</p>
+<p class="mb-2"><b>9. Lei aplicável.</b> Legislação brasileira. Contato: ${LEGAL_EMAIL}.</p>`;
+        const PRIV_HTML = `<h4 class="font-bold text-sm mb-1">Política de privacidade do My Trade Dash</h4><p class="text-gray-400 mb-3">Versão de ${TERMS_DATE} · em conformidade com a LGPD (Lei nº 13.709/2018)</p>
+<p class="mb-2"><b>1. Controlador.</b> My Trade Dash. Contato para assuntos de dados pessoais: ${LEGAL_EMAIL}.</p>
+<p class="mb-1"><b>2. Dados tratados.</b></p>
+<ul class="list-disc pl-5 mb-2 space-y-0.5"><li>Pedido de convite: nome, e-mail, WhatsApp (com DDD), data de nascimento e como soube do app.</li><li>Conta: e-mail e senha (a senha fica protegida pelo provedor de login e não é vista por ninguém).</li><li>Uso do app: operações (data, horários, ativo, setup, contratos, pontos e resultado), movimentações financeiras (depósitos, saques e bancos informados), notas do dia (valor líquido, IRRF e custos), setups, DARF marcados como pagos e o histórico de auditoria.</li><li>No aparelho: tema escolhido e posição do botão Atalhos (ficam só no seu aparelho).</li></ul>
+<p class="mb-2"><b>3. Para que usamos.</b> Prestar o serviço (calcular resultados, indicadores, relatórios e a estimativa de DARF), liberar o acesso, falar com você pelo WhatsApp sobre o acesso e enviar felicitações de aniversário (com a sua autorização), e manter a segurança. Não vendemos dados nem os usamos para publicidade.</p>
+<p class="mb-2"><b>4. Bases legais.</b> Execução do serviço que você contratou (art. 7º, V), consentimento para contato por WhatsApp e felicitações (art. 7º, I) e legítimo interesse para segurança e prevenção de fraudes (art. 7º, IX).</p>
+<p class="mb-2"><b>5. Onde ficam e com quem são compartilhados.</b> Os dados ficam no Supabase (banco de dados e login, servidores em São Paulo). O site é publicado pelo GitHub Pages. Esses fornecedores só armazenam e processam os dados para o app funcionar. Não há outro compartilhamento, salvo obrigação legal.</p>
+<p class="mb-2"><b>6. Segurança.</b> Conexão criptografada (HTTPS) e regras no banco que fazem cada usuário ver e alterar somente os próprios dados dentro de sua respectiva área logada.</p>
+<p class="mb-2"><b>7. Por quanto tempo.</b> Enquanto a conta estiver ativa. Pedidos de convite ficam até serem excluídos (na lixeira, por até 15 dias). Após o pedido de exclusão da conta, os dados são apagados, salvo o que a lei obrigar a guardar.</p>
+<p class="mb-2"><b>8. Seus direitos (art. 18).</b> Confirmar se tratamos seus dados, acessar, corrigir, pedir a exclusão, a portabilidade (o backup em ⚙ Opções &gt; Exportar backup já entrega seus dados) e revogar o consentimento. Peça pelo e-mail ${LEGAL_EMAIL}.</p>
+<p class="mb-2"><b>9. Menores de idade.</b> O app não é destinado a menores de 18 anos e não aceita pedidos deles (LGPD, art. 14).</p>
+<p class="mb-2"><b>10. Mudanças.</b> Esta política pode ser atualizada; o app pedirá um novo aceite quando isso acontecer.</p>`;
+
+        /* ---- janela de termos (aceite obrigatório ou leitura) ---- */
+        function termsModal(mode, tab0) {
+            if ($('termsOv')) return null;
+            const gate = mode === 'gate';
+            const o = document.createElement('div'); o.id = 'termsOv';
+            if (gate) o.dataset.noBack = '1';
+            o.className = 'fixed inset-0 z-[130] flex items-center justify-center p-3 bg-black/80';
+            o.innerHTML = `<div role="dialog" aria-modal="true" aria-labelledby="termsTtl" class="w-full max-w-lg max-h-[92vh] flex flex-col rounded-xl border border-gray-600 bg-gray-900 text-sm text-gray-200 shadow-2xl">
+                <div class="px-4 pt-4 pb-2"><div class="flex items-start justify-between gap-2"><h3 id="termsTtl" class="text-base font-bold">${gate ? 'Antes de continuar' : '📄 Termos e privacidade'}</h3>${gate ? '' : '<button type="button" data-c class="px-3 py-1 rounded-lg bg-gray-700 text-white text-xs font-semibold">Fechar</button>'}</div>
+                    ${gate ? '<p class="text-xs text-gray-400 mt-1">Para usar o My Trade Dash, leia e aceite os Termos de uso e a Política de privacidade.</p>' : ''}
+                    <div class="mt-3 flex gap-2 text-xs" role="tablist"><button type="button" role="tab" data-tab="t" class="px-3 py-1.5 rounded-lg font-semibold">Termos de uso</button><button type="button" role="tab" data-tab="p" class="px-3 py-1.5 rounded-lg font-semibold">Privacidade</button></div></div>
+                <div id="termsBody" class="px-4 py-2 overflow-y-auto text-xs leading-relaxed min-h-[8rem]"></div>
+                ${gate ? `<div class="px-4 pt-2 pb-4 border-t border-gray-700"><label class="flex items-start gap-2 text-xs cursor-pointer"><input type="checkbox" id="termsOk" class="mt-0.5 h-4 w-4"><span>Li e aceito os Termos de uso e a Política de privacidade do My Trade Dash.</span></label>
+                    <p id="termsErr" class="text-xs text-red-400 min-h-[1rem] mt-1" role="alert"></p>
+                    <div class="flex justify-end gap-2 mt-1"><button type="button" id="termsExit" class="px-3 py-1.5 rounded-lg bg-gray-700 text-white text-xs font-semibold">Sair</button><button type="button" id="termsGo" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold">Aceitar e continuar</button></div></div>` : ''}</div>`;
+            document.body.appendChild(o);
+            const body = o.querySelector('#termsBody');
+            const show = t => { body.innerHTML = t === 'p' ? PRIV_HTML : TERMS_HTML; body.scrollTop = 0;
+                o.querySelectorAll('[data-tab]').forEach(b => { const on = b.dataset.tab === t; b.setAttribute('aria-selected', String(on)); b.className = 'px-3 py-1.5 rounded-lg font-semibold ' + (on ? 'bg-blue-600 text-white' : 'border border-gray-600 text-gray-300 hover:bg-gray-800'); }); };
+            o.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => show(b.dataset.tab));
+            show(tab0 || 't');
+            const c = o.querySelector('[data-c]'); if (c) c.onclick = () => o.remove();
+            if (!gate) o.addEventListener('click', e => { if (e.target === o) o.remove(); });
+            return o;
+        }
+        window.openTermsModal = tab => termsModal('read', tab);
+
+        const uidNow = () => (typeof MODE !== 'undefined' && MODE === 'claude') ? 'hmo' : (typeof currentUserId !== 'undefined' ? currentUserId : null);
+        async function termsAccepted() {
+            if (MODE === 'claude') { const d = await hmoDb.collection('aceites').doc(TERMS_DOC + '_' + TERMS_VER).get(); return !!(d && d.exists); }
+            const { data, error } = await sb.from('tb_aceites').select('version').eq('doc', TERMS_DOC).eq('version', TERMS_VER);
+            if (error) throw error; return data.length > 0;
+        }
+        async function termsSave() {
+            if (MODE === 'claude') { await hmoDb.collection('aceites').doc(TERMS_DOC + '_' + TERMS_VER).set({ accepted_at: Date.now() }); return; }
+            const { error } = await sb.from('tb_aceites').upsert({ doc: TERMS_DOC, version: TERMS_VER }, { onConflict: 'user_id,doc,version', ignoreDuplicates: true });
+            if (error) throw error;
+        }
+        function termsGate() {
+            return new Promise(res => {
+                const o = termsModal('gate'); if (!o) return res(false);
+                const err = o.querySelector('#termsErr'), go = o.querySelector('#termsGo');
+                o.querySelector('#termsExit').onclick = async () => {
+                    const b = o.querySelector('#termsExit'); b.disabled = true; o.querySelector('#termsGo').disabled = true;
+                    try { await auditAdd({ kind: 'terms_decline', outcome: 'Recusada', detail: `Saiu sem aceitar os Termos de uso e a Política de privacidade (versão de ${TERMS_DATE})` }); } catch (e) {}
+                    o.remove(); res(false); lockNow();
+                };
+                go.onclick = async () => {
+                    if (!o.querySelector('#termsOk').checked) { err.textContent = 'Marque "Li e aceito" para continuar.'; return; }
+                    err.textContent = ''; go.disabled = true;
+                    try { await termsSave(); } catch (e) { err.textContent = 'Não foi possível registrar o aceite agora. Tente de novo.'; go.disabled = false; return; }
+                    try { auditAdd({ kind: 'terms_accept', outcome: 'Concluída', detail: `Aceite dos Termos de uso e da Política de privacidade (versão de ${TERMS_DATE})` }); } catch (e) {}
+                    o.remove(); res(true);
+                };
+            });
+        }
+
+        /* ---- primeiro acesso guiado ---- */
+        const gKey = () => 'mtd_guide_done_' + uidNow();
+        const gDone = () => { try { return localStorage.getItem(gKey()) === '1'; } catch (e) { return false; } };
+        const gMark = () => { try { localStorage.setItem(gKey(), '1'); } catch (e) {} };
+        function openGuide(auto) {
+            if ($('guideOv')) return;
+            const o = document.createElement('div'); o.id = 'guideOv';
+            o.className = 'fixed inset-0 z-[95] flex items-center justify-center p-3 bg-black/70';
+            document.body.appendChild(o);
+            let step = 1, saved1 = false;
+            const today = todayLocalISO();
+            const end = () => { gMark(); o.remove(); };
+            const frame = (title, inner, btns) => `<div role="dialog" aria-modal="true" class="w-full max-w-md max-h-[92vh] overflow-y-auto rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl">
+                <p class="text-[11px] text-gray-400">🧭 Primeiro acesso · passo ${step} de 4</p><h3 class="text-base font-bold mb-2">${title}</h3>${inner}
+                <p id="gdMsg" class="text-xs min-h-[1rem] mt-2" role="status"></p><div class="mt-2 flex flex-wrap justify-end gap-2">${btns}</div></div>`;
+            const B = (attr, label, cls) => `<button type="button" ${attr} class="px-3 py-1.5 rounded-lg text-xs font-semibold ${cls || 'bg-gray-700 text-white'}">${label}</button>`;
+            const msg = (t, bad) => { const m = o.querySelector('#gdMsg'); m.className = 'text-xs min-h-[1rem] mt-2 ' + (bad ? 'text-red-400' : 'text-emerald-300'); m.textContent = t; };
+            const IN = 'w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200';
+            const TOT = 4;
+            const draw = () => {
+                if (step === 1) {
+                    const act = (typeof setups !== 'undefined' ? setups : []).filter(s => s.active).map(s => s.name);
+                    o.innerHTML = frame('Cadastre seus setups', `<p class="text-xs text-gray-400 mb-2">Setup é a estratégia que você usa em cada operação (por exemplo, pullback ou rompimento). Cada operação é ligada a um setup, e os relatórios mostram qual rende mais. ${act.length ? 'Estes já estão ativos:' : 'Ainda não há setups ativos.'}</p>
+                        ${act.length ? `<p class="text-xs mb-3 break-words">${act.map(esc).join(' · ')}</p>` : ''}
+                        <label class="block text-xs text-gray-400 mb-1" for="gdSetup">Novo setup (opcional)</label>
+                        <div class="flex flex-wrap gap-2"><input id="gdSetup" maxlength="60" autocomplete="off" placeholder="Nome do setup" class="${IN} flex-1 min-w-[10rem]"><select id="gdKind" class="${IN} w-auto"><option value="dentro">Dentro do plano</option><option value="fora">Fora do plano</option></select><button type="button" data-addset class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold">Adicionar</button></div>`,
+                        B('data-skipall', 'Pular tudo') + B('data-next', 'Continuar', 'bg-blue-600 text-white'));
+                } else if (step === 2) {
+                    o.innerHTML = frame('Capital investido', `<p class="text-xs text-gray-400 mb-3"><b class="text-gray-200">Capital investido</b> é o seu dinheiro que está na corretora: a soma dos depósitos menos os saques. Não inclui lucro nem prejuízo das operações. Cada depósito ou saque é uma <b class="text-gray-200">movimentação financeira</b>. Registre a primeira agora ou depois, em Gestão financeira.</p>${saved1 ? '<p class="text-xs text-amber-300 mb-3">Você já registrou uma movimentação aqui. Salvar de novo cria outro lançamento; use Pular para seguir sem repetir.</p>' : ''}
+                        <label class="block text-xs text-gray-400 mb-1" for="gdType">Tipo</label><select id="gdType" class="${IN} mb-2"><option value="Depósito">Depósito (do banco para a corretora)</option><option value="Saque">Saque (da corretora para o banco)</option></select>
+                        <label class="block text-xs text-gray-400 mb-1" for="gdAmount">Valor (R$)</label><input id="gdAmount" inputmode="decimal" autocomplete="off" placeholder="0,00" class="${IN} mb-2">
+                        <label class="block text-xs text-gray-400 mb-1" for="gdDate">Data</label><input id="gdDate" type="date" max="${today}" value="${today}" class="${IN} mb-2">
+                        <label class="block text-xs text-gray-400 mb-1" for="gdBank" id="gdBankLb">Banco de origem</label><input id="gdBank" maxlength="40" autocomplete="off" placeholder="Ex.: Nubank" class="${IN}">`,
+                        B('data-back', '← Voltar') + B('data-skipall', 'Pular tudo') + B('data-skip', 'Pular') + B('data-save', 'Salvar e continuar', 'bg-blue-600 text-white'));
+                    o.querySelector('#gdAmount').addEventListener('blur', e => { const v = parseMoney(e.target.value); if (v > 0) e.target.value = fmtMoneyBR(v); });
+                    o.querySelector('#gdType').addEventListener('change', e => { o.querySelector('#gdBankLb').textContent = e.target.value === 'Saque' ? 'Banco de destino' : 'Banco de origem'; });
+                } else if (step === 3) {
+                    const g = id => { const e = document.getElementById(id); return e ? e.textContent.trim() : 'R$ 0,00'; };
+                    o.innerHTML = frame('Capital atual', `<p class="text-xs text-gray-400 mb-3"><b class="text-gray-200">Capital atual</b> é quanto você tem hoje na corretora: o capital investido mais o lucro (ou menos o prejuízo) das suas operações. Ele muda a cada operação lançada e é o que a curva Capital Curve acompanha.</p>
+                        <div class="rounded-lg border border-gray-700 bg-gray-800/40 px-3 py-2 text-xs space-y-1"><p>Capital investido hoje: <b class="text-gray-100">${esc(g('metricInvested'))}</b></p><p>Capital atual hoje: <b class="text-gray-100">${esc(g('metricCapital'))}</b></p></div>`,
+                        B('data-back', '← Voltar') + B('data-skipall', 'Pular tudo') + B('data-next', 'Continuar', 'bg-blue-600 text-white'));
+                } else {
+                    o.innerHTML = frame('Registre suas operações', `<p class="text-xs text-gray-400">Cada operação vai em <b class="text-gray-200">📈 Nova operação</b>: data, horários, ativo, setup, contratos, tipo (Gain ou Loss), pontos e resultado em R$. Ela entra no histórico, nos relatórios e no Capital atual. Depósitos e saques ficam em <b class="text-gray-200">➕ Nova movimentação</b>. Os dois também estão no botão ⚡ Atalhos. Para reabrir este guia: ⚙ Opções &gt; 🧭 Guia de primeiro acesso.</p>`,
+                        B('data-back', '← Voltar') + B('data-skipall', 'Concluir') + B('data-flow', '➕ Registrar movimentação') + B('data-op', '📈 Registrar operação', 'bg-blue-600 text-white'));
+                }
+                wire();
+            };
+            const wire = () => {
+                const q = s => o.querySelector(s);
+                q('[data-skipall]').onclick = end;
+                const bk = q('[data-back]'); if (bk) bk.onclick = () => { step--; draw(); };
+                const sk = q('[data-skip]'); if (sk) sk.onclick = () => { step++; draw(); };
+                const nx = q('[data-next]'); if (nx) nx.onclick = () => { step++; draw(); };
+                const op = q('[data-op]'); if (op) op.onclick = () => { end(); openModal(); };
+                const fl = q('[data-flow]'); if (fl) fl.onclick = () => { end(); openFlowModal(); };
+                const sv = q('[data-save]'); if (sv) sv.onclick = async () => {
+                    const amount = parseMoney(q('#gdAmount').value), iso = q('#gdDate').value || today, bank = q('#gdBank').value.trim() || 'Banco', type = q('#gdType').value;
+                    if (!(amount > 0)) return msg('Informe um valor maior que zero ou use Pular.', true);
+                    if (iso > today) return msg('A data não pode ser futura.', true);
+                    const date = iso.split('-').reverse().join('/');
+                    sv.disabled = true;
+                    try { await addFlow({ date, type, amount: Math.round(amount * 100) / 100, from: type === 'Saque' ? 'Corretora' : bank, to: type === 'Saque' ? bank : 'Corretora', ts: computeTs(date, '00:00'), createdAt: Date.now() }); saved1 = true; step++; draw(); }
+                    catch (e) { sv.disabled = false; msg('Não foi possível salvar agora.', true); }
+                };
+                const ad = q('[data-addset]'); if (ad) ad.onclick = async () => {
+                    const nn = q('#gdSetup').value.trim().replace(/\s+/g, ' '), kind = q('#gdKind').value;
+                    if (!nn) return msg('Digite o nome do setup ou use Continuar.', true);
+                    if (setups.some(x => x.name.toLowerCase() === nn.toLowerCase())) return msg('Já existe um setup com esse nome.', true);
+                    ad.disabled = true;
+                    try { await setupDb('add', null, { name: nn, active: true, kind, prev_names: '[]' }); auditAdd({ kind: 'setup_create', outcome: 'Concluída', detail: `${nn} (${kind === 'fora' ? 'Fora' : 'Dentro'})` }); if (MODE !== 'claude') await reloadAll(true); draw(); msg('Setup criado.'); }
+                    catch (e) { ad.disabled = false; msg('Não foi possível criar agora.', true); }
+                };
+            };
+            draw();
+        }
+        window.openGuide = () => openGuide(false);
+
+        /* ---- gatilho: ao entrar (tela de acesso some) ---- */
+        let running = false;
+        async function afterLogin() {
+            if (running) return; running = true;
+            try {
+                let ok = false;
+                try { ok = await termsAccepted(); } catch (e) { ok = false; }
+                if (!ok) { ok = await termsGate(); if (!ok) return; }
+                await new Promise(r => setTimeout(r, 1800));   // espera os dados carregarem
+                if ($('lockScreen').classList.contains('hidden') && !gDone() && typeof rows !== 'undefined' && !rows.length && !flows.length) openGuide(true);
+            } finally { running = false; }
+        }
+        new MutationObserver(() => { if ($('lockScreen').classList.contains('hidden')) afterLogin(); }).observe($('lockScreen'), { attributes: true, attributeFilter: ['class'] });
+        if ($('lockScreen').classList.contains('hidden')) setTimeout(afterLogin, 600);
+
+        /* ---- links na tela de acesso ---- */
+        const lk = document.createElement('div'); lk.className = 'text-center text-[11px] text-gray-400';
+        lk.innerHTML = '<button type="button" data-l="t" class="underline hover:text-gray-200">Termos de uso</button> · <button type="button" data-l="p" class="underline hover:text-gray-200">Política de privacidade</button>';
+        $('invOpen').parentElement.insertAdjacentElement('afterend', lk);
+        lk.querySelectorAll('[data-l]').forEach(b => b.onclick = () => openTermsModal(b.dataset.l));
+    })();
+    </script>
+    <script>
     /* ===== Gesto de voltar (celular) ===== */
     (function () {
         const $ = id => document.getElementById(id);
@@ -3408,6 +3712,8 @@ hmoDb = db;
                 return $('invClose').click();
             }
             const el = L.el;
+            if (el.dataset.noBack) return;
+            if (el.id === 'guideOv') { const sk = el.querySelector('[data-skipall]'); const dirty = [...el.querySelectorAll('input:not([type=date])')].some(i => i.value.trim()); return dirty ? lossPrompt(() => sk.click()) : sk.click(); }
             if (el.id === 'backPrompt') { const a = el.querySelector('[data-a]'); if (a) a.click(); return; }
             if (el.id === 'setupsOv') return requestClose('setupsOv');
             const c = el.querySelector('[data-n],[data-c],#rpNo,[data-ok],#suClose');
@@ -3422,7 +3728,7 @@ hmoDb = db;
 
         /* guarda no histórico */
         let guard = !!(history.state && history.state.mtd), ignore = 0, exiting = false, activated = false;
-        const desired = () => !exiting && (locked() ? invOpen() : true);
+        const desired = () => !exiting && (locked() ? (invOpen() || !!$('termsOv')) : true);
         function sync() {
             const d = desired();
             if (d && !guard) { if (!activated) return; history.pushState({ mtd: 1 }, ''); guard = true; }
@@ -3441,6 +3747,7 @@ hmoDb = db;
         });
         new MutationObserver(() => { if (locked()) tabs = ['ops']; sync(); }).observe($('lockScreen'), { attributes: true, attributeFilter: ['class'] });
         new MutationObserver(sync).observe($('invForm'), { attributes: true, attributeFilter: ['class'] });
+        new MutationObserver(sync).observe(document.body, { childList: true });
         window.__mtdBack = { onBack, sync, state: () => ({ guard, tabs: tabs.slice(), exiting }) };
     })();
     </script>
