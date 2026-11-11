@@ -151,6 +151,32 @@
                 <p id="lockError" class="text-xs text-red-400 min-h-[1rem]"></p>
                 <button type="submit" id="lockBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">Entrar</button>
             </form>
+            <div class="text-center"><button type="button" id="invOpen" class="text-xs text-blue-400 hover:text-blue-300 underline">Quer usar o app? Peça um convite</button></div>
+            <form id="invForm" class="hidden space-y-3" autocomplete="off" novalidate>
+                <div id="invFields" class="space-y-3">
+                    <div class="rounded-lg border border-amber-500 bg-amber-950/30 px-3 py-2 text-[11px] leading-snug text-amber-200" role="note">🔞 <strong>Somente para maiores de 18 anos.</strong> A maioridade civil começa aos 18 anos completos (Código Civil, Lei nº 10.406/2002, art. 5º) e os dados de crianças e adolescentes têm regras próprias na LGPD (Lei nº 13.709/2018, art. 14). Por isso, este app não aceita pedidos de menores de 18 anos.</div>
+                    <div><label for="invName" class="block text-xs font-medium text-gray-400 mb-1">Nome e sobrenome</label><input type="text" id="invName" maxlength="80" autocomplete="name" placeholder="Ex.: Maria Souza" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200"></div>
+                    <div><label for="invEmail" class="block text-xs font-medium text-gray-400 mb-1">E-mail</label><input type="email" id="invEmail" maxlength="120" autocomplete="email" autocapitalize="none" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200"></div>
+                    <div><label for="invBirth" class="block text-xs font-medium text-gray-400 mb-1">Data de nascimento</label><input type="date" id="invBirth" min="1900-01-01" autocomplete="bday" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200"></div>
+                    <div id="invMinor" class="hidden rounded-lg border-2 border-red-500 bg-red-950 px-3 py-2 text-xs font-semibold leading-snug text-red-200" role="alert">⛔ Menores de 18 anos não podem pedir convite nem usar o app (Código Civil, art. 5º; LGPD, art. 14). Seu pedido não será enviado.</div>
+                    <div><label for="invDdd" class="block text-xs font-medium text-gray-400 mb-1">💬 WhatsApp</label>
+                        <div class="flex items-center gap-2"><span class="text-gray-400 text-sm">(</span><input type="tel" id="invDdd" inputmode="numeric" maxlength="2" placeholder="DDD" aria-label="DDD" autocomplete="tel-area-code" class="w-16 shrink-0 text-center bg-darkBg border border-gray-700 rounded-lg px-2 py-2 text-sm text-gray-200"><span class="text-gray-400 text-sm">)</span><input type="tel" id="invPhone" inputmode="numeric" maxlength="10" placeholder="9xxxx-xxxx" aria-label="Número com 9 dígitos" autocomplete="tel-local" class="flex-1 min-w-0 bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200"></div>
+                        <p id="invUf" class="text-[11px] min-h-[1rem] text-emerald-400 mt-1" aria-live="polite"></p>
+                        <p class="text-[11px] text-gray-400">💬 O número precisa ter WhatsApp: é por ele que vamos te responder.</p></div>
+                    <div><label for="invHow" class="block text-xs font-medium text-gray-400 mb-1">Como soube do app?</label><input type="text" id="invHow" maxlength="140" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200"></div>
+                    <div style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden" aria-hidden="true"><label>Não preencha<input type="text" id="invWeb" tabindex="-1" autocomplete="off"></label></div>
+                    <label class="flex items-start gap-2 text-[11px] text-gray-400"><input type="checkbox" id="invOk" class="mt-0.5"><span>Em conformidade com a Lei Geral de Proteção de Dados (LGPD, Lei nº 13.709/2018), autorizo o contato por WhatsApp sobre o meu acesso e o uso dos meus dados somente para essa finalidade e para receber felicitações de aniversário.</span></label>
+                    <p id="invMsg" class="text-xs min-h-[1rem] text-red-400" role="alert"></p>
+                    <button type="submit" id="invBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">Enviar pedido</button>
+                    <button type="button" id="invClose" class="hidden w-full bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Fechar</button>
+                </div>
+                <div id="invDone" class="hidden space-y-3 text-center">
+                    <p class="text-2xl">✅</p>
+                    <p class="text-sm font-semibold text-gray-100">Recebemos seu pedido!</p>
+                    <p class="text-xs text-gray-400">Em breve entraremos em contato com você pelo WhatsApp que informou.</p>
+                    <button type="button" id="invDoneBack" class="w-full bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">Fechar</button>
+                </div>
+            </form>
         </div>
         <div class="mt-4 w-full max-w-sm flex items-center justify-center gap-2 px-2">
             <svg viewBox="0 0 200 200" role="img" aria-label="Escudo My Trade Dash" class="h-12 w-12 shrink-0"><use href="#escudoMTD"/></svg>
@@ -195,6 +221,7 @@
                     <button type="button" role="menuitem" onclick="optsAction(() => document.getElementById('importFile').click())" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📤 Importar backup</button>
                     <button type="button" role="menuitem" onclick="optsAction(openSetupsModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🧩 Gerenciar setups</button>
                     <button type="button" role="menuitem" onclick="optsAction(openAuditModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📋 Histórico de auditoria</button>
+                    <button id="btnInvites" type="button" role="menuitem" onclick="optsAction(openInvitesModal)" class="hidden w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📨 Pedidos de convite <span id="invBadge" class="hidden ml-1 px-1.5 py-0.5 rounded-full bg-amber-600 text-white text-[10px] font-bold"></span></button>
                     <button id="btnTheme" type="button" role="menuitem" onclick="optsAction(openThemeModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🌓 Tema</button>
                     <div id="sepLogout" class="border-t border-gray-700 my-1"></div>
                     <button id="btnLogout" type="button" role="menuitem" onclick="optsAction(lockNow)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-100 font-semibold">🚪 Sair</button>
@@ -551,7 +578,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V97';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V102';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -806,7 +833,8 @@
         async function refreshBell() {
             try {
                 const [notes0, st] = await Promise.all([newsLoad(), newsReadState()]);
-                const notes = notes0.concat(darfAlerts());
+                try { await invLoadCache(); } catch (e) {}
+                const notes = notes0.concat(darfAlerts(), invAlerts());
                 const now = Date.now();
                 setBellCount(notes.filter(x => newsIsUnread(x, st, now)).length);
             } catch (e) { setBellCount(0); }
@@ -828,7 +856,8 @@
             try {
                 const [notes0, st] = await Promise.all([newsLoad(), newsReadState()]);
                 const now = Date.now();
-                notes0.push(...darfAlerts());
+                try { await invLoadCache(); } catch (e) {}
+                notes0.push(...darfAlerts(), ...invAlerts());
                 const notes = notes0.filter(x => !st.dismissed.has(x.id)).sort((a, b) => b.published_at - a.published_at);
                 const excluded = () => notes0.filter(x => !x.synthetic && st.dismissed.has(x.id) && Date.now() - x.published_at <= EXCL_DAYS * DAY_MS).sort((a, b) => b.published_at - a.published_at);
                 const updBell = () => setBellCount(notes.filter(x => newsIsUnread(x, st, Date.now())).length);
@@ -841,10 +870,11 @@
                             <span class="text-gray-400">${fmtDateTimeBR(x.published_at).replace(', ', ' - ')}</span></div>
                         <ul class="mt-1 list-disc pl-5 text-gray-300 space-y-0.5">${(x.items || []).map(i => `<li>${esc(i)}</li>`).join('')}</ul>
                         <div class="mt-2 flex flex-wrap gap-2" data-actions="${x.id}">
-                            ${x.synthetic ? '<button type="button" data-darf class="px-2.5 py-1 rounded-lg border border-amber-400 text-amber-100 hover:bg-amber-900 font-semibold">📄 Abrir Custos e imposto (DARF)</button>' : `<button type="button" data-tg="${x.id}" class="px-2.5 py-1 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700">${read ? '○ Marcar como não lida' : '✔ Marcar como lida'}</button>
+                            ${x.synthetic && x.action === 'inv' ? '<button type="button" data-inv class="px-2.5 py-1 rounded-lg border border-amber-400 text-amber-100 hover:bg-amber-900 font-semibold">📨 Abrir Pedidos de convite</button>' : x.synthetic ? '<button type="button" data-darf class="px-2.5 py-1 rounded-lg border border-amber-400 text-amber-100 hover:bg-amber-900 font-semibold">📄 Abrir Custos e imposto (DARF)</button>' : `<button type="button" data-tg="${x.id}" class="px-2.5 py-1 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700">${read ? '○ Marcar como não lida' : '✔ Marcar como lida'}</button>
                             <button type="button" data-del="${x.id}" class="px-2.5 py-1 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700">🗑 Excluir</button>`}</div></div>`;
                 };
                 const wireDarf = () => body.querySelectorAll('[data-darf]').forEach(b => b.onclick = () => { ov.remove(); repOpen = '1'; switchTab('report'); });
+                const wireInv = () => body.querySelectorAll('[data-inv]').forEach(b => b.onclick = () => { ov.remove(); openInvitesModal(); });
                 const wireToggles = rerender => body.querySelectorAll('[data-tg]').forEach(b => b.onclick = async () => {
                     const id = b.dataset.tg; b.disabled = true;
                     try {
@@ -885,7 +915,7 @@
                         + (excluded().length ? `<button type="button" id="nwExcl" class="mt-2 w-full px-3 py-2 rounded-lg border border-gray-600 text-gray-200 hover:bg-gray-700 font-semibold">🗑 Ver excluídas (${excluded().length})</button>` : '');
                     const o = body.querySelector('#nwOld'); if (o) o.onclick = showOld;
                     const ex = body.querySelector('#nwExcl'); if (ex) ex.onclick = showExcl;
-                    wireToggles(showMain); wireDelete(showMain); wireAll(showMain); wireDarf();
+                    wireToggles(showMain); wireDelete(showMain); wireAll(showMain); wireDarf(); wireInv();
                 };
                 const showExcl = () => {
                     const list = excluded();
@@ -1854,7 +1884,7 @@ hmoDb = db;
             setTimeout(() => $('lockUser').focus(), 50);
         }
         function afterLogout() {
-            currentUserId = null; rows = []; flows = [];
+            currentUserId = null; rows = []; flows = []; invSetAdmin(false);
             bellInit = false; setBellCount(0);
             $('userBadge').textContent = '';
             $('menuUserName').textContent = ''; $('menuUserEmail').textContent = '';
@@ -1879,11 +1909,12 @@ hmoDb = db;
             $('lockScreen').classList.add('hidden');
             $('menuUserName').textContent = (hmoCred && hmoCred.user) || 'Teste'; $('menuUserEmail').textContent = 'Ambiente HMO · dados de teste';
             resetIdle();
+            invAdminInit();
         }
         async function lockNow() {
             if (MODE === 'claude') {
                 try { sessionStorage.removeItem('hmo_ok'); } catch (e) {}
-                closeOptsMenu(); showLock(); return;
+                invSetAdmin(false); closeOptsMenu(); showLock(); return;
             }
             try { await sb.auth.signOut(); } catch (e) {}
             afterLogout();
@@ -1909,6 +1940,7 @@ hmoDb = db;
             $('menuUserName').textContent = name;
             $('menuUserEmail').textContent = session.user.email || '';
             await reloadAll();
+            invAdminInit();
         }
         function initAuth() {
             if (!sb) { $('lockError').textContent = 'A biblioteca do banco de dados não carregou. Recarregue a página.'; return; }
@@ -1918,6 +1950,257 @@ hmoDb = db;
         ['mousemove', 'keydown', 'click', 'touchstart', 'scroll'].forEach(ev => document.addEventListener(ev, resetIdle, { passive: true }));
         document.addEventListener('visibilitychange', () => { if (!document.hidden && currentUserId) reloadAll(true); });
 
+        /* ---------- Pedido de convite (tela de login) e administração de convites ---------- */
+        const INV_ST = { novo: 'Novo', convidado: 'Convidado', recusado: 'Recusado' };
+        const DDD_UF = {};
+        Object.entries({ SP: '11 12 13 14 15 16 17 18 19', RJ: '21 22 24', ES: '27 28', MG: '31 32 33 34 35 37 38', PR: '41 42 43 44 45 46', SC: '47 48 49', RS: '51 53 54 55', DF: '61', GO: '62 64', TO: '63', MT: '65 66', MS: '67', AC: '68', RO: '69', BA: '71 73 74 75 77', SE: '79', PE: '81 87', AL: '82', PB: '83', RN: '84', CE: '85 88', PI: '86 89', PA: '91 93 94', AM: '92 97', RR: '95', AP: '96', MA: '98 99' }).forEach(([uf, l]) => l.split(' ').forEach(d => { DDD_UF[d] = uf; }));
+        const UF_NOME = { AC: 'Acre', AL: 'Alagoas', AP: 'Amapá', AM: 'Amazonas', BA: 'Bahia', CE: 'Ceará', DF: 'Distrito Federal', ES: 'Espírito Santo', GO: 'Goiás', MA: 'Maranhão', MT: 'Mato Grosso', MS: 'Mato Grosso do Sul', MG: 'Minas Gerais', PA: 'Pará', PB: 'Paraíba', PR: 'Paraná', PE: 'Pernambuco', PI: 'Piauí', RJ: 'Rio de Janeiro', RN: 'Rio Grande do Norte', RS: 'Rio Grande do Sul', RO: 'Rondônia', RR: 'Roraima', SC: 'Santa Catarina', SP: 'São Paulo', SE: 'Sergipe', TO: 'Tocantins' };
+        let invIsAdmin = false, invCache = [], invCacheAt = 0;
+        const invDigits = v => String(v || '').replace(/\D/g, '');
+        const invUfOf = w => { const d = String(w || ''); return DDD_UF[d.startsWith('55') ? d.slice(2, 4) : d.slice(0, 2)] || ''; };
+        const invFmtPhone = d => { d = String(d || ''); if (d.startsWith('55') && d.length >= 12) { const l = d.slice(2); return '(' + l.slice(0, 2) + ') ' + l.slice(2, l.length - 4) + '-' + l.slice(-4); } return d; };
+        const invWhen = v => { const t = new Date(v); return isNaN(t) ? '' : t.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }); };
+        const invBirthBR = s => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || '')); return m ? `${m[3]}/${m[2]}/${m[1]}` : ''; };
+        const invNorm = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+        async function invSubmit(rec) {
+            if (MODE === 'claude') {
+                const all = (await hmoDb.collection('convites').get()).docs.map(d => d.data());
+                if (all.some(x => String(x.email).toLowerCase() === rec.email.toLowerCase())) return { dup: 'email' };
+                if (all.some(x => x.whatsapp === rec.whatsapp)) return { dup: 'whatsapp' };
+                await hmoDb.collection('convites').add({ ...rec, status: 'novo', archived: false, created_at: Date.now() });
+                return { dup: null };
+            }
+            const { error } = await sb.from('tb_convites').insert({ name: rec.name, email: rec.email, whatsapp: rec.whatsapp, birth_date: rec.birth_date, how_known: rec.how_known, consent: true });
+            if (error) { if (error.code === '23505') return { dup: /email/i.test((error.message || '') + (error.details || '')) ? 'email' : 'whatsapp' }; throw error; }
+            return { dup: null };
+        }
+        async function invList() {
+            if (MODE === 'claude') return (await hmoDb.collection('convites').get()).docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            const { data, error } = await sb.from('tb_convites').select('*').order('created_at', { ascending: false }).limit(1000);
+            if (error) throw error; return data || [];
+        }
+        async function invPatch(id, patch) {
+            if (MODE === 'claude') { await hmoDb.collection('convites').doc(id).update(patch); return; }
+            const { error } = await sb.from('tb_convites').update(patch).eq('id', id); if (error) throw error;
+        }
+        const invSetStatus = (id, status) => invPatch(id, MODE === 'claude' ? { status, handled_at: Date.now() } : { status, handled_at: new Date().toISOString() });
+        const invSetArchived = (id, archived) => invPatch(id, { archived });
+        async function invDelete(id) {
+            if (MODE === 'claude') { await hmoDb.collection('convites').doc(id).delete(); return; }
+            const { error } = await sb.from('tb_convites').delete().eq('id', id); if (error) throw error;
+        }
+        async function invLoadCache(force) {
+            if (!invIsAdmin) { invCache = []; return; }
+            if (!force && Date.now() - invCacheAt < 15000) return;
+            invCache = await invList(); invCacheAt = Date.now();
+        }
+        function invSetAdmin(on) {
+            invIsAdmin = !!on;
+            ['btnInvites', 'fabInv'].forEach(i => { const b = $(i); if (b) b.classList.toggle('hidden', !invIsAdmin); });
+            if (!invIsAdmin) { invCache = []; invCacheAt = 0; ['invBadge', 'fabInvBadge'].forEach(i => { const c = $(i); if (c) c.classList.add('hidden'); }); }
+        }
+        function invAlerts() {
+            if (!invIsAdmin) return [];
+            const out = [], now = new Date();
+            const nw = invCache.filter(x => x.status === 'novo' && !x.archived);
+            if (nw.length) out.push({ id: 'inv:new', title: nw.length === 1 ? '1 pedido de convite novo' : nw.length + ' pedidos de convite novos', important: true, published_at: Date.now(), expires_at: null, synthetic: true, action: 'inv',
+                items: nw.slice(0, 5).map(x => `${x.name}${invUfOf(x.whatsapp) ? ' (' + invUfOf(x.whatsapp) + ')' : ''}`).concat(nw.length > 5 ? ['… e mais ' + (nw.length - 5) + '.'] : []).concat(['Responda pelo WhatsApp e marque como convidado ou recusado.']) });
+            invCache.forEach(x => {
+                const bd = invBdayTomorrow(x); if (!bd) return;
+                out.push({ id: 'bday:' + x.id + ':' + now.getFullYear(), title: `Amanhã é aniversário de ${x.name}`, important: true, published_at: Date.now(), expires_at: null, synthetic: true, action: 'inv',
+                    items: [`Faz ${bd.age} anos em ${String(bd.day).padStart(2, '0')}/${bd.month}.`, `WhatsApp: ${invFmtPhone(x.whatsapp)}${invUfOf(x.whatsapp) ? ' · ' + invUfOf(x.whatsapp) : ''}.`] });
+            });
+            return out;
+        }
+        async function invRefreshBadge(toast) {
+            if (!invIsAdmin) return;
+            try {
+                await invLoadCache(true);
+                const n = invCache.filter(x => x.status === 'novo' && !x.archived).length;
+                ['invBadge', 'fabInvBadge'].forEach(i => { const c = $(i); if (c) { c.textContent = n; c.classList.toggle('hidden', n === 0); } });
+                if (toast && n > 0) showToast(n === 1 ? '1 pedido de convite novo' : n + ' pedidos de convite novos', 'ok');
+                if (bellInit) refreshBell();
+            } catch (e) {}
+        }
+        async function invAdminInit() {
+            if (MODE === 'claude') { invSetAdmin(true); invRefreshBadge(true); return; }
+            try {
+                const { data } = await sb.from('tb_admins').select('user_id').eq('user_id', currentUserId).maybeSingle();
+                invSetAdmin(!!data);
+            } catch (e) { invSetAdmin(false); }
+            invRefreshBadge(true);
+        }
+        setInterval(() => { if (invIsAdmin && !document.hidden) invRefreshBadge(false); }, 120000);
+        function invBdayOn(x, off) {
+            if (!x || x.status === 'recusado' || !x.birth_date) return null;
+            const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(x.birth_date); if (!m) return null;
+            const n = new Date(), t = new Date(n.getFullYear(), n.getMonth(), n.getDate() + off);
+            let d = +m[3]; const mo = +m[2]; if (mo === 2 && d === 29 && !isLeapY(t.getFullYear())) d = 28;
+            return (t.getMonth() + 1 === mo && t.getDate() === d) ? { age: t.getFullYear() - +m[1], day: d, month: m[2] } : null;
+        }
+        const invBdayTomorrow = x => invBdayOn(x, 1);
+        const invBdayNear = x => { const h = invBdayOn(x, 0); if (h) return { ...h, when: 'hoje' }; const a = invBdayOn(x, 1); return a ? { ...a, when: 'amanhã' } : null; };
+        function invBdayLink(x) {
+            const first = String(x.name || '').trim().split(/\s+/)[0] || '';
+            return 'https://wa.me/' + x.whatsapp + '?text=' + encodeURIComponent(`Parabéns, ${first}! Muitas felicidades neste dia. Feliz aniversário e um abraço do My Trade Dash!`);
+        }
+        function invWaLink(r) {
+            const first = String(r.name || '').trim().split(/\s+/)[0] || '';
+            const msg = `Olá, ${first}! Seu pedido de convite para o My Trade Dash foi recebido e o acesso será liberado. Seu login será o e-mail ${r.email}. A senha provisória será enviada por aqui.`;
+            return 'https://wa.me/' + r.whatsapp + '?text=' + encodeURIComponent(msg);
+        }
+        const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+        const isLeapY = y => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+        async function openInvitesModal() {
+            const ov = document.createElement('div');
+            ov.className = 'fixed inset-0 z-[95] flex items-center justify-center p-3 bg-black/70';
+            const now0 = new Date();
+            let filter = 'novo', list = [], q = '', armed = null, armedT = null, mode = 'list', calY = now0.getFullYear(), calM = now0.getMonth(), calSel = null;
+            ov.innerHTML = `<div class="w-full max-w-lg max-h-[90vh] flex flex-col rounded-xl border border-gray-600 bg-gray-900 text-sm text-gray-200 shadow-2xl">
+                <div class="flex items-center justify-between gap-2 px-4 py-3 border-b border-gray-700"><h3 class="text-base font-bold">📨 Pedidos de convite</h3><div class="flex gap-2"><button type="button" id="ivMode" class="px-3 py-1 rounded-lg border border-gray-600 text-gray-100 text-xs font-semibold">🎂 Aniversariantes</button><button type="button" id="ivClose" class="px-3 py-1 rounded-lg bg-gray-700 text-white text-xs font-semibold">Fechar</button></div></div>
+                <div id="ivListBox" class="flex flex-col min-h-0">
+                    <div class="px-4 pt-3"><div class="relative"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true">🔍</span><input type="search" id="ivSearch" placeholder="Pesquisar por nome, telefone ou e-mail" autocomplete="off" class="w-full bg-darkBg border border-gray-700 rounded-lg pl-9 pr-3 py-2 text-xs text-gray-200"></div></div>
+                    <div class="flex flex-wrap gap-2 px-4 pt-3" id="ivTabs"></div>
+                    <div id="ivBody" class="p-4 space-y-3 overflow-y-auto"></div>
+                </div>
+                <div id="ivCalBox" class="hidden p-4 overflow-y-auto"></div>
+                <p class="px-4 pb-3 text-[11px] text-gray-400">Os pedidos ficam aqui até você excluir. Arquivar tira da lista sem apagar. Nada desta tela vai para o histórico de auditoria.</p></div>`;
+            document.body.appendChild(ov);
+            const close = () => { ov.remove(); invRefreshBadge(false); };
+            ov.querySelector('#ivClose').onclick = close;
+            ov.addEventListener('click', ev => { if (ev.target === ov) close(); });
+            const body = ov.querySelector('#ivBody'), tabs = ov.querySelector('#ivTabs'), search = ov.querySelector('#ivSearch'), calBox = ov.querySelector('#ivCalBox'), listBox = ov.querySelector('#ivListBox'), modeBtn = ov.querySelector('#ivMode');
+            const match = r => { const t = invNorm(q.trim()); if (!t) return true; const dg = invDigits(q); return invNorm(r.name).includes(t) || invNorm(r.email).includes(t) || (dg.length >= 2 && String(r.whatsapp || '').includes(dg)); };
+            const inTab = (r, k) => k === 'arquivado' ? !!r.archived : !r.archived && (k === 'todos' || r.status === k);
+            const draw = () => {
+                const searching = q.trim() !== '';
+                const cnt = k => list.filter(x => inTab(x, k)).length;
+                tabs.innerHTML = [['novo', 'Novos'], ['convidado', 'Convidados'], ['recusado', 'Recusados'], ['arquivado', 'Arquivados'], ['todos', 'Todos']].map(([k, t]) => `<button type="button" data-t="${k}" class="px-3 py-1 rounded-lg text-xs font-semibold border ${!searching && filter === k ? 'border-blue-500 bg-blue-950 text-blue-200' : 'border-gray-700 text-gray-300'}">${t} (${cnt(k)})</button>`).join('');
+                const items = searching ? list.filter(match) : list.filter(x => inTab(x, filter));
+                const head = searching ? `<p class="text-[11px] text-gray-400">Resultado da pesquisa em todos os pedidos, inclusive arquivados: ${items.length}.</p>` : '';
+                body.innerHTML = head + (items.length ? items.map(r => { const uf = invUfOf(r.whatsapp), bd = invBdayNear(r); return `<div class="rounded-lg border border-gray-700 p-3" data-id="${esc(r.id)}">
+                    <div class="flex items-start justify-between gap-2"><div class="min-w-0"><p class="font-bold text-gray-100 break-words">${esc(r.name)}</p><p class="text-xs text-gray-400 break-all">${esc(r.email)}</p><p class="text-xs text-gray-300">💬 ${esc(invFmtPhone(r.whatsapp))}${uf ? ' · ' + esc(uf) : ''}</p>${r.birth_date ? `<p class="text-xs text-gray-300">🎂 ${esc(invBirthBR(r.birth_date))}</p>` : ''}</div>
+                    <div class="shrink-0 flex flex-col items-end gap-1"><span class="text-[10px] px-2 py-0.5 rounded-full border ${r.status === 'novo' ? 'border-blue-500 text-blue-300' : 'border-gray-600 text-gray-400'}">${esc(INV_ST[r.status] || r.status)}</span>${r.archived ? '<span class="text-[10px] px-2 py-0.5 rounded-full border border-gray-600 text-gray-400">🗄 Arquivado</span>' : ''}</div></div>
+                    <p class="text-xs text-gray-400 mt-1">Como soube: <span class="text-gray-200">${esc(r.how_known)}</span></p>
+                    <p class="text-[11px] text-gray-500">${esc(invWhen(r.created_at))}</p>
+                    ${bd ? `<p class="text-xs text-amber-300 mt-1">🎂 ${bd.when === 'hoje' ? 'Hoje' : 'Amanhã'} é aniversário (faz ${bd.age} anos)</p>` : ''}
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        <a href="${esc(invWaLink(r))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold">💬 WhatsApp</a>
+                        ${bd ? `<a href="${esc(invBdayLink(r))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold">💬 Parabenizar</a>` : ''}
+                        ${r.status !== 'convidado' ? '<button type="button" data-a="convidado" class="px-3 py-1.5 rounded-lg bg-gray-700 text-gray-100 text-xs font-semibold">Marcar convidado</button>' : ''}
+                        ${r.status !== 'recusado' ? '<button type="button" data-a="recusado" class="px-3 py-1.5 rounded-lg bg-gray-700 text-gray-100 text-xs font-semibold">Recusar</button>' : ''}
+                        ${r.status !== 'novo' ? '<button type="button" data-a="novo" class="px-3 py-1.5 rounded-lg bg-gray-700 text-gray-100 text-xs font-semibold">Reabrir</button>' : ''}
+                        <button type="button" data-a="arq" class="px-3 py-1.5 rounded-lg bg-gray-700 text-gray-100 text-xs font-semibold">${r.archived ? '♻ Desarquivar' : '🗄 Arquivar'}</button>
+                        <button type="button" data-a="del" class="px-3 py-1.5 rounded-lg bg-red-700 text-white text-xs font-semibold">${armed === r.id ? 'Confirmar exclusão' : 'Excluir'}</button>
+                    </div></div>`; }).join('') : '<p class="text-xs text-gray-400 text-center py-6">Nenhum pedido nesta lista.</p>');
+            };
+            const drawCal = () => {
+                const today = new Date(), isCur = calY === today.getFullYear() && calM === today.getMonth();
+                const byDay = {};
+                list.filter(x => x.status !== 'recusado' && /^\d{4}-\d{2}-\d{2}/.test(x.birth_date || '')).forEach(x => {
+                    const m = +x.birth_date.slice(5, 7) - 1; let d = +x.birth_date.slice(8, 10);
+                    if (m !== calM) return; if (m === 1 && d === 29 && !isLeapY(calY)) d = 28;
+                    (byDay[d] = byDay[d] || []).push({ ...x, age: calY - +x.birth_date.slice(0, 4), day: d });
+                });
+                const first = new Date(calY, calM, 1).getDay(), days = new Date(calY, calM + 1, 0).getDate();
+                let cells = ''; for (let i = 0; i < first; i++) cells += '<div></div>';
+                for (let d = 1; d <= days; d++) {
+                    const n = (byDay[d] || []).length, tod = isCur && d === today.getDate(), sel = calSel === d;
+                    cells += `<button type="button" data-d="${d}" ${n ? '' : 'tabindex="-1"'} class="h-11 rounded-lg border text-xs flex flex-col items-center justify-center ${sel ? 'border-blue-400 bg-blue-950 text-blue-100' : tod ? 'border-gray-400 text-gray-100' : n ? 'border-amber-500 text-gray-100' : 'border-gray-800 text-gray-500'}"><span class="${tod ? 'font-bold underline' : ''}">${d}</span>${n ? `<span class="text-[10px] leading-none">🎂${n > 1 ? n : ''}</span>` : ''}</button>`;
+                }
+                const all = Object.values(byDay).flat().sort((a, b) => a.day - b.day);
+                const shown = calSel ? all.filter(x => x.day === calSel) : all;
+                const waB = invBdayLink;
+                calBox.innerHTML = `<div class="flex items-center justify-between mb-3"><button type="button" data-n="-1" class="px-3 py-1 rounded-lg border border-gray-600 text-xs font-semibold" aria-label="Mês anterior">◀</button><p class="font-bold capitalize">${MESES[calM]} de ${calY}</p><button type="button" data-n="1" class="px-3 py-1 rounded-lg border border-gray-600 text-xs font-semibold" aria-label="Próximo mês">▶</button></div>
+                    <div class="grid grid-cols-7 gap-1 text-center text-[10px] text-gray-400 mb-1">${['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(x => `<span>${x}</span>`).join('')}</div>
+                    <div class="grid grid-cols-7 gap-1">${cells}</div>
+                    <p class="text-[11px] text-gray-400 mt-2">🎂 marca dias com aniversariantes (todos os pedidos, menos os recusados, inclusive arquivados). Toque em um dia para filtrar.</p>
+                    <div class="mt-3 space-y-2">${shown.length ? shown.map(x => `<div class="rounded-lg border border-gray-700 p-3 flex items-center justify-between gap-2"><div class="min-w-0"><p class="font-bold text-gray-100 break-words">${String(x.day).padStart(2, '0')}/${String(calM + 1).padStart(2, '0')} · ${esc(x.name)}</p><p class="text-xs text-gray-400">Faz ${x.age} anos${invUfOf(x.whatsapp) ? ' · ' + esc(invUfOf(x.whatsapp)) : ''}</p></div><a href="${esc(waB(x))}" target="_blank" rel="noopener" class="shrink-0 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold">💬 Parabenizar</a></div>`).join('') : `<p class="text-xs text-gray-400 text-center py-4">Nenhum aniversariante ${calSel ? 'neste dia' : 'neste mês'}.</p>`}</div>`;
+            };
+            const setMode = m => {
+                mode = m; listBox.classList.toggle('hidden', m === 'cal'); calBox.classList.toggle('hidden', m !== 'cal');
+                modeBtn.textContent = m === 'cal' ? '📋 Pedidos' : '🎂 Aniversariantes';
+                if (m === 'cal') drawCal(); else draw();
+            };
+            modeBtn.onclick = () => setMode(mode === 'cal' ? 'list' : 'cal');
+            calBox.addEventListener('click', e => {
+                const n = e.target.closest('[data-n]'), d = e.target.closest('[data-d]');
+                if (n) { calM += +n.dataset.n; if (calM < 0) { calM = 11; calY--; } if (calM > 11) { calM = 0; calY++; } calSel = null; drawCal(); }
+                else if (d) { const v = +d.dataset.d; calSel = calSel === v ? null : v; drawCal(); }
+            });
+            const load = async () => { try { list = await invList(); invCache = list; invCacheAt = Date.now(); } catch (e) { body.innerHTML = '<p class="text-xs text-red-400">Não foi possível carregar os pedidos: ' + esc((e && e.message) || e) + '</p>'; return; } mode === 'cal' ? drawCal() : draw(); };
+            search.addEventListener('input', () => { q = search.value; draw(); });
+            tabs.addEventListener('click', e => { const b = e.target.closest('[data-t]'); if (b) { filter = b.dataset.t; q = ''; search.value = ''; draw(); } });
+            body.addEventListener('click', async e => {
+                const b = e.target.closest('[data-a]'); if (!b) return;
+                const id = b.closest('[data-id]').dataset.id, a = b.dataset.a, r = list.find(x => x.id === id);
+                try {
+                    if (a === 'del') {
+                        if (armed !== id) { armed = id; clearTimeout(armedT); armedT = setTimeout(() => { armed = null; draw(); }, 4000); draw(); return; }
+                        armed = null; await invDelete(id); list = list.filter(x => x.id !== id); invCache = list; showToast('Pedido excluído', 'ok');
+                    } else if (a === 'arq') { await invSetArchived(id, !r.archived); r.archived = !r.archived; showToast(r.archived ? 'Pedido arquivado' : 'Pedido desarquivado', 'ok'); }
+                    else { await invSetStatus(id, a); if (r) r.status = a; }
+                    draw();
+                } catch (ex) { showToast('Não foi possível concluir: ' + ((ex && ex.message) || ex), 'err'); }
+            });
+            await load();
+        }
+        (function () {
+            const link = $('invOpen'), form = $('invForm'), lf = $('lockForm'), sub = $('lockSub'), msg = $('invMsg');
+            if (!link) return;
+            const subOld = sub.textContent, SUB_FORM = 'Peça um convite. Entraremos em contato pelo WhatsApp.';
+            const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            const info = (t, bad) => { msg.className = 'text-xs min-h-[1rem] ' + (bad === false ? 'text-amber-300' : 'text-red-400'); msg.textContent = t; };
+            const isMinor = b => { const lim = new Date(); lim.setFullYear(lim.getFullYear() - 18); return /^\d{4}-\d{2}-\d{2}$/.test(b) && b > ymd(lim); };
+            const checkMinor = () => { const m = isMinor($('invBirth').value); if (m) msg.textContent = ''; $('invMinor').classList.toggle('hidden', !m); $('invBtn').classList.toggle('hidden', m); $('invClose').classList.toggle('hidden', !m); return m; };
+            const view = on => {
+                form.classList.toggle('hidden', !on); lf.classList.toggle('hidden', on); link.parentElement.classList.toggle('hidden', on);
+                sub.textContent = on ? SUB_FORM : subOld;
+                info(''); if (!on) { form.reset(); $('invUf').textContent = ''; }
+                if (on) { $('invDone').classList.add('hidden'); $('invFields').classList.remove('hidden'); checkMinor(); setTimeout(() => $('invName').focus(), 50); }
+            };
+            $('invBirth').max = ymd(new Date());
+            const showUf = () => {
+                const d = invDigits($('invDdd').value), el = $('invUf');
+                if (d.length < 2) { el.textContent = ''; return; }
+                const uf = DDD_UF[d.slice(0, 2)];
+                el.textContent = uf ? `📍 ${UF_NOME[uf]} (${uf})` : 'DDD não encontrado'; el.className = 'text-[11px] min-h-[1rem] ' + (uf ? 'text-emerald-400' : 'text-red-400');
+            };
+            $('invDdd').addEventListener('input', () => { const i = $('invDdd'); i.value = invDigits(i.value).slice(0, 2); showUf(); if (i.value.length === 2) $('invPhone').focus(); });
+            $('invPhone').addEventListener('input', () => { const i = $('invPhone'); let d = invDigits(i.value).slice(0, 9); i.value = d.length > 5 ? d.slice(0, 5) + '-' + d.slice(5) : d; });
+            ['input', 'change'].forEach(ev => $('invBirth').addEventListener(ev, checkMinor));
+            link.addEventListener('click', () => view(true));
+            $('invClose').addEventListener('click', () => view(false));
+            $('invDoneBack').addEventListener('click', () => view(false));
+            const DUP = { email: 'Já recebemos um pedido com este e-mail. Em breve entraremos em contato pelo WhatsApp informado.', whatsapp: 'Já recebemos um pedido com este WhatsApp. Em breve entraremos em contato.', again: 'Seu pedido já foi enviado. Em breve entraremos em contato pelo WhatsApp informado.' };
+            form.addEventListener('submit', async e => {
+                e.preventDefault();
+                if ($('invWeb').value) { sub.textContent = ''; $('invFields').classList.add('hidden'); $('invDone').classList.remove('hidden'); return; }
+                const ddd = invDigits($('invDdd').value), num = invDigits($('invPhone').value), birth = $('invBirth').value;
+                const rec = { name: $('invName').value.trim().replace(/\s+/g, ' '), email: $('invEmail').value.trim(), whatsapp: '55' + ddd + num, birth_date: birth, how_known: $('invHow').value.trim().replace(/\s+/g, ' ') };
+                const parts = rec.name.split(' ');
+                if (checkMinor()) return info('Menores de 18 anos não podem pedir convite.');
+                if (parts.length < 2 || parts[0].length < 2 || parts[1].length < 1) return info('Informe nome e sobrenome.');
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rec.email) || rec.email.length > 120) return info('Informe um e-mail válido.');
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(birth) || birth < '1900-01-01') return info('Informe a data de nascimento.');
+                if (!DDD_UF[ddd]) return info('Informe um DDD válido.');
+                if (!/^9\d{8}$/.test(num)) return info('Informe o número do WhatsApp com 9 dígitos (começa com 9).');
+                if (rec.how_known.length < 2) return info('Conte como soube do app.');
+                if (!$('invOk').checked) return info('Marque a autorização para continuar.');
+                let last = 0; try { last = +localStorage.getItem('mtd_inv_last') || 0; } catch (x) {}
+                if (Date.now() - last < 60000) return info(DUP.again, false);
+                const btn = $('invBtn'); btn.disabled = true; btn.textContent = 'Enviando…'; msg.textContent = '';
+                try {
+                    const r = await invSubmit(rec);
+                    if (r.dup) info(DUP[r.dup] || DUP.again, false);
+                    else {
+                        try { localStorage.setItem('mtd_inv_last', String(Date.now())); } catch (x) {}
+                        form.reset(); $('invUf').textContent = ''; sub.textContent = ''; $('invFields').classList.add('hidden'); $('invDone').classList.remove('hidden');
+                    }
+                } catch (ex) { info('Não foi possível enviar agora. Tente de novo em instantes.'); }
+                btn.disabled = false; btn.textContent = 'Enviar pedido';
+            });
+        })();
         $('lockForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const err = $('lockError'), now = Date.now();
@@ -2961,6 +3244,7 @@ hmoDb = db;
             <button type="button" role="menuitem" data-fab="set" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">🧩 Gerenciar setups</button>
             <div class="border-t border-gray-600 my-1"></div>
             <button type="button" role="menuitem" data-fab="theme" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">🌓 Tema</button>
+            <button id="fabInv" type="button" role="menuitem" data-fab="inv" class="hidden w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">📨 Pedidos de convite <span id="fabInvBadge" class="hidden ml-1 px-1.5 py-0.5 rounded-full bg-amber-600 text-white text-[10px] font-bold"></span></button>
             <button type="button" role="menuitem" data-fab="exit" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100 font-semibold">🚪 Sair</button>
             <p class="px-3 pb-2 pt-0.5 text-[10px] leading-tight text-gray-400">arraste o botão Atalhos para onde preferir</p>
         </div>
@@ -3008,7 +3292,7 @@ hmoDb = db;
             const b = e.target.closest('[data-fab]'); if (!b) return; close();
             const k = b.dataset.fab;
             if (k === 'op') openModal(); else if (k === 'flow') openFlowModal(); else if (k === 'rep') switchTab('report');
-            else if (k === 'aud') openAuditModal(); else if (k === 'set') openSetupsModal(); else if (k === 'theme') openThemeModal(); else if (k === 'exit') lockNow();
+            else if (k === 'aud') openAuditModal(); else if (k === 'set') openSetupsModal(); else if (k === 'theme') openThemeModal(); else if (k === 'exit') lockNow(); else if (k === 'inv') openInvitesModal();
         });
     })();
     </script>
