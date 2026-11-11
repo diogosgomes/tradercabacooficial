@@ -578,7 +578,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V104';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V105';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -3326,6 +3326,122 @@ hmoDb = db;
             if (k === 'op') openModal(); else if (k === 'flow') openFlowModal(); else if (k === 'rep') switchTab('report');
             else if (k === 'aud') openAuditModal(); else if (k === 'set') openSetupsModal(); else if (k === 'theme') openThemeModal(); else if (k === 'exit') lockNow(); else if (k === 'inv') openInvitesModal();
         });
+    })();
+    </script>
+    <script>
+    /* ===== Gesto de voltar (celular) ===== */
+    (function () {
+        const $ = id => document.getElementById(id);
+        const STATIC = { tradeModal: () => closeModal(), flowModal: () => closeFlowModal(), noteModal: () => closeNoteModal(), pwdModal: () => closePwdModal() };
+        const snap = {};
+        const vals = root => JSON.stringify([...root.querySelectorAll('input,select,textarea')].map(e => e.type === 'checkbox' || e.type === 'radio' ? e.checked : e.value));
+        const isOpen = id => { const m = $(id); return m && m.classList.contains('flex') && !m.classList.contains('hidden'); };
+        Object.keys(STATIC).forEach(id => {
+            const m = $(id); if (!m) return;
+            new MutationObserver(() => { if (isOpen(id)) { if (snap[id] === undefined) snap[id] = vals(m); } else delete snap[id]; }).observe(m, { attributes: true, attributeFilter: ['class'] });
+        });
+        const dirtyStatic = id => snap[id] !== undefined && vals($(id)) !== snap[id];
+        const setupsOv = () => $('setupsOv');
+        const dirtySetups = () => { const o = setupsOv(); if (!o) return false; const n = o.querySelector('#suNewName'); if (n && n.value.trim()) return true; return [...o.querySelectorAll('.su-name')].some(i => i.value.trim().replace(/\s+/g, ' ') !== (i.dataset.orig || i.defaultValue || '').trim()); };
+        const locked = () => !$('lockScreen').classList.contains('hidden');
+        const invOpen = () => !$('invForm').classList.contains('hidden');
+        const invDirty = () => ['invName', 'invEmail', 'invBirth', 'invDdd', 'invPhone', 'invHow'].some(i => $(i) && $(i).value.trim()) || ($('invOk') && $('invOk').checked);
+
+        function prompt(title, btnA, btnB, onB) {
+            const o = document.createElement('div'); o.id = 'backPrompt'; o.dataset.backCancel = '1';
+            o.className = 'fixed inset-0 z-[120] flex items-center justify-center p-3 bg-black/70';
+            o.innerHTML = '<div class="w-full max-w-sm rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl"><p class="font-bold mb-4 break-words"></p><div class="flex justify-end gap-2"><button type="button" data-a class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold"></button><button type="button" data-b class="px-3 py-1.5 rounded-lg bg-gray-700 text-white text-xs font-semibold"></button></div></div>';
+            o.querySelector('p').textContent = title;
+            o.querySelector('[data-a]').textContent = btnA; o.querySelector('[data-b]').textContent = btnB;
+            document.body.appendChild(o);
+            o.querySelector('[data-a]').onclick = () => { o.remove(); sync(); };
+            o.querySelector('[data-b]').onclick = () => { o.remove(); onB(); sync(); };
+            return o;
+        }
+        const lossPrompt = onDiscard => { if ($('backPrompt')) return; prompt('Você vai perder o que digitou.', 'Continuar editando', 'Voltar sem salvar', onDiscard); };
+        function exitPrompt() {
+            if ($('backPrompt')) return;
+            prompt('Deseja sair do My Trade Dash?', 'Continuar', 'Sair', () => { exiting = true; try { window.close(); } catch (e) {} });
+        }
+        /* fecha um formulário/janela com checagem de perda */
+        function requestClose(id) {
+            if (STATIC[id]) { if (dirtyStatic(id)) lossPrompt(() => STATIC[id]()); else STATIC[id](); return; }
+            if (id === 'setupsOv') { const o = setupsOv(); if (!o) return; if (dirtySetups()) lossPrompt(() => o.remove()); else o.remove(); }
+        }
+        /* intercepta Cancelar, × e toque fora quando há algo alterado */
+        document.addEventListener('click', e => {
+            const t = e.target; if (!t || !t.closest || t.closest('#backPrompt')) return;
+            const sm = t.closest('#tradeModal,#flowModal,#noteModal,#pwdModal');
+            if (sm) {
+                const id = sm.id, btn = t.closest('button[onclick]'), oc = btn ? btn.getAttribute('onclick') : '';
+                if (t === sm || /^close(Modal|FlowModal|NoteModal|PwdModal)\(\)$/.test(oc)) { e.stopImmediatePropagation(); e.preventDefault(); if (t === sm && downOn !== sm) return; requestClose(id); }
+                return;
+            }
+            const so = setupsOv();
+            if (so && (t === so || t.id === 'suClose') && dirtySetups()) { e.stopImmediatePropagation(); e.preventDefault(); requestClose('setupsOv'); }
+        }, true);
+        let downOn = null;
+        document.addEventListener('pointerdown', e => { downOn = e.target; activated = true; if (exiting) exiting = false; sync(); }, true);
+        document.addEventListener('keydown', () => { activated = true; sync(); }, true);
+
+        /* camada mais alta */
+        function topLayer() {
+            for (const id of ['fabMenu', 'optsMenu', 'moreMenu']) { const m = $(id); if (m && !m.classList.contains('hidden')) return { kind: 'menu', el: m }; }
+            let best = null, bz = -1;
+            [...document.body.children].forEach(el => {
+                if (!el.classList || !el.classList.contains('fixed') || !el.classList.contains('inset-0')) return;
+                if (el.id === 'lockScreen' || STATIC[el.id] || el.classList.contains('hidden')) return;
+                const z = +((/z-\[(\d+)\]/.exec(el.className) || [])[1] || 0); if (z >= bz) { bz = z; best = el; }
+            });
+            if (best) return { kind: 'dyn', el: best };
+            for (const id of Object.keys(STATIC)) if (isOpen(id)) return { kind: 'static', id };
+            if (locked() && invOpen()) return { kind: 'inv' };
+            return null;
+        }
+        function closeLayer(L) {
+            if (L.kind === 'menu') { L.el.classList.add('hidden'); const b = L.el.id === 'fabMenu' ? $('fabBtn') : L.el.id === 'optsMenu' ? $('btnOpts') : $('btnMore'); if (b) b.setAttribute('aria-expanded', 'false'); return; }
+            if (L.kind === 'static') return requestClose(L.id);
+            if (L.kind === 'inv') {
+                if (!$('invDone').classList.contains('hidden')) return $('invDoneBack').click();
+                const minor = !$('invMinor').classList.contains('hidden');
+                if (!minor && invDirty()) return lossPrompt(() => $('invClose').click());
+                return $('invClose').click();
+            }
+            const el = L.el;
+            if (el.id === 'backPrompt') { const a = el.querySelector('[data-a]'); if (a) a.click(); return; }
+            if (el.id === 'setupsOv') return requestClose('setupsOv');
+            const c = el.querySelector('[data-n],[data-c],#rpNo,[data-ok],#suClose');
+            if (c) c.click(); else el.click();
+        }
+
+        /* abas */
+        const tabOf = () => ['ops', 'flow', 'report'].find(k => !$('panel' + k[0].toUpperCase() + k.slice(1)).classList.contains('hidden')) || 'ops';
+        let tabs = ['ops'], inBack = false;
+        const _sw = window.switchTab;
+        window.switchTab = function (w) { _sw(w); if (!inBack && tabs[tabs.length - 1] !== w) { tabs.push(w); if (tabs.length > 40) tabs.shift(); } };
+
+        /* guarda no histórico */
+        let guard = !!(history.state && history.state.mtd), ignore = 0, exiting = false, activated = false;
+        const desired = () => !exiting && (locked() ? invOpen() : true);
+        function sync() {
+            const d = desired();
+            if (d && !guard) { if (!activated) return; history.pushState({ mtd: 1 }, ''); guard = true; }
+            else if (!d && guard) { guard = false; ignore++; history.back(); }
+        }
+        function onBack() {
+            const L = topLayer(); if (L) return closeLayer(L);
+            if (locked()) return;
+            if (tabs.length > 1) { tabs.pop(); inBack = true; try { window.switchTab(tabs[tabs.length - 1]); } finally { inBack = false; } return; }
+            exitPrompt();
+        }
+        window.addEventListener('popstate', e => {
+            if (ignore > 0) { ignore--; return; }
+            if (e.state && e.state.mtd) { guard = true; return; }
+            guard = false; onBack(); sync();
+        });
+        new MutationObserver(() => { if (locked()) tabs = ['ops']; sync(); }).observe($('lockScreen'), { attributes: true, attributeFilter: ['class'] });
+        new MutationObserver(sync).observe($('invForm'), { attributes: true, attributeFilter: ['class'] });
+        window.__mtdBack = { onBack, sync, state: () => ({ guard, tabs: tabs.slice(), exiting }) };
     })();
     </script>
 </body>
