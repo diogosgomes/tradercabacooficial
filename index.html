@@ -41,8 +41,8 @@
     </script>
     <style>
         :root { color-scheme: dark; box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
-        html { scroll-padding-top: env(safe-area-inset-top, 0px); overflow-x: hidden; }
-        body { background: #0b0f19; overflow-x: hidden; }
+        html { scroll-padding-top: calc(env(safe-area-inset-top, 0px) + var(--stk, 0px) + 8px); overflow-x: hidden; }
+        body { background: #0b0f19; overflow-x: clip; } /* clip (e não hidden): hidden faria do body o contêiner de rolagem e quebraria o cabeçalho fixo */
         img, a { -webkit-user-drag: none; }
         /* ===== Tema claro/escuro (V92): cores do guia de marca; ganho = azul, perda = âmbar ===== */
         :root{color-scheme:dark}
@@ -189,8 +189,10 @@
         <p class="mt-3 text-center text-[11px] text-gray-500">© 2026 My Trade Dash · Todos os direitos reservados.</p>
     </div>
 
+    <!-- Cabeçalho e abas fixos no topo -->
+    <div id="stickyTop" class="sticky top-0 z-[55]">
     <!-- Top Navbar -->
-    <header class="bg-cardBg border-b border-gray-800 px-3 sm:px-6 py-3 flex flex-col sm:flex-row gap-3 justify-between items-stretch sm:items-center">
+    <header id="appHeader" class="bg-cardBg border-b border-gray-800 px-3 sm:px-6 py-3 flex flex-col sm:flex-row gap-3 justify-between items-stretch sm:items-center">
         <div class="flex items-center justify-between sm:justify-start space-x-3">
             <div class="flex items-center space-x-3">
                 <h1 class="sr-only">My Trade Dash · Diário de Operações</h1>
@@ -220,15 +222,15 @@
                         <p id="menuUserEmail" class="text-[11px] text-gray-400 truncate"></p>
                     </div>
                     <div class="border-t border-gray-700 my-1"></div>
-                    <button id="btnPwd" type="button" role="menuitem" onclick="optsAction(openPwdModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🔑 Trocar senha</button>
                     <button type="button" role="menuitem" onclick="optsAction(exportData)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📥 Exportar backup</button>
-                    <button type="button" role="menuitem" onclick="optsAction(() => document.getElementById('importFile').click())" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📤 Importar backup</button>
                     <button type="button" role="menuitem" onclick="optsAction(openSetupsModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🧩 Gerenciar setups</button>
-                    <button type="button" role="menuitem" onclick="optsAction(openAuditModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📋 Histórico de auditoria</button>
-                    <button type="button" role="menuitem" onclick="optsAction(() => openTermsModal())" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📄 Termos e privacidade</button>
                     <button type="button" role="menuitem" onclick="optsAction(() => openGuide())" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🧭 Guia do My Trade Dash</button>
+                    <button type="button" role="menuitem" onclick="optsAction(openAuditModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📋 Histórico de auditoria</button>
+                    <button type="button" role="menuitem" onclick="optsAction(() => document.getElementById('importFile').click())" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📤 Importar backup</button>
                     <button id="btnInvites" type="button" role="menuitem" onclick="optsAction(openInvitesModal)" class="hidden w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📨 Pedidos de convite <span id="invBadge" class="hidden ml-1 px-1.5 py-0.5 rounded-full bg-amber-600 text-white text-[10px] font-bold"></span></button>
                     <button id="btnTheme" type="button" role="menuitem" onclick="optsAction(openThemeModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🌓 Tema</button>
+                    <button type="button" role="menuitem" onclick="optsAction(() => openTermsModal())" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📄 Termos e privacidade</button>
+                    <button id="btnPwd" type="button" role="menuitem" onclick="optsAction(openPwdModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🔑 Trocar senha</button>
                     <div id="sepLogout" class="border-t border-gray-700 my-1"></div>
                     <button id="btnLogout" type="button" role="menuitem" onclick="optsAction(lockNow)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-100 font-semibold">🚪 Sair</button>
                 </div>
@@ -236,6 +238,7 @@
             <input type="file" id="importFile" accept=".json,application/json" class="hidden" onchange="importData(this.files[0])">
         </div>
     </header>
+    </div>
 
     <!-- Main Container -->
     <main class="flex-1 p-3 sm:p-6 pb-24 sm:pb-28 max-w-[1680px] mx-auto w-full space-y-4 sm:space-y-6">
@@ -600,7 +603,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V121';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V127';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -3396,18 +3399,19 @@ hmoDb = db;
         processAndRender();
         initApp();
     </script>
+    <script>(function(){var e=document.getElementById('stickyTop');if(!e||!window.ResizeObserver)return;var f=function(){document.documentElement.style.setProperty('--stk',e.offsetHeight+'px');};new ResizeObserver(f).observe(e);f();})();</script>
     <div id="fabWrap" class="fixed left-3 bottom-4 z-[70]">
         <div id="fabMenu" role="menu" class="hidden absolute bottom-14 left-0 w-56 bg-cardBg border border-gray-600 rounded-xl shadow-2xl py-1 text-xs">
-            <button type="button" role="menuitem" data-fab="op" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">📈 Nova operação</button>
-            <button type="button" role="menuitem" data-fab="flow" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">➕ Nova movimentação</button>
-            <button type="button" role="menuitem" data-fab="rep" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">📊 Relatórios</button>
+                        <button type="button" role="menuitem" data-fab="set" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">🧩 Gerenciar setups</button>
             <button type="button" role="menuitem" data-fab="aud" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">📋 Histórico de auditoria</button>
-            <button type="button" role="menuitem" data-fab="set" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">🧩 Gerenciar setups</button>
+            <button type="button" role="menuitem" data-fab="flow" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">➕ Nova movimentação</button>
+            <button type="button" role="menuitem" data-fab="op" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">📈 Nova operação</button>
+            <button type="button" role="menuitem" data-fab="rep" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">📊 Relatórios</button>
             <div class="border-t border-gray-600 my-1"></div>
-            <button type="button" role="menuitem" data-fab="theme" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">🌓 Tema</button>
             <button id="fabInv" type="button" role="menuitem" data-fab="inv" class="hidden w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">📨 Pedidos de convite <span id="fabInvBadge" class="hidden ml-1 px-1.5 py-0.5 rounded-full bg-amber-600 text-white text-[10px] font-bold"></span></button>
+            <button type="button" role="menuitem" data-fab="theme" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">🌓 Tema</button>
             <button type="button" role="menuitem" data-fab="exit" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100 font-semibold">🚪 Sair</button>
-            <p class="px-3 pb-2 pt-0.5 text-[10px] leading-tight text-gray-400">arraste o botão Atalhos para onde preferir</p>
+<p class="px-3 pb-2 pt-0.5 text-[10px] leading-tight text-gray-400">arraste o botão Atalhos para onde preferir</p>
         </div>
         <button type="button" id="fabBtn" aria-haspopup="menu" aria-expanded="false" class="h-12 px-4 rounded-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-2xl border-2 border-blue-300 flex items-center gap-1.5">⚡ Atalhos</button>
     </div>
