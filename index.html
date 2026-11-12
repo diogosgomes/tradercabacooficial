@@ -129,6 +129,37 @@
         html[data-theme="light"] :is(.bg-blue-600,.bg-emerald-600,.bg-amber-600,.bg-red-700,.bg-violet-700).text-white{color:#fff}
         
         @media print { body * { display: none !important; } body::before { content: "Impressão desativada"; display: block; color: #000; } }
+        /* Sino: Alertas e Novidades */
+        .bl-tab{padding:6px 14px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid #4B5563;color:#E5E7EB;background:transparent;cursor:pointer}
+        .bl-tab[aria-selected="true"]{background:#2563EB;border-color:#2563EB;color:#fff}
+        .bl-x{margin-left:auto;padding:4px 10px;border-radius:8px;border:1px solid #4B5563;color:#E5E7EB;font-size:12px;background:transparent;cursor:pointer}
+        .al{display:flex;gap:10px;border:1px solid #374151;background:rgba(31,41,55,.5);border-radius:10px;padding:9px 10px;margin-bottom:8px;cursor:pointer;color:#E5E7EB}
+        .al-ic{flex:0 0 24px;height:24px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+        .al-r .al-ic{background:#4A1D1D;color:#F87171}
+        .al-a .al-ic{background:#45310B;color:#FBBF24}
+        .al-t{font-size:13px;line-height:1.35}
+        .al-note{font-size:11px;color:#9CA3AF;margin-top:3px;font-weight:400;line-height:1.4}
+        .al-crit{border:2px solid #F87171;background:#3B1414;color:#F87171}
+        .al-crit .al-t{font-weight:700}
+        .al-crit .al-note{color:#FCA5A5}
+        .al-crit .al-ic{background:transparent;color:#F87171;font-size:15px}
+        .al.is-read{opacity:.55}
+        .al-btn{padding:3px 10px;border-radius:8px;border:1px solid #6B7280;color:#E5E7EB;font-size:11px;font-weight:600;background:transparent;cursor:pointer}
+        .al-crit .al-btn{border-color:#F87171;color:#FCA5A5}
+        .al-wa,html[data-theme="light"] .al-wa{background:#059669;border-color:#059669;color:#fff;text-decoration:none}
+        html[data-theme="light"] .bl-tab{border-color:#CBD5E1;color:#1F2937}
+        html[data-theme="light"] .bl-tab[aria-selected="true"]{background:#1D4ED8;border-color:#1D4ED8;color:#fff}
+        html[data-theme="light"] .bl-x{border-color:#CBD5E1;color:#1F2937}
+        html[data-theme="light"] .al{border-color:#D1D5DB;background:#fff;color:#111827}
+        html[data-theme="light"] .al-r .al-ic{background:#FFEDD5;color:#C2410C}
+        html[data-theme="light"] .al-a .al-ic{background:#FEF3C7;color:#92400E}
+        html[data-theme="light"] .al-note{color:#4B5563}
+        html[data-theme="light"] .al-crit{border-color:#C2410C;background:#FFF1E6;color:#C2410C}
+        html[data-theme="light"] .al-crit .al-note{color:#9A3412}
+        html[data-theme="light"] .al-crit .al-ic{color:#C2410C}
+        html[data-theme="light"] .al-btn{border-color:#9CA3AF;color:#1F2937}
+        html[data-theme="light"] .al-crit .al-btn{border-color:#C2410C;color:#9A3412}
+
     </style>
 </head>
 <body class="bg-darkBg text-gray-100 font-sans min-h-screen flex flex-col w-full">
@@ -212,9 +243,11 @@
                     <button type="button" role="menuitem" onclick="moreAction(() => openFlowModal())" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🏦 Financeiro (depósito ou saque)</button>
                 </div>
             </div>
-            <button id="btnBell" type="button" onclick="openNewsModal()" aria-label="Novidades" class="relative border border-gray-500 text-gray-200 hover:bg-gray-700 px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition">🔔<span id="bellCount" class="hidden ml-1 px-1.5 rounded-full bg-amber-400 text-gray-900 font-extrabold text-[10px]"></span></button>
+            <button id="btnAdmin" type="button" onclick="openAdminModal()" class="hidden border border-amber-500 text-amber-300 hover:bg-gray-700 px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition">🛡 Admin <span id="invBadge" class="hidden ml-1 px-1.5 py-0.5 rounded-full bg-amber-600 text-white text-[10px] font-bold"></span></button>
+            <button id="btnBell" type="button" onclick="bellToggle()" aria-label="Notificações" aria-haspopup="dialog" aria-expanded="false" class="relative border border-gray-500 text-gray-200 hover:bg-gray-700 px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition">🔔<span id="bellCount" class="hidden ml-1 px-1.5 rounded-full bg-amber-400 text-gray-900 font-extrabold text-[10px]"></span></button>
             <div class="relative">
                 <button id="btnOpts" type="button" onclick="toggleOptsMenu()" aria-haspopup="true" aria-expanded="false" class="border border-gray-500 text-gray-200 hover:bg-gray-700 px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition">⚙️ Opções ▾</button>
+                <div id="bellMenu" role="dialog" aria-label="Notificações" class="hidden fixed z-[60] bg-cardBg border border-gray-700 rounded-xl shadow-2xl p-3 text-xs overflow-y-auto"></div>
                 <div id="optsMenu" role="menu" class="hidden fixed z-[60] w-60 bg-cardBg border border-gray-700 rounded-lg shadow-2xl py-1 text-xs">
                     <div class="px-3 py-2">
                         <p class="text-[10px] text-gray-500">Conectado como</p>
@@ -227,11 +260,11 @@
                     <button type="button" role="menuitem" onclick="optsAction(() => openGuide())" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🧭 Guia do My Trade Dash</button>
                     <button type="button" role="menuitem" onclick="optsAction(openAuditModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📋 Histórico de auditoria</button>
                     <button type="button" role="menuitem" onclick="optsAction(() => document.getElementById('importFile').click())" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📤 Importar backup</button>
-                    <button id="btnInvites" type="button" role="menuitem" onclick="optsAction(openInvitesModal)" class="hidden w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📨 Pedidos de convite <span id="invBadge" class="hidden ml-1 px-1.5 py-0.5 rounded-full bg-amber-600 text-white text-[10px] font-bold"></span></button>
                     <button id="btnTheme" type="button" role="menuitem" onclick="optsAction(openThemeModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🌓 Tema</button>
                     <button type="button" role="menuitem" onclick="optsAction(() => openTermsModal())" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📄 Termos e privacidade</button>
                     <button id="btnPwd" type="button" role="menuitem" onclick="optsAction(openPwdModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🔑 Trocar senha</button>
                     <div id="sepLogout" class="border-t border-gray-700 my-1"></div>
+                    <button id="btnExcl" type="button" role="menuitem" onclick="optsAction(openExclModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-red-300">🗑 Excluir minha conta</button>
                     <button id="btnLogout" type="button" role="menuitem" onclick="optsAction(lockNow)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-100 font-semibold">🚪 Sair</button>
                 </div>
             </div>
@@ -242,13 +275,15 @@
 
     <!-- Main Container -->
     <main class="flex-1 p-3 sm:p-6 pb-24 sm:pb-28 max-w-[1680px] mx-auto w-full space-y-4 sm:space-y-6">
+        <div id="excBar" class="hidden rounded-lg border border-amber-500 bg-amber-950/40 px-3 py-2 text-xs text-amber-100 flex flex-wrap items-center gap-2"></div>
 
         <!-- Metrics Cards Dinâmicos -->
-        <h2 class="text-sm sm:text-base font-bold text-gray-200 -mb-1">Visão geral</h2>
+        <h2 class="text-sm sm:text-base font-bold text-gray-200 -mb-1">Visão Geral</h2>
         <div id="fsBlock" class="hidden bg-cardBg border-2 border-blue-500/60 rounded-xl shadow-lg p-3 sm:p-4"></div>
         <div class="grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
             <div class="bg-cardBg border-2 border-blue-500/60 p-2 sm:p-5 rounded-xl shadow-lg">
                 <p class="text-[9px] sm:text-xs font-medium text-gray-400 uppercase tracking-tight sm:tracking-wider truncate">Valor Investido</p>
+                <p class="text-[8px] sm:text-[11px] leading-tight text-gray-500">(Aportado e ainda na sua corretora)</p>
                 <div class="mt-1 sm:mt-2"><span id="metricInvested" class="text-sm sm:text-3xl leading-tight font-extrabold text-gray-100">R$ 0,00</span></div>
                 <p id="metricInvestedSub" class="mt-1 hidden sm:block text-[10px] sm:text-[11px] text-gray-500">0,00 depositados − 0,00 sacados</p>
             </div>
@@ -259,6 +294,7 @@
             </div>
             <div class="bg-cardBg border-2 border-blue-500/60 p-2 sm:p-5 rounded-xl shadow-lg">
                 <p class="text-[9px] sm:text-xs font-medium text-gray-400 uppercase tracking-tight sm:tracking-wider truncate">Capital Atual</p>
+                <p class="text-[8px] sm:text-[11px] leading-tight text-gray-500">(Saldo na sua corretora)</p>
                 <div class="mt-1 sm:mt-2"><span id="metricCapital" class="text-sm sm:text-3xl leading-tight font-extrabold gl-pos">R$ 0,00</span></div>
                 <p id="metricCapitalSub" class="mt-1 hidden sm:block text-[10px] sm:text-[11px] text-gray-500">0,00 investido + 0,00 de lucro</p>
             </div>
@@ -332,7 +368,7 @@
                             <th class="py-3 px-2 text-center">Contratos</th>
                             <th class="py-3 px-2 text-center">Tipo</th>
                             <th class="py-3 px-2 text-right">Pontos</th>
-                            <th class="py-3 px-2 text-right">Resultado (R$)</th>
+                            <th class="py-3 px-2 text-right">Resultado líquido (R$)</th>
                             <th class="py-3 px-2 text-right">Saldo Acum.</th>
                             <th class="py-3 px-2 text-center">Ações</th>
                         </tr>
@@ -467,7 +503,7 @@
 
                 <div>
                     <label class="block text-xs font-medium text-gray-400 mb-1">Setup Utilizado</label>
-                    <select id="tSetup" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></select>
+                    <select id="tSetup" required class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></select>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -483,8 +519,21 @@
                         <input type="number" id="tPoints" value="300" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-400 mb-1">Resultado (R$)</label>
+                        <label class="block text-xs font-medium text-gray-400 mb-1" for="tMoney">Resultado bruto da operação (R$)</label>
                         <input type="text" inputmode="decimal" autocomplete="off" id="tMoney" value="60,00" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200" placeholder="Sem sinal">
+                        <p class="mt-1 text-[10px] leading-snug text-gray-500">Valor que a operação gerou, sem as deduções da sua corretora.</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1" for="tCosts">Custos da corretora (R$)</label>
+                        <input type="text" inputmode="decimal" autocomplete="off" id="tCosts" value="" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200" placeholder="Opcional">
+                        <p class="mt-1 text-[10px] leading-snug text-gray-500">Opcional. Preencha quando receber a nota da corretora.</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1" for="tNet">Líquido da operação (R$)</label>
+                        <input type="text" id="tNet" readonly tabindex="-1" value="" class="w-full bg-gray-800/60 border border-gray-700 rounded-lg px-3 py-2 text-xs font-semibold text-gray-200 cursor-default" aria-live="polite">
+                        <p class="mt-1 text-[10px] leading-snug text-gray-500">Calculado sozinho: resultado bruto menos custos.</p>
                     </div>
                 </div>
 
@@ -603,7 +652,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V127';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V139';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -663,24 +712,27 @@
             'Pullback1015_Max3intervalo4barras': 'Setup_Pullback1015_Max3intervalo4barras'
         };
         const DEFAULT_SETUP = 'Setup_Pullback0930_Max3int4b_PriceAction_Cpernas_operacoesCondicionadasde250e200pontos';
-        const SETUP_DEFAULTS = [
+        // Novos usuários começam só com um setup de saída; os setups dele ele cria em Gerenciar setups
+        const SETUP_DEFAULTS = [{ name: 'Operação fora de Setup', kind: 'fora' }];
+        // Lista antiga (quem já usa o app a recebeu): só para reconhecer esses nomes como "padrão"
+        const SETUP_LEGACY = [
             { name: 'Operações anteriores a 10/2026', kind: 'fora' }, { name: 'Outras - Fora do Setup', kind: 'fora' }, { name: 'Setup Topo e Fundo', kind: 'dentro' },
             { name: 'Setup_Pullback0930_Max3int4b_PriceAction_Cpernas_operacoesCondicionadasde250e200pontos', kind: 'dentro' }, { name: 'Setup_Pullback1005_Max3intervalo4barras', kind: 'dentro' },
             { name: 'Setup_Pullback1015_Max3', kind: 'dentro' }, { name: 'Setup_Pullback1015_Max3COM2contratos', kind: 'dentro' }, { name: 'Setup_Pullback1015_Max3intervalo4barras', kind: 'dentro' },
             { name: 'Setup_Pullback250pontos0930_Max3intervalo3barras', kind: 'dentro' }, { name: 'SetupGemini_Pullback250pontosSEMprotecao1015', kind: 'dentro' }, { name: 'SetupGemini_SR_Max3', kind: 'dentro' }];
         let setups = [], setupsOk = true, setupsSeeded = false, prevMap = {};
         const parsePrev = v => { try { const a = typeof v === 'string' ? JSON.parse(v || '[]') : v; return Array.isArray(a) ? a : []; } catch (e) { return []; } };
-        const setupFromDb = r => ({ id: r.id, name: r.name, active: r.active !== false, kind: r.kind === 'fora' ? 'fora' : 'dentro', prev: parsePrev(r.prev_names) });
+        const setupFromDb = r => ({ id: r.id, name: r.name, active: r.active !== false, kind: r.kind === 'fora' ? 'fora' : 'dentro', prev: parsePrev(r.prev_names), deleted: !!r.deleted });
         const normSetup = v => SETUP_RENAME[v] || prevMap[v] || v;
         const setupsView = () => (setups.length ? setups : SETUP_DEFAULTS.map(d => ({ id: null, name: d.name, active: true, kind: d.kind, prev: [] })));
-        const setupKind = n => { const s = setups.find(x => x.name === n); return s ? s.kind : ((SETUP_DEFAULTS.find(x => x.name === n) || {}).kind || 'dentro'); };
+        const setupKind = n => { const s = setups.find(x => x.name === n); return s ? s.kind : ((SETUP_DEFAULTS.concat(SETUP_LEGACY).find(x => x.name === n) || {}).kind || 'dentro'); };
         const setupByName = (a, b) => a.name.localeCompare(b.name, 'pt-BR');
         function fillSetupSelect(cur) {
             const sel = document.getElementById('tSetup'); if (!sel) return;
             const keep = cur != null ? cur : sel.value;
-            const list = setupsView().filter(s => s.active || s.name === keep).sort(setupByName);
-            sel.innerHTML = list.map(s => `<option value="${esc(s.name)}">${esc(s.name)}</option>`).join('');
-            if (list.some(s => s.name === keep)) sel.value = keep;
+            const list = setupsView().filter(s => (s.active && !s.deleted) || s.name === keep).sort(setupByName);
+            sel.innerHTML = '<option value="" disabled>Escolha o setup…</option>' + list.map(s => `<option value="${esc(s.name)}">${esc(s.name)}</option>`).join('');
+            sel.value = list.some(s => s.name === keep) ? keep : '';
         }
         function setupsApply(arr) {
             setups = arr; prevMap = {};
@@ -694,8 +746,10 @@
             } catch (e) {}
             setupsApply([]);
         }
-        const tradeFromDb = r => ({ id: r.id, date: isoToBr(r.trade_date), timeIn: r.time_in, timeOut: r.time_out, asset: r.asset, setup: normSetup(r.setup), contracts: r.contracts, type: r.type, points: r.points, result: Number(r.result), ts: Number(r.ts) });
-        const tradeToDb = t => ({ trade_date: brToIso(t.date), time_in: t.timeIn, time_out: t.timeOut, asset: t.asset, setup: t.setup, contracts: t.contracts, type: t.type, points: t.points, result: t.result, ts: t.ts });
+        const tradeFromDb = r => hydrateTrade({ id: r.id, date: isoToBr(r.trade_date), timeIn: r.time_in, timeOut: r.time_out, asset: r.asset, setup: normSetup(r.setup), contracts: r.contracts, type: r.type, points: r.points, result: Number(r.result), costs: Number(r.costs) || 0, ts: Number(r.ts) });
+        // Em memória: gross = bruto digitado, costs = custos da corretora e result = líquido (bruto − custos). Telas e relatórios usam o líquido; o DARF usa o bruto.
+        const hydrateTrade = t => { const g = Number(t.result) || 0, c = Math.abs(Number(t.costs) || 0); t.gross = g; t.costs = c; t.result = Math.round((g - c) * 100) / 100; return t; };
+        const tradeToDb = t => ({ trade_date: brToIso(t.date), time_in: t.timeIn, time_out: t.timeOut, asset: t.asset, setup: t.setup, contracts: t.contracts, type: t.type, points: t.points, result: t.result, costs: t.costs || 0, ts: t.ts });
         const flowFromDb = r => ({ id: r.id, date: isoToBr(r.flow_date), type: r.type, amount: Number(r.amount), from: r.from_bank, to: r.to_bank, ts: Number(r.ts), createdAt: Number(r.created_ms) });
         const flowToDb = f => { const o = { flow_date: brToIso(f.date), type: f.type, amount: f.amount, from_bank: f.from, to_bank: f.to, ts: f.ts }; if (f.createdAt) o.created_ms = f.createdAt; return o; };
 
@@ -782,7 +836,7 @@
             const el = $('bellCount'); if (!el) return;
             el.textContent = n > 9 ? '9+' : String(n);
             el.classList.toggle('hidden', !n);
-            $('btnBell').setAttribute('aria-label', n ? `Novidades: ${n} não lida${n > 1 ? 's' : ''}` : 'Novidades');
+            $('btnBell').setAttribute('aria-label', n ? `Notificações: ${n} não lida${n > 1 ? 's' : ''}` : 'Notificações');
         }
         function brMs(d, h, m) { return Date.UTC(2026, d[0] - 1, d[1], (h || 0) + 3, m || 0); }
         function hmoSeedNotes() {
@@ -798,7 +852,8 @@
                 n([11, 9], 10, 0, 'Gerenciar setups', ['Em Opções, "Gerenciar setups" permite renomear (as operações acompanham), ativar, inativar e classificar cada setup como Dentro ou Fora.', 'Ao inativar um setup com operações, você pode só inativar ou mover as operações para outro setup ativo.'], false, 15),
                 n([11, 9], 10, 30, 'Histórico de auditoria', ['"Histórico de importações" agora se chama "Histórico de auditoria".', 'Além de importações e exportações, registra exclusões, troca de senha e mudanças nos setups.'], false, 15),
                 n([11, 9], 11, 0, 'Saída automática após 30 minutos', ['Sem usar o app por 30 minutos, ele volta para a tela de login (antes eram 15).'], false, 15),
-                n([9, 1], 9, 0, 'Exemplo de novidade antiga', ['Novidades com mais de 15 dias saem da lista principal e ficam em "Ver anteriores". Demonstração no HMO.'], false, 15)
+                n([9, 1], 9, 0, 'Exemplo de novidade antiga', ['Novidades com mais de 15 dias saem da lista principal e ficam em "Ver anteriores". Demonstração no HMO.'], false, 15),
+                n([11, 11], 22, 30, 'Sino com Alertas e Novidades', ['O sino 🔔 agora tem duas abas: Alertas (o que precisa de atenção) e Novidades (o que mudou no app).', 'Alertas têm nível: crítico, urgente ou atenção. O DARF avisa a 7 dias úteis do vencimento e há lembrete de backup a cada 30 dias.', 'A lixeira de Novidades conta os 30 dias a partir da exclusão.', 'No cadastro de operação, o setup agora é obrigatório: escolha um (ou "Operação fora de Setup"). Quem começa agora no app recebe só esse setup e cria os demais em Gerenciar setups.', 'Nenhum setup é fixo: você renomeia, inativa ou exclui qualquer um, e ao excluir pode manter o nome antigo nas operações (aparecem como "nome (excluído)"). Sempre precisa haver um setup ativo.'], false, 15)
             ];
         }
         async function newsLoad() {
@@ -821,16 +876,18 @@
         async function newsReadState() {
             if (MODE === 'claude') {
                 const snap = await hmoDb.collection('release_reads').get();
-                return { baseline: 0, ids: new Set(snap.docs.map(d => d.id)), dismissed: new Set(snap.docs.filter(d => d.data().dismissed).map(d => d.id)), purged: new Set(snap.docs.filter(d => d.data().purged).map(d => d.id)) };   // no HMO começa em 0 para você ver o sino
+                const dAt = {}; snap.docs.forEach(d => { if (d.data().dismissed_at) dAt[d.id] = d.data().dismissed_at; });
+                return { baseline: 0, ids: new Set(snap.docs.map(d => d.id)), dismissed: new Set(snap.docs.filter(d => d.data().dismissed).map(d => d.id)), purged: new Set(snap.docs.filter(d => d.data().purged).map(d => d.id)), dismissedAt: dAt };   // no HMO começa em 0 para você ver o sino
             }
             const [r, p] = await Promise.all([
-                sb.from('tb_release_reads').select('note_id, dismissed, purged'),
+                sb.from('tb_release_reads').select('note_id, dismissed, purged, dismissed_at'),
                 sb.from('profiles').select('created_at').maybeSingle()
             ]);
             if (r.error) throw r.error;
             // pessoa nova não vê como "não lidas" as novidades anteriores ao cadastro
             const baseline = p.data && p.data.created_at ? Date.parse(p.data.created_at) : Date.now();
-            return { baseline, ids: new Set(r.data.map(x => x.note_id)), dismissed: new Set(r.data.filter(x => x.dismissed).map(x => x.note_id)), purged: new Set(r.data.filter(x => x.purged).map(x => x.note_id)) };
+            const dAt = {}; r.data.forEach(x => { if (x.dismissed_at) dAt[x.note_id] = Date.parse(x.dismissed_at); });
+            return { baseline, ids: new Set(r.data.map(x => x.note_id)), dismissed: new Set(r.data.filter(x => x.dismissed).map(x => x.note_id)), purged: new Set(r.data.filter(x => x.purged).map(x => x.note_id)), dismissedAt: dAt };
         }
         async function newsMarkRead(ids) {
             if (!ids.length) return;
@@ -839,8 +896,8 @@
         }
         // Excluir = esconder só para esta pessoa; a novidade continua na tabela para os outros
         async function newsDismiss(id) {
-            if (MODE === 'claude') { await hmoDb.collection('release_reads').doc(id).set({ read_at: Date.now(), dismissed: true }); return; }
-            const { error } = await sb.from('tb_release_reads').upsert({ note_id: id, dismissed: true }, { onConflict: 'user_id,note_id' });
+            if (MODE === 'claude') { await hmoDb.collection('release_reads').doc(id).set({ read_at: Date.now(), dismissed: true, dismissed_at: Date.now() }); return; }
+            const { error } = await sb.from('tb_release_reads').upsert({ note_id: id, dismissed: true, dismissed_at: new Date().toISOString() }, { onConflict: 'user_id,note_id' });
             if (error) throw error;
         }
         async function newsRestore(id) {
@@ -851,7 +908,7 @@
         // Esvaziar a lixeira = apagar de vez da tela desta pessoa (continua só no sistema, para os outros)
         async function newsPurge(ids) {
             if (!ids.length) return;
-            if (MODE === 'claude') { for (const id of ids) await hmoDb.collection('release_reads').doc(id).set({ read_at: Date.now(), dismissed: true, purged: true }); return; }
+            if (MODE === 'claude') { for (const id of ids) await hmoDb.collection('release_reads').doc(id).set({ read_at: Date.now(), dismissed: true, purged: true, dismissed_at: Date.now() }); return; }
             const { error } = await sb.from('tb_release_reads').update({ purged: true }).in('note_id', ids).eq('dismissed', true);
             if (error) throw error;
         }
@@ -862,142 +919,213 @@
         const newsActive = (x, now) => x.expires_at == null || x.expires_at > now;
         const newsCounts = (x, st, now) => x.published_at > st.baseline && (x.important ? newsActive(x, now) : now - x.published_at <= NEWS_DAYS * DAY_MS);
         const newsIsUnread = (x, st, now) => !st.dismissed.has(x.id) && !st.ids.has(x.id) && newsCounts(x, st, now);
-        async function refreshBell() {
+        // ===== Sino 🔔: abas Alertas e Novidades =====
+        // Leituras de alertas e data do último backup: tb_alert_reads (key texto). No HMO: coleção alert_reads.
+        async function alertState() {
             try {
-                const [notes0, st] = await Promise.all([newsLoad(), newsReadState()]);
-                try { await invLoadCache(); } catch (e) {}
-                const notes = notes0.concat(darfAlerts(), invAlerts(), fridayAlerts());
-                const now = Date.now();
-                setBellCount(notes.filter(x => newsIsUnread(x, st, now)).length);
-            } catch (e) { setBellCount(0); }
+                const m = {};
+                if (MODE === 'claude') { (await hmoDb.collection('alert_reads').get()).docs.forEach(d => { m[d.id] = d.data().read_at || 1; }); }
+                else { const { data, error } = await sb.from('tb_alert_reads').select('key, read_at'); if (error) throw error; data.forEach(x => { m[x.key] = Date.parse(x.read_at) || 1; }); }
+                return { ar: new Set(Object.keys(m)), last: m['backup:last'] || 0 };
+            } catch (e) { return { ar: new Set(), last: 0, fail: true }; }
         }
-        async function openNewsModal() {
-            const ov = document.createElement('div');
-            ov.className = 'fixed inset-0 z-[95] flex items-center justify-center p-3 bg-black/70';
-            ov.innerHTML = `<div class="w-full max-w-lg max-h-[85vh] flex flex-col rounded-xl border border-gray-600 bg-gray-900 text-sm text-gray-200 shadow-2xl">
-                <div class="flex items-center justify-between px-4 py-3 border-b border-gray-700">
-                    <h3 class="text-base font-bold">🔔 Novidades</h3>
-                    <button type="button" id="nwClose" class="px-3 py-1 rounded-lg bg-gray-700 text-white text-xs font-semibold">Fechar</button>
-                </div>
-                <div id="nwBody" class="p-4 overflow-y-auto text-xs"><p class="text-gray-400">Carregando…</p></div></div>`;
-            document.body.appendChild(ov);
-            ov.querySelector('#nwClose').onclick = () => ov.remove();
-            ov.addEventListener('click', ev => { if (ev.target === ov) ov.remove(); });
-            const body = ov.querySelector('#nwBody');
-            const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+        async function alertSet(key, on) {
+            if (MODE === 'claude') { const d = hmoDb.collection('alert_reads').doc(key); if (on) await d.set({ read_at: Date.now() }); else await d.delete(); return; }
+            const r = on ? await sb.from('tb_alert_reads').upsert({ key }, { onConflict: 'user_id,key' }) : await sb.from('tb_alert_reads').delete().eq('key', key);
+            if (r.error) throw r.error;
+        }
+        async function backupMark() {
             try {
-                const [notes0, st] = await Promise.all([newsLoad(), newsReadState()]);
-                const now = Date.now();
-                try { await invLoadCache(); } catch (e) {}
-                notes0.push(...darfAlerts(), ...invAlerts(), ...fridayAlerts());
-                const notes = notes0.filter(x => !st.dismissed.has(x.id)).sort((a, b) => b.published_at - a.published_at);
-                const excluded = () => notes0.filter(x => !x.synthetic && st.dismissed.has(x.id) && !st.purged.has(x.id) && Date.now() - x.published_at <= EXCL_DAYS * DAY_MS).sort((a, b) => b.published_at - a.published_at);
-                const updBell = () => setBellCount(notes.filter(x => newsIsUnread(x, st, Date.now())).length);
-                const card = x => {
-                    const read = st.ids.has(x.id);
-                    const tag = newsIsUnread(x, st, Date.now()) ? '● NÃO LIDA · ' : '';
-                    return `<div class="border ${x.important ? 'border-amber-500 bg-amber-950/30' : 'border-gray-700 bg-gray-800/40'} rounded-lg p-3 mb-2">
-                        <div class="flex flex-wrap justify-between gap-1">
-                            <span class="font-bold">${x.important ? '⚠ IMPORTANTE · ' : ''}${tag}${esc(x.title)}</span>
-                            <span class="text-gray-400">${fmtDateTimeBR(x.published_at).replace(', ', ' - ')}</span></div>
+                if (MODE === 'claude') await hmoDb.collection('alert_reads').doc('backup:last').set({ read_at: Date.now() });
+                else { const r = await sb.from('tb_alert_reads').upsert({ key: 'backup:last', read_at: new Date().toISOString() }, { onConflict: 'user_id,key' }); if (r.error) throw r.error; }
+                bellSoon();
+            } catch (e) {}
+        }
+        // Ordem: alertas do administrador (Supabase, convites, aniversários), depois críticos, depois os demais
+        function alertsBuild(c) {
+            const admin = fridayAlerts(c.ar).concat(invAlerts(c.ar), excAlerts(excAdminList));
+            const rest = darfAlerts().concat(backupAlerts(c));
+            return admin.concat(rest.filter(a => a.level === 'crit'), rest.filter(a => a.level !== 'crit'));
+        }
+        async function bellLoad() {
+            const [notes, st, as] = await Promise.all([newsLoad(), newsReadState(), alertState()]);
+            try { await invLoadCache(); } catch (e) {}
+            return { notes, st, as, alerts: alertsBuild({ ar: as.ar, last: as.last, fail: as.fail, baseline: st.baseline }) };
+        }
+        function bellCounts(D) {
+            const now = Date.now();
+            return { na: D.alerts.filter(a => !a.read).length, nn: D.notes.filter(x => newsIsUnread(x, D.st, now)).length };
+        }
+        let bellOpenFlag = false, bellTab = null;
+        async function refreshBell() {
+            try { const D = await bellLoad(), c = bellCounts(D); setBellCount(c.na + c.nn); } catch (e) { setBellCount(0); }
+        }
+        function bellClose() { bellOpenFlag = false; const m = $('bellMenu'); if (m) m.classList.add('hidden'); const b = $('btnBell'); if (b) b.setAttribute('aria-expanded', 'false'); }
+        function bellPlace() {
+            const m = $('bellMenu'), b = $('btnBell').getBoundingClientRect(), vw = window.innerWidth, w = Math.min(440, vw - 16);
+            m.style.width = w + 'px'; m.style.top = (b.bottom + 4) + 'px';
+            m.style.left = Math.max(8, Math.min(b.right - w, vw - w - 8)) + 'px';
+            m.style.maxHeight = Math.max(200, window.innerHeight - b.bottom - 16) + 'px';
+        }
+        window.addEventListener('resize', () => { if (bellOpenFlag) bellPlace(); });
+        document.addEventListener('click', e => {
+            if (!bellOpenFlag) return;
+            if ((e.composedPath ? e.composedPath() : []).some(n => n && (n.id === 'bellMenu' || n.id === 'btnBell' || (n.dataset && n.dataset.keepBell)))) return;
+            bellClose();
+        });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape' && bellOpenFlag) bellClose(); });
+        async function bellToggle() {
+            if (bellOpenFlag) { bellClose(); return; }
+            closeOptsMenu(); closeMoreMenu();
+            const m = $('bellMenu'), body0 = '<p class="text-gray-400 p-1">Carregando…</p>';
+            bellOpenFlag = true; m.innerHTML = body0; m.classList.remove('hidden'); bellPlace(); $('btnBell').setAttribute('aria-expanded', 'true');
+            let D;
+            try { D = await bellLoad(); } catch (e) { if (bellOpenFlag) m.innerHTML = '<p class="text-red-300 p-1">Não foi possível carregar as notificações agora.</p>'; return; }
+            if (!bellOpenFlag) return;
+            bellBuild(D);
+        }
+        function bellBuild(D) {
+            const m = $('bellMenu'), notes0 = D.notes, st = D.st, alerts = D.alerts;
+            const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+            let tab = bellTab || (bellCounts(D).na || !bellCounts(D).nn ? 'a' : 'n');
+            m.innerHTML = '<div class="flex items-center gap-2 mb-3"><button type="button" id="bTabA" class="bl-tab" role="tab"></button><button type="button" id="bTabN" class="bl-tab" role="tab"></button><button type="button" id="bClose" class="bl-x" aria-label="Fechar">✕</button></div><div id="bBody"></div>';
+            const body = m.querySelector('#bBody');
+            const updBell = () => {
+                const c = bellCounts(D); setBellCount(c.na + c.nn);
+                m.querySelector('#bTabA').textContent = `Alertas (${c.na})`; m.querySelector('#bTabN').textContent = `Novidades (${c.nn})`;
+                m.querySelector('#bTabA').setAttribute('aria-selected', String(tab === 'a')); m.querySelector('#bTabN').setAttribute('aria-selected', String(tab === 'n'));
+            };
+            // ---------- Alertas ----------
+            const alertCard = (a, i) => `<div class="al al-${a.level === 'crit' ? 'crit' : a.level}${a.read ? ' is-read' : ''}" data-ai="${i}" role="button" tabindex="0">
+                <span class="al-ic" aria-hidden="true">${a.level === 'a' ? '⚠' : '✕'}</span>
+                <div class="min-w-0 flex-1"><div class="al-t">${esc(a.title)}</div>${a.note ? `<div class="al-note">${esc(a.note)}</div>` : ''}
+                ${a.action === 'export' ? `<div class="mt-2"><button type="button" data-ex="${i}" class="al-btn al-wa">📥 Exportar backup</button></div>` : ''}${a.canRead ? `<div class="mt-2 flex flex-wrap gap-2">${a.link ? `<a href="${esc(a.link)}" target="_blank" rel="noopener" data-wa class="al-btn al-wa">💬 Parabenizar</a>` : ''}${a.link2 ? `<a href="${esc(a.link2)}" target="_blank" rel="noopener" data-wa class="al-btn al-wa">✉ Parabenizar por e-mail</a>` : ''}<button type="button" data-rd="${i}" class="al-btn">${a.read ? 'Marcar como não lida' : 'Marcar como lida'}</button></div>` : ''}</div></div>`;
+            const act = a => {
+                if (a.action === 'darf') { bellClose(); repOpen = '1'; switchTab('report'); }
+                else if (a.action === 'inv') { bellClose(); openInvitesModal(); }
+                else if (a.action === 'exc') { bellClose(); openAdminModal('exc'); }
+                else if (a.action === 'export') doExport(a);
+                else bellClose();
+            };
+            const doExport = async a => {
+                try { await exportData(); } catch (e) {}
+                try { const s2 = await alertState(); if (s2.last > Date.now() - 60000) { const i = alerts.indexOf(a); if (i >= 0) alerts.splice(i, 1); updBell(); if (tab === 'a') showAlerts(); showToast('Backup exportado', 'ok'); } } catch (e) {}
+            };
+            const showAlerts = () => {
+                body.innerHTML = alerts.length ? alerts.map(alertCard).join('') : '<p class="text-gray-400 p-1">Nenhum alerta no momento.</p>';
+                body.querySelectorAll('[data-wa]').forEach(l => l.onclick = ev => ev.stopPropagation());
+                body.querySelectorAll('[data-ex]').forEach(b => b.onclick = ev => { ev.stopPropagation(); doExport(alerts[+b.dataset.ex]); });
+                body.querySelectorAll('[data-rd]').forEach(b => b.onclick = async ev => {
+                    ev.stopPropagation(); const a = alerts[+b.dataset.rd]; b.disabled = true;
+                    try { await alertSet(a.key, !a.read); if (a.read) D.as.ar.delete(a.key); else D.as.ar.add(a.key); a.read = !a.read; }
+                    catch (e) { showToast('Não foi possível atualizar agora.', 'err'); }
+                    updBell(); showAlerts();
+                });
+                body.querySelectorAll('.al').forEach(el => { const go = () => act(alerts[+el.dataset.ai]); el.onclick = go; el.onkeydown = ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); go(); } }; });
+            };
+            // ---------- Novidades ----------
+            const notes = notes0.filter(x => !st.dismissed.has(x.id)).sort((a, b) => b.published_at - a.published_at);
+            const excluded = () => notes0.filter(x => st.dismissed.has(x.id) && !st.purged.has(x.id) && Date.now() - (st.dismissedAt[x.id] || x.published_at) <= EXCL_DAYS * DAY_MS).sort((a, b) => (st.dismissedAt[b.id] || b.published_at) - (st.dismissedAt[a.id] || a.published_at));
+            const card = x => {
+                const read = st.ids.has(x.id), un = newsIsUnread(x, st, Date.now());
+                return `<div class="border ${x.important ? 'border-2 border-amber-500 bg-amber-950/30' : 'border-gray-700 bg-gray-800/40'} rounded-lg p-3 mb-2">
+                    ${x.important ? '<div class="text-[11px] font-bold text-amber-300 mb-0.5">⚠ IMPORTANTE</div>' : ''}
+                    <div class="font-bold">${un ? '● ' : ''}${esc(x.title)}</div>
+                    <div class="text-gray-400">${fmtDateTimeBR(x.published_at).replace(', ', ' - ')}</div>
+                    <ul class="mt-1 list-disc pl-5 text-gray-300 space-y-0.5">${(x.items || []).map(i => `<li>${esc(i)}</li>`).join('')}</ul>
+                    <div class="mt-2 flex flex-wrap gap-2" data-actions="${x.id}">
+                        <button type="button" data-tg="${x.id}" class="px-2.5 py-1 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700">${read ? '○ Marcar como não lida' : '✔ Marcar como lida'}</button>
+                        <button type="button" data-del="${x.id}" class="px-2.5 py-1 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700">🗑 Excluir</button></div></div>`;
+            };
+            const wireToggles = rerender => body.querySelectorAll('[data-tg]').forEach(b => b.onclick = async () => {
+                const id = b.dataset.tg; b.disabled = true;
+                try { if (st.ids.has(id)) { await newsMarkUnread(id); st.ids.delete(id); } else { await newsMarkRead([id]); st.ids.add(id); } }
+                catch (e) { showToast('Não foi possível atualizar agora.', 'err'); }
+                updBell(); rerender();
+            });
+            const wireDelete = rerender => body.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
+                const id = b.dataset.del, box = body.querySelector(`[data-actions="${id}"]`);
+                box.innerHTML = '<span class="text-amber-200 w-full">Excluir só da sua tela? Para os outros utilizadores continua aparecendo, e a novidade não é apagada do sistema.</span>'
+                    + '<button type="button" data-yes class="px-2.5 py-1 rounded-lg bg-amber-600 text-white font-bold">Excluir</button><button type="button" data-no class="px-2.5 py-1 rounded-lg border border-gray-600 text-gray-300">Cancelar</button>';
+                box.querySelector('[data-no]').onclick = rerender;
+                box.querySelector('[data-yes]').onclick = async () => {
+                    try { await newsDismiss(id); st.dismissed.add(id); st.dismissedAt[id] = Date.now(); const i = notes.findIndex(x => x.id === id); if (i >= 0) notes.splice(i, 1); showToast('Novidade excluída da sua tela', 'ok'); }
+                    catch (e) { showToast('Não foi possível excluir agora.', 'err'); }
+                    recompute(); updBell(); rerender();
+                };
+            });
+            let important, regular, recent, older;
+            const recompute = () => {
+                important = notes.filter(x => x.important && newsActive(x, Date.now()));
+                regular = notes.filter(x => !x.important || !newsActive(x, Date.now()));
+                recent = regular.filter(x => Date.now() - x.published_at <= NEWS_DAYS * DAY_MS).slice(0, NEWS_MAX);
+                older = regular.filter(x => !recent.includes(x));
+            };
+            recompute();
+            const unreadIds = () => notes.filter(x => newsIsUnread(x, st, Date.now())).map(x => x.id);
+            const markAllBar = () => unreadIds().length ? `<button type="button" id="nwAll" class="mb-2 mr-3 text-xs text-blue-300 hover:text-blue-200 underline font-semibold">✔ Marcar todas como lidas (${unreadIds().length})</button>` : '';
+            const wireAll = rerender => { const b = body.querySelector('#nwAll'); if (b) b.onclick = async () => {
+                b.disabled = true; const ids = unreadIds();
+                try { await newsMarkRead(ids); ids.forEach(id => st.ids.add(id)); } catch (e) { showToast('Não foi possível atualizar agora.', 'err'); }
+                updBell(); rerender(); }; };
+            let infoOpen = false;
+            const INFO = ['A lista mostra até ' + NEWS_MAX + ' novidades dos últimos ' + NEWS_DAYS + ' dias. As mais antigas ficam em Ver anteriores.',
+                'Avisos ⚠ IMPORTANTE ficam no topo até a data de validade (ou por 7 dias, se não tiverem data).',
+                'O número do sino soma os alertas não lidos e as novidades não lidas desses ' + NEWS_DAYS + ' dias (mais os avisos importantes válidos).',
+                '🗑 Excluir tira a novidade só da sua tela. Ela fica ' + EXCL_DAYS + ' dias, contados da exclusão, em Ver excluídas, onde você pode restaurar ou esvaziar de vez.',
+                'Novidades publicadas antes do seu cadastro aparecem na lista, mas não entram na contagem do sino.',
+                'Os alertas (aba Alertas) são calculados pelo app e somem sozinhos quando o assunto é resolvido.'];
+            const infoBlock = () => `<button type="button" id="nwInfo" aria-expanded="${infoOpen}" class="mb-2 text-xs text-blue-300 hover:text-blue-200 underline">ℹ Como funcionam as novidades ${infoOpen ? '▴' : '▾'}</button>`
+                + `<ul id="nwInfoBox" class="${infoOpen ? '' : 'hidden '}mb-3 list-disc pl-5 text-[11px] text-gray-300 space-y-1 rounded-lg border border-gray-700 bg-gray-800/40 py-2 pr-2">${INFO.map(t => `<li>${esc(t)}</li>`).join('')}</ul>`;
+            const wireInfo = () => { const b = body.querySelector('#nwInfo'), bx = body.querySelector('#nwInfoBox'); if (b) b.onclick = () => { infoOpen = !infoOpen; bx.classList.toggle('hidden', !infoOpen); b.setAttribute('aria-expanded', String(infoOpen)); b.textContent = 'ℹ Como funcionam as novidades ' + (infoOpen ? '▴' : '▾'); }; };
+            const showMain = () => {
+                body.innerHTML = '<div>' + markAllBar() + infoBlock().replace('<button', '<button') + '</div>' + important.map(card).join('')
+                    + (recent.length ? recent.map(card).join('') : `<p class="text-gray-400 mb-2">Nenhuma novidade nos últimos ${NEWS_DAYS} dias.</p>`)
+                    + (older.length ? `<button type="button" id="nwOld" class="mt-2 w-full px-3 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-semibold">Ver anteriores (${older.length})</button>` : '')
+                    + (excluded().length ? `<button type="button" id="nwExcl" class="mt-2 w-full px-3 py-2 rounded-lg border border-gray-600 text-gray-200 hover:bg-gray-700 font-semibold">🗑 Ver excluídas (${excluded().length})</button>` : '');
+                const o = body.querySelector('#nwOld'); if (o) o.onclick = showOld;
+                const ex = body.querySelector('#nwExcl'); if (ex) ex.onclick = showExcl;
+                wireToggles(showMain); wireDelete(showMain); wireAll(showMain); wireInfo();
+            };
+            const showExcl = () => {
+                const list = excluded();
+                body.innerHTML = '<div class="mb-3 flex items-center justify-between gap-2"><button type="button" id="nwBack" class="px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-semibold">← Voltar</button>'
+                    + (list.length ? `<button type="button" id="nwEmpty" class="px-3 py-1.5 rounded-lg border border-amber-500 text-amber-100 hover:bg-amber-950 font-semibold">🗑 Esvaziar (${list.length})</button>` : '') + '</div>'
+                    + `<h4 class="font-bold text-sm mb-1">🗑 Excluídas (últimos ${EXCL_DAYS} dias)</h4><p class="mb-2 text-amber-200">As novidades ficam aqui por ${EXCL_DAYS} dias, contados da exclusão. Esvaziar apaga de vez.</p>`
+                    + `<p class="mb-3 text-gray-400">Restaurar traz a novidade de volta à lista, como lida.</p>`
+                    + (list.length ? list.map(x => `<div class="border border-gray-700 bg-gray-800/40 rounded-lg p-3 mb-2"><div class="font-bold">${esc(x.title)}</div><div class="text-gray-400">${fmtDateTimeBR(x.published_at).replace(', ', ' - ')}</div>
                         <ul class="mt-1 list-disc pl-5 text-gray-300 space-y-0.5">${(x.items || []).map(i => `<li>${esc(i)}</li>`).join('')}</ul>
-                        <div class="mt-2 flex flex-wrap gap-2" data-actions="${x.id}">
-                            ${x.synthetic && x.action === 'none' ? '' : x.synthetic && x.action === 'inv' ? '<button type="button" data-inv class="px-2.5 py-1 rounded-lg border border-amber-400 text-amber-100 hover:bg-amber-900 font-semibold">📨 Abrir Pedidos de convite</button>' : x.synthetic ? '<button type="button" data-darf class="px-2.5 py-1 rounded-lg border border-amber-400 text-amber-100 hover:bg-amber-900 font-semibold">📄 Abrir Custos e imposto (DARF)</button>' : `<button type="button" data-tg="${x.id}" class="px-2.5 py-1 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700">${read ? '○ Marcar como não lida' : '✔ Marcar como lida'}</button>
-                            <button type="button" data-del="${x.id}" class="px-2.5 py-1 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700">🗑 Excluir</button>`}</div></div>`;
+                        <div class="mt-2"><button type="button" data-rs="${x.id}" class="px-2.5 py-1 rounded-lg border border-blue-400 text-blue-100 hover:bg-blue-950 font-semibold">↩ Restaurar</button></div></div>`).join('') : `<p class="text-gray-400">Nenhuma novidade excluída nos últimos ${EXCL_DAYS} dias.</p>`);
+                body.querySelector('#nwBack').onclick = showMain;
+                const em = body.querySelector('#nwEmpty'); if (em) em.onclick = async () => {
+                    const ok = await askBox('Esvaziar as novidades excluídas?', `As ${list.length} novidade(s) excluída(s) serão apagadas de vez da sua tela e não poderão ser restauradas. Esta exclusão é permanente.`, 'Confirmar esvaziar', 'Cancelar esvaziar');
+                    if (!ok) return;
+                    em.disabled = true;
+                    try { await newsPurge(list.map(x => x.id)); list.forEach(x => st.purged.add(x.id)); showExcl(); showToast('Lixeira de Novidades esvaziada', 'ok'); }
+                    catch (e) { em.disabled = false; showToast('Não foi possível esvaziar agora.', 'err'); }
                 };
-                const wireDarf = () => body.querySelectorAll('[data-darf]').forEach(b => b.onclick = () => { ov.remove(); repOpen = '1'; switchTab('report'); });
-                const wireInv = () => body.querySelectorAll('[data-inv]').forEach(b => b.onclick = () => { ov.remove(); openInvitesModal(); });
-                const wireToggles = rerender => body.querySelectorAll('[data-tg]').forEach(b => b.onclick = async () => {
-                    const id = b.dataset.tg; b.disabled = true;
-                    try {
-                        if (st.ids.has(id)) { await newsMarkUnread(id); st.ids.delete(id); }
-                        else { await newsMarkRead([id]); st.ids.add(id); }
-                    } catch (e) { showToast('Não foi possível atualizar agora.', 'err'); }
-                    updBell(); rerender();
+                body.querySelectorAll('[data-rs]').forEach(b => b.onclick = async () => {
+                    const id = b.dataset.rs; b.disabled = true;
+                    try { await newsRestore(id); st.dismissed.delete(id); st.ids.add(id); const x = notes0.find(n => n.id === id); if (x && !notes.includes(x)) { notes.push(x); notes.sort((a, c) => c.published_at - a.published_at); } recompute(); updBell(); showExcl(); showToast('Novidade restaurada', 'ok'); }
+                    catch (e) { b.disabled = false; showToast('Não foi possível restaurar agora.', 'err'); }
                 });
-                const wireDelete = rerender => body.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
-                    const id = b.dataset.del, box = body.querySelector(`[data-actions="${id}"]`);
-                    box.innerHTML = '<span class="text-amber-200 w-full">Excluir só da sua tela? Para os outros utilizadores continua aparecendo, e a novidade não é apagada do sistema.</span>'
-                        + '<button type="button" data-yes class="px-2.5 py-1 rounded-lg bg-amber-600 text-white font-bold">Excluir</button><button type="button" data-no class="px-2.5 py-1 rounded-lg border border-gray-600 text-gray-300">Cancelar</button>';
-                    box.querySelector('[data-no]').onclick = rerender;
-                    box.querySelector('[data-yes]').onclick = async () => {
-                        try { await newsDismiss(id); st.dismissed.add(id); const i = notes.findIndex(x => x.id === id); if (i >= 0) notes.splice(i, 1); }
-                        catch (e) { showToast('Não foi possível excluir agora.', 'err'); }
-                        recompute(); updBell(); rerender();
-                    };
-                });
-                let important, regular, recent, older;
-                const recompute = () => {
-                    important = notes.filter(x => x.important && newsActive(x, Date.now()));
-                    regular = notes.filter(x => !x.important);
-                    recent = regular.filter(x => Date.now() - x.published_at <= NEWS_DAYS * DAY_MS).slice(0, NEWS_MAX);
-                    older = regular.filter(x => !recent.includes(x));
-                };
-                recompute();
-                const unreadIds = () => notes.filter(x => !x.synthetic && newsIsUnread(x, st, Date.now())).map(x => x.id);
-                const markAllBar = () => unreadIds().length ? `<button type="button" id="nwAll" class="mb-3 w-full px-3 py-2 rounded-lg border border-gray-500 text-gray-100 hover:bg-gray-700 font-semibold">✔ Marcar todas como lidas (${unreadIds().length})</button>` : '';
-                const wireAll = rerender => { const b = body.querySelector('#nwAll'); if (b) b.onclick = async () => {
-                    b.disabled = true; const ids = unreadIds();
-                    try { await newsMarkRead(ids); ids.forEach(id => st.ids.add(id)); } catch (e) { showToast('Não foi possível atualizar agora.', 'err'); }
-                    updBell(); rerender(); }; };
-                let infoOpen = false;
-                const INFO = ['A lista mostra até ' + NEWS_MAX + ' novidades dos últimos ' + NEWS_DAYS + ' dias. As mais antigas ficam em Ver anteriores.',
-                    'Avisos ⚠ IMPORTANTE ficam no topo até a data de validade (ou por 7 dias, se não tiverem data).',
-                    'O número do sino conta só as não lidas desses ' + NEWS_DAYS + ' dias e os avisos importantes válidos.',
-                    '🗑 Excluir tira a novidade só da sua tela. Ela fica ' + EXCL_DAYS + ' dias em Ver excluídas, onde você pode restaurar ou esvaziar de vez.',
-                    'Novidades publicadas antes do seu cadastro aparecem na lista, mas não entram na contagem do sino.',
-                    'Alertas automáticos (como o de DARF) são calculados pelo app e não vão para a lixeira.'];
-                if (invIsAdmin) INFO.push('Pedidos de convite novos e aniversários também aparecem aqui, e somem sozinhos quando resolvidos.');
-                const infoBlock = () => `<button type="button" id="nwInfo" aria-expanded="${infoOpen}" class="mb-3 text-[11px] text-blue-300 hover:text-blue-200 underline">ℹ Como funcionam as novidades</button>`
-                    + `<ul id="nwInfoBox" class="${infoOpen ? '' : 'hidden '}mb-3 list-disc pl-5 text-[11px] text-gray-300 space-y-1 rounded-lg border border-gray-700 bg-gray-800/40 py-2 pr-2">${INFO.map(t => `<li>${esc(t)}</li>`).join('')}</ul>`;
-                const wireInfo = () => { const b = body.querySelector('#nwInfo'), bx = body.querySelector('#nwInfoBox'); if (b) b.onclick = () => { infoOpen = !infoOpen; bx.classList.toggle('hidden', !infoOpen); b.setAttribute('aria-expanded', String(infoOpen)); }; };
-                const showMain = () => {
-                    body.innerHTML = markAllBar() + infoBlock() + important.map(card).join('')
-                        + (recent.length ? recent.map(card).join('') : `<p class="text-gray-400 mb-2">Sem novidades nos últimos ${NEWS_DAYS} dias.</p>`)
-                        + (older.length ? `<button type="button" id="nwOld" class="mt-2 w-full px-3 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-semibold">Ver anteriores (${older.length})</button>` : '')
-                        + (excluded().length ? `<button type="button" id="nwExcl" class="mt-2 w-full px-3 py-2 rounded-lg border border-gray-600 text-gray-200 hover:bg-gray-700 font-semibold">🗑 Ver excluídas (${excluded().length})</button>` : '');
-                    const o = body.querySelector('#nwOld'); if (o) o.onclick = showOld;
-                    const ex = body.querySelector('#nwExcl'); if (ex) ex.onclick = showExcl;
-                    wireToggles(showMain); wireDelete(showMain); wireAll(showMain); wireDarf(); wireInv(); wireInfo();
-                };
-                const showExcl = () => {
-                    const list = excluded();
-                    body.innerHTML = '<div class="mb-3 flex items-center justify-between gap-2"><button type="button" id="nwBack" class="px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-semibold">← Voltar</button>'
-                        + (list.length ? `<button type="button" id="nwEmpty" class="px-3 py-1.5 rounded-lg border border-amber-500 text-amber-100 hover:bg-amber-950 font-semibold">🗑 Esvaziar (${list.length})</button>` : '') + '</div>'
-                        + `<h4 class="font-bold text-sm mb-1">🗑 Novidades excluídas</h4><p class="mb-2 text-amber-200">As novidades ficam aqui por ${EXCL_DAYS} dias. Esvaziar apaga de vez.</p>`
-                        + `<p class="mb-3 text-gray-400">Novidades que você excluiu da sua tela, publicadas nos últimos ${EXCL_DAYS} dias. Restaurar traz a novidade de volta à lista, como lida.</p>`
-                        + (list.length ? list.map(x => `<div class="border border-gray-700 bg-gray-800/40 rounded-lg p-3 mb-2"><div class="flex flex-wrap justify-between gap-1"><span class="font-bold">${esc(x.title)}</span><span class="text-gray-400">${fmtDateTimeBR(x.published_at).replace(', ', ' - ')}</span></div>
-                            <ul class="mt-1 list-disc pl-5 text-gray-300 space-y-0.5">${(x.items || []).map(i => `<li>${esc(i)}</li>`).join('')}</ul>
-                            <div class="mt-2"><button type="button" data-rs="${x.id}" class="px-2.5 py-1 rounded-lg border border-blue-400 text-blue-100 hover:bg-blue-950 font-semibold">↩ Restaurar</button></div></div>`).join('') : '<p class="text-gray-400">Nenhuma novidade excluída nos últimos 30 dias.</p>');
-                    body.querySelector('#nwBack').onclick = showMain;
-                    const em = body.querySelector('#nwEmpty'); if (em) em.onclick = async () => {
-                        const ok = await askBox('Esvaziar as novidades excluídas?', `As ${list.length} novidade(s) excluída(s) serão apagadas de vez da sua tela e não poderão ser restauradas. Esta exclusão é permanente.`, 'Confirmar esvaziar', 'Cancelar esvaziar');
-                        if (!ok) return;
-                        em.disabled = true;
-                        try { await newsPurge(list.map(x => x.id)); list.forEach(x => st.purged.add(x.id)); showExcl(); showToast('✔ Lixeira esvaziada.', 'ok'); }
-                        catch (e) { em.disabled = false; showToast('Não foi possível esvaziar agora.', 'err'); }
-                    };
-                    body.querySelectorAll('[data-rs]').forEach(b => b.onclick = async () => {
-                        const id = b.dataset.rs; b.disabled = true;
-                        try { await newsRestore(id); st.dismissed.delete(id); st.ids.add(id); const x = notes0.find(n => n.id === id); if (x && !notes.includes(x)) { notes.push(x); notes.sort((a, c) => c.published_at - a.published_at); } recompute(); updBell(); showExcl(); showToast('✔ Novidade restaurada.', 'ok'); }
-                        catch (e) { b.disabled = false; showToast('Não foi possível restaurar agora.', 'err'); }
-                    });
-                };
-                let openM;
-                const showOld = () => {
-                    const g = {}; older.forEach(x => { const k = auditMonthKey(x.published_at); (g[k] = g[k] || []).push(x); });
-                    const keys = Object.keys(g).sort().reverse();
-                    if (openM === undefined) openM = keys[0];
-                    body.innerHTML = '<button type="button" id="nwBack" class="mb-3 px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-semibold">← Voltar</button>' + markAllBar()
-                        + keys.map(k => { const [yy, mm] = k.split('-'); return `<button type="button" data-m="${k}" class="w-full text-left px-3 py-2 mb-2 rounded-lg bg-gray-800 hover:bg-gray-700 font-semibold">${openM === k ? '−' : '+'} ${mm}/${yy} – ${g[k].length} ${g[k].length === 1 ? 'novidade' : 'novidades'}</button>` + (openM === k ? g[k].map(card).join('') : ''); }).join('');
-                    body.querySelector('#nwBack').onclick = showMain;
-                    body.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { openM = openM === b.dataset.m ? null : b.dataset.m; showOld(); });
-                    wireToggles(showOld); wireAll(showOld); wireDarf(); wireDelete(() => { if (older.length) showOld(); else showMain(); });
-                };
-                showMain(); updBell();
-            } catch (e) {
-                body.innerHTML = '<p class="text-red-300">Não foi possível carregar as novidades agora.</p>';
-            }
+            };
+            let openM;
+            const showOld = () => {
+                const g = {}; older.forEach(x => { const k = auditMonthKey(x.published_at); (g[k] = g[k] || []).push(x); });
+                const keys = Object.keys(g).sort().reverse();
+                if (openM === undefined) openM = keys[0];
+                body.innerHTML = '<button type="button" id="nwBack" class="mb-3 px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-white font-semibold">← Ocultar anteriores</button><div>' + markAllBar() + '</div>'
+                    + keys.map(k => { const [yy, mm] = k.split('-'); return `<button type="button" data-m="${k}" class="w-full text-left px-3 py-2 mb-2 rounded-lg bg-gray-800 hover:bg-gray-700 font-semibold">${openM === k ? '−' : '+'} ${mm}/${yy} – ${g[k].length} ${g[k].length === 1 ? 'novidade' : 'novidades'}</button>` + (openM === k ? g[k].map(card).join('') : ''); }).join('');
+                body.querySelector('#nwBack').onclick = showMain;
+                body.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { openM = openM === b.dataset.m ? null : b.dataset.m; showOld(); });
+                wireToggles(showOld); wireAll(showOld); wireDelete(() => { if (older.length) showOld(); else showMain(); });
+            };
+            const show = () => { updBell(); if (tab === 'a') showAlerts(); else showMain(); };
+            m.querySelector('#bTabA').onclick = () => { tab = bellTab = 'a'; show(); };
+            m.querySelector('#bTabN').onclick = () => { tab = bellTab = 'n'; show(); };
+            m.querySelector('#bClose').onclick = bellClose;
+            show(); bellPlace();
         }
 
         // ---- Auditoria de importações e exportações (best-effort: nunca bloqueia a operação) ----
@@ -1082,7 +1210,7 @@
         function askBox(title, msg, okLabel, cancelLabel) {
             return new Promise(res => {
                 const o = document.createElement('div');
-                o.className = 'fixed inset-0 z-[110] flex items-center justify-center p-3 bg-black/70';
+                o.className = 'fixed inset-0 z-[110] flex items-center justify-center p-3 bg-black/70'; o.dataset.keepBell = '1';
                 o.innerHTML = `<div class="w-full max-w-sm rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl"><p class="font-bold mb-1 break-words">${esc(title)}</p><p class="text-xs text-gray-400 mb-4">${esc(msg)}</p><div class="flex justify-end gap-2"><button type="button" data-n class="px-3 py-1.5 rounded-lg bg-gray-700 text-white text-xs font-semibold">${esc(cancelLabel || 'Cancelar')}</button><button type="button" data-y class="px-3 py-1.5 rounded-lg ${okLabel && /esvaziar|excluir/i.test(okLabel) ? 'bg-amber-600' : 'bg-blue-600'} text-white text-xs font-semibold">${esc(okLabel || 'Confirmar')}</button></div></div>`;
                 document.body.appendChild(o);
                 const end = v => { o.remove(); res(v); };
@@ -1094,8 +1222,8 @@
             if (op === 'add') await dbRun(sb.from('tb_setups').insert(data)); else if (op === 'upd') await dbRun(sb.from('tb_setups').update(data).eq('id', s.id)); else await dbRun(sb.from('tb_setups').delete().eq('id', s.id));
         }
         async function setupAfter() { if (MODE !== 'claude') await reloadAll(true); renderSetupsModal(); }
-        const SETUP_FIXED = ['Outras - Fora do Setup'];   // não pode ser excluído (só inativar); pode ser renomeado e continua protegido pelo nome antigo
-        const setupIsFixed = s => SETUP_FIXED.includes(s.name) || (s.prev || []).some(x => SETUP_FIXED.includes(x));
+        const setupLbl = n => (setups.some(x => x.deleted && x.name === n) ? n + ' (excluído)' : n);
+        const setupActiveN = () => setups.filter(x => x.active && !x.deleted).length;
         let suNote = null;
         function suMsg(msg, kind) {
             const pre = kind === 'err' ? '⚠ ' : (kind === 'wait' ? '⏳ ' : '✔ ');
@@ -1116,7 +1244,7 @@
         async function setupRename(s, raw) {
             const nn = String(raw || '').trim().replace(/\s+/g, ' ');
             if (!nn || nn === s.name) { renderSetupsModal(); return; }
-            if (setups.some(x => x !== s && x.name.toLowerCase() === nn.toLowerCase())) { suMsg('Já existe um setup com esse nome.', 'err'); renderSetupsModal(); return; }
+            { const c = setups.find(x => x !== s && x.name.toLowerCase() === nn.toLowerCase()); if (c) { suMsg(c.deleted ? 'Esse nome já foi usado por um setup excluído. Use outro nome.' : 'Já existe um setup com esse nome.', 'err'); renderSetupsModal(); return; } }
             const old = s.name, n = setupCount(old);
             const react = !s.active;
             if (!(await askBox(react ? `Renomear e reativar "${old}" como "${nn}"?` : `Renomear "${old}" para "${nn}"?`, (react ? 'Este setup está inativo e será reativado junto com a renomeação. ' : '') + (n ? `${n} operação(ões) já registrada(s) serão atualizadas para o novo nome.` : 'Nenhuma operação usa este setup ainda.'), react ? 'Confirmar e Reativar' : 'Confirmar'))) { renderSetupsModal(); return; }
@@ -1139,19 +1267,20 @@
                 const o = document.createElement('div');
                 o.className = 'fixed inset-0 z-[110] flex items-center justify-center p-3 bg-black/70';
                 o.innerHTML = `<div class="w-full max-w-md rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl"><p class="font-bold mb-1 break-words">⚠ "${esc(s.name)}" tem ${n} operação(ões) registrada(s)</p>
-                    <p class="text-xs text-gray-400 mb-3">${del ? 'Para excluir este setup, as operações precisam ir para outro setup ativo. Elas passam a aparecer com o setup escolhido e a ação não pode ser desfeita.' : 'Se você só inativar, as operações continuam no histórico e nos relatórios com este setup, mas ele deixa de aparecer em novos lançamentos. Se preferir, mova as operações para outro setup ativo e inative este em seguida.'}</p>
+                    <p class="text-xs text-gray-400 mb-3">${del ? 'Escolha: mover as operações para outro setup ativo, ou excluir o setup mantendo o nome antigo nelas (elas continuam nos relatórios como &quot;nome (excluído)&quot;). Mover não pode ser desfeito.' : 'Se você só inativar, as operações continuam no histórico e nos relatórios com este setup, mas ele deixa de aparecer em novos lançamentos. Se preferir, mova as operações para outro setup ativo e inative este em seguida.'}</p>
                     <label class="block text-xs text-gray-400 mb-1">Mover as operações para:</label>
                     <select data-t class="w-full mb-4 bg-darkBg border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-200">${others.map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('') || '<option value="">(não há outro setup ativo)</option>'}</select>
-                    <div class="flex flex-wrap justify-end gap-2"><button type="button" data-c class="px-3 py-1.5 rounded-lg bg-gray-700 text-white text-xs font-semibold">Cancelar</button>${del ? '' : '<button type="button" data-k class="px-3 py-1.5 rounded-lg bg-gray-600 hover:bg-gray-500 text-white text-xs font-semibold">Só inativar</button>'}<button type="button" data-m class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold disabled:opacity-40" ${others.length ? '' : 'disabled'}>${del ? 'Mover e excluir' : 'Mover e inativar'}</button></div></div>`;
+                    <div class="flex flex-wrap justify-end gap-2"><button type="button" data-c class="px-3 py-1.5 rounded-lg bg-gray-700 text-white text-xs font-semibold">Cancelar</button>${del ? '<button type="button" data-k class="px-3 py-1.5 rounded-lg bg-gray-600 hover:bg-gray-500 text-white text-xs font-semibold">Excluir e manter o nome antigo</button>' : '<button type="button" data-k class="px-3 py-1.5 rounded-lg bg-gray-600 hover:bg-gray-500 text-white text-xs font-semibold">Só inativar</button>'}<button type="button" data-m class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold disabled:opacity-40" ${others.length ? '' : 'disabled'}>${del ? 'Mover e excluir' : 'Mover e inativar'}</button></div></div>`;
                 document.body.appendChild(o);
                 const end = v => { o.remove(); res(v); };
                 o.querySelector('[data-c]').onclick = () => end(null);
-                const kb = o.querySelector('[data-k]'); if (kb) kb.onclick = () => end({ move: null });
+                const kb = o.querySelector('[data-k]'); if (kb) kb.onclick = () => end(del ? { keep: true } : { move: null });
                 o.querySelector('[data-m]').onclick = () => end({ move: others.find(x => String(x.id) === o.querySelector('[data-t]').value) || null });
             });
         }
         async function setupToggle(s, on) {
             let moved = '', movedTo = null;
+            if (!on && s.active && setupActiveN() <= 1) { await askInfo('Mantenha ao menos um setup ativo', 'Crie ou ative outro setup antes de inativar este. Sem setup ativo não dá para lançar novas operações.'); renderSetupsModal(); return; }
             if (!on) {
                 const n = setupCount(s.name);
                 if (n) {
@@ -1180,38 +1309,52 @@
         async function setupAdd() {
             const inp = document.getElementById('suNewName'), nn = inp.value.trim().replace(/\s+/g, ' '), kind = document.getElementById('suNewKind').value;
             if (!nn) { suMsg('Digite o nome do novo setup.', 'err'); return; }
-            if (setups.some(x => x.name.toLowerCase() === nn.toLowerCase())) { suMsg('Já existe um setup com esse nome.', 'err'); return; }
-            try { await setupDb('add', null, { name: nn, active: true, kind, prev_names: '[]' }); auditAdd({ kind: 'setup_create', outcome: 'Concluída', detail: `${nn} (${kind === 'fora' ? 'Fora' : 'Dentro'})` }); suMsg('Setup criado.', 'ok'); }
+            const ex = setups.find(x => x.name.toLowerCase() === nn.toLowerCase());
+            if (ex && !ex.deleted) { suMsg('Já existe um setup com esse nome.', 'err'); return; }
+            try { if (ex) await setupDb('upd', ex, { deleted: false, active: true, kind }); else await setupDb('add', null, { name: nn, active: true, kind, prev_names: '[]' }); auditAdd({ kind: 'setup_create', outcome: 'Concluída', detail: `${nn} (${kind === 'fora' ? 'Fora' : 'Dentro'})` }); suMsg('Setup criado.', 'ok'); }
             catch (e) { suMsg('Não foi possível criar.', 'err'); }
             await setupAfter();
         }
         async function setupDelete(s) {
-            if (setupIsFixed(s)) { await askInfo(`"${s.name}" não pode ser excluído`, 'Ele é o destino das operações feitas fora de qualquer setup e dos relatórios "Dentro x fora". Se não quiser usá-lo, use Inativar.'); return; }
+            if (s.active && setupActiveN() <= 1) { await askInfo('Mantenha ao menos um setup ativo', 'Crie ou ative outro setup antes de excluir este. Sem setup ativo não dá para lançar novas operações.'); return; }
             const nOps = setupCount(s.name);
-            let moved = '', movedTo = null;
+            let moved = '', movedTo = null, keep = false;
             if (nOps) {
                 const r = await askInact(s, nOps, true);
-                if (!r || !r.move) return;
-                suMsg('Processando…', 'wait');
-                try {
-                    if (MODE === 'claude') { await Promise.all(rows.filter(x => x.setup === s.name).map(x => dbCol.doc(x.id).update({ setup: r.move.name }))); }
-                    else await dbRun(sb.from('trades').update({ setup: r.move.name }).in('setup', [s.name, ...s.prev]));
-                    moved = ` · ${nOps} operação(ões) movida(s) para "${r.move.name}"`; movedTo = r.move.name;
-                } catch (e) { suMsg('Não foi possível mover as operações. Nada foi excluído.', 'err'); await setupAfter(); return; }
+                if (!r) return;
+                if (r.keep) keep = true;
+                else {
+                    if (!r.move) return;
+                    suMsg('Processando…', 'wait');
+                    try {
+                        if (MODE === 'claude') { await Promise.all(rows.filter(x => x.setup === s.name).map(x => dbCol.doc(x.id).update({ setup: r.move.name }))); }
+                        else await dbRun(sb.from('trades').update({ setup: r.move.name }).in('setup', [s.name, ...s.prev]));
+                        moved = ` · ${nOps} operação(ões) movida(s) para "${r.move.name}"`; movedTo = r.move.name;
+                    } catch (e) { suMsg('Não foi possível mover as operações. Nada foi excluído.', 'err'); await setupAfter(); return; }
+                }
             } else if (!(await askBox(`Excluir o setup "${s.name}"?`, 'Nenhuma operação usa este setup. Esta ação não pode ser desfeita.', 'Excluir'))) return;
-            try { await setupDb('del', s); auditAdd({ kind: 'setup_delete', outcome: 'Concluída', detail: s.name + moved }); suMsg(movedTo ? `Operações movidas para "${movedTo}" e setup "${s.name}" excluído.` : `Setup "${s.name}" excluído.`, 'ok'); }
-            catch (e) { suMsg('Não foi possível excluir.', 'err'); }
+            try {
+                if (keep) {
+                    await setupDb('upd', s, { active: false, deleted: true });
+                    auditAdd({ kind: 'setup_delete', outcome: 'Concluída', detail: s.name + ` · ${nOps} operação(ões) mantida(s) com o nome antigo` });
+                    suMsg(`Setup "${s.name}" excluído. As ${nOps} operação(ões) continuam com o nome antigo e aparecem nos relatórios como "${s.name} (excluído)".`, 'ok');
+                } else {
+                    await setupDb('del', s);
+                    auditAdd({ kind: 'setup_delete', outcome: 'Concluída', detail: s.name + moved });
+                    suMsg(movedTo ? `Operações movidas para "${movedTo}" e setup "${s.name}" excluído.` : `Setup "${s.name}" excluído.`, 'ok');
+                }
+            } catch (e) { suMsg('Não foi possível excluir.', 'err'); }
             await setupAfter();
         }
         function renderSetupsModal() {
             const b = document.getElementById('suBody'); if (!b) return;
             if (!setupsOk) { b.innerHTML = '<p class="text-amber-300">A tabela de setups ainda não foi criada no banco (rode o SQL tb_setups). Enquanto isso, o app usa a lista padrão.</p>'; return; }
             if (!setups.length) { b.innerHTML = '<p class="text-gray-400">Carregando…</p>'; return; }
-            const list = [...setups].sort(setupByName);
+            const list = setups.filter(x => !x.deleted).sort(setupByName);
             const opt = (v, k) => `<option value="${v}" ${k === v ? 'selected' : ''}>${v === 'fora' ? 'Fora' : 'Dentro'}</option>`;
-            b.innerHTML = `<p class="mb-3 text-gray-400">Edite o nome (as operações já registradas acompanham), defina a classificação (usada no quadro "Dentro x fora do setup") e desmarque "Ativo" para parar de usar o setup em novas operações. Para inativar ou excluir um setup com operações, escolha para onde movê-las.</p>
+            b.innerHTML = `<p class="mb-3 text-gray-400">Edite o nome (as operações já registradas acompanham), defina a classificação (usada no quadro "Dentro x fora do setup") e desmarque "Ativo" para parar de usar o setup em novas operações. Todos os setups são seus: renomeie, inative ou exclua como quiser. Ao excluir um setup com operações, mova as operações para outro setup ou mantenha o nome antigo nelas (elas continuam nos relatórios como "nome (excluído)"). Sempre precisa existir ao menos um setup ativo.</p>
                 <div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr class="text-left text-gray-400 border-b border-gray-700"><th class="py-2 pr-2">Nome do setup</th><th class="py-2 px-2">Classificação</th><th class="py-2 px-2 text-center">Ativo</th><th class="py-2 px-2 text-right">Operações</th><th class="py-2 pl-2"></th></tr></thead><tbody>`
-                + list.map(s => { const n = setupCount(s.name); return `<tr class="border-b border-gray-800"><td class="py-1.5 pr-2"><div class="flex gap-1.5 items-center"><input type="text" class="su-name w-full min-w-[15rem] bg-darkBg border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-200 ${s.active ? '' : 'opacity-60'}" data-id="${esc(s.id)}" data-orig="${esc(s.name)}" value="${esc(s.name)}" title="${esc(s.name)}"><button type="button" class="su-ren ${setupIsFixed(s) ? 'su-fixed ' : ''}shrink-0 px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed" data-id="${esc(s.id)}" ${setupIsFixed(s) ? '' : 'disabled'}>Renomear</button></div></td>
+                + list.map(s => { const n = setupCount(s.name); return `<tr class="border-b border-gray-800"><td class="py-1.5 pr-2"><div class="flex gap-1.5 items-center"><input type="text" class="su-name w-full min-w-[15rem] bg-darkBg border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-200 ${s.active ? '' : 'opacity-60'}" data-id="${esc(s.id)}" data-orig="${esc(s.name)}" value="${esc(s.name)}" title="${esc(s.name)}"><button type="button" class="su-ren shrink-0 px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed" data-id="${esc(s.id)}" disabled>Renomear</button></div></td>
                     <td class="py-1.5 px-2"><select class="su-kind bg-darkBg border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-200" data-id="${esc(s.id)}">${opt('dentro', s.kind)}${opt('fora', s.kind)}</select></td>
                     <td class="py-1.5 px-2 text-center"><label class="inline-flex items-center gap-1 cursor-pointer"><input type="checkbox" class="su-act" data-id="${esc(s.id)}" ${s.active ? 'checked' : ''}><span>${s.active ? 'Ativo' : 'Inativo'}</span></label></td>
                     <td class="py-1.5 px-2 text-right font-mono">${n}</td>
@@ -1227,9 +1370,9 @@
             ov.innerHTML = `<div class="w-full max-w-3xl max-h-[88vh] flex flex-col rounded-xl border border-gray-600 bg-gray-900 text-sm text-gray-200 shadow-2xl"><div class="flex items-center justify-between px-4 py-3 border-b border-gray-700"><h3 class="text-base font-bold">🧩 Gerenciar setups</h3><button type="button" id="suClose" class="px-3 py-1 rounded-lg bg-gray-700 text-white text-xs font-semibold">Fechar</button></div><div id="suBody" class="p-4 overflow-y-auto text-xs"></div></div>`;
             document.body.appendChild(ov);
             ov.querySelector('#suClose').onclick = () => ov.remove();
-            ov.addEventListener('click', ev => { if (ev.target === ov) { ov.remove(); return; } const t = ev.target.closest('.su-del,#suAdd,.su-ren'); if (!t) return; if (t.id === 'suAdd') setupAdd(); else if (t.classList.contains('su-ren')) { const s = setupFind(t), inp = t.closest('tr').querySelector('.su-name'); if (s) { if (setupIsFixed(s)) { inp.value = s.name; askInfo(`"${s.name}" não pode ser renomeado`, 'O nome dele é usado nos relatórios e nas operações sem setup. Se não quiser usá-lo, use Inativar.'); } else setupRename(s, inp.value); } } else { const s = setupFind(t); if (s) setupDelete(s); } });
+            ov.addEventListener('click', ev => { if (ev.target === ov) { ov.remove(); return; } const t = ev.target.closest('.su-del,#suAdd,.su-ren'); if (!t) return; if (t.id === 'suAdd') setupAdd(); else if (t.classList.contains('su-ren')) { const s = setupFind(t), inp = t.closest('tr').querySelector('.su-name'); if (s) { setupRename(s, inp.value); } } else { const s = setupFind(t); if (s) setupDelete(s); } });
             ov.addEventListener('change', ev => { const t = ev.target, s = t.dataset && t.dataset.id ? setupFind(t) : null; if (!s) return; if (t.classList.contains('su-kind')) setupSetKind(s, t.value); else if (t.classList.contains('su-act')) setupToggle(s, t.checked); });
-            ov.addEventListener('input', ev => { const t = ev.target; if (!t.classList || !t.classList.contains('su-name')) return; { const rb = t.closest('tr').querySelector('.su-ren'); if (!rb.classList.contains('su-fixed')) rb.disabled = t.value.trim().replace(/\s+/g, ' ') === t.dataset.orig; } });
+            ov.addEventListener('input', ev => { const t = ev.target; if (!t.classList || !t.classList.contains('su-name')) return; { const rb = t.closest('tr').querySelector('.su-ren'); rb.disabled = t.value.trim().replace(/\s+/g, ' ') === t.dataset.orig; } });
             ov.addEventListener('keydown', ev => { const t = ev.target; if (ev.key === 'Enter' && t.classList && t.classList.contains('su-name')) { ev.preventDefault(); const bt = t.closest('tr').querySelector('.su-ren'); if (!bt.disabled) bt.click(); } });
             renderSetupsModal();
         }
@@ -1381,7 +1524,7 @@ hmoDb = db;
             const timer = setTimeout(() => setStatus('Sem resposta…', 'warn'), 10000);
             dbCol.orderBy('ts', 'asc').onSnapshot(snap => {
                 if (!snap.metadata.fromCache) { clearTimeout(timer); setStatus('Salvo online ✓', 'ok'); }
-                rows = snap.docs.map(d => { const x = { ...d.data(), id: d.id }; x.setup = normSetup(x.setup); return x; });
+                rows = snap.docs.map(d => { const x = { ...d.data(), id: d.id }; x.setup = normSetup(x.setup); return hydrateTrade(x); });
                 processAndRender();
             }, () => { clearTimeout(timer); setStatus('Erro sync', 'err'); });
         }
@@ -1413,7 +1556,7 @@ hmoDb = db;
         }
 
         function tradeKey(r) {
-            return [r.date, r.timeIn, r.timeOut, r.asset, r.setup, r.contracts, r.type, r.points, r.result].join('|');
+            return [r.date, r.timeIn, r.timeOut, r.asset, r.setup, r.contracts, r.type, r.points, r.gross != null ? r.gross : r.result].join('|');
         }
 
         async function importData(file) {
@@ -1440,7 +1583,8 @@ hmoDb = db;
                         contracts: parseInt(r.contracts) || 1,
                         type: r.type,
                         points: Math.round(Number(r.points) || 0),
-                        result: Number(r.result) || 0
+                        result: Number(r.result) || 0,
+                        costs: Math.abs(Number(r.costs) || 0)
                     };
                     if (!t.timeIn || !t.timeOut) { invalid++; continue; }
                     t.ts = computeTs(t.date, t.timeIn);
@@ -1483,16 +1627,16 @@ hmoDb = db;
 
         async function exportData() {
             const strip = arr => arr.map(({ id, ...rest }) => rest);
-            const data = JSON.stringify({ versao: 3, operacoes: strip(rows), movimentacoes: strip(flows), notas: strip(notes) }, null, 2);
+            const data = JSON.stringify({ versao: 3, operacoes: strip(rows).map(({ gross, ...o }) => ({ ...o, result: gross != null ? gross : o.result })), movimentacoes: strip(flows), notas: strip(notes) }, null, 2);
             try {
                 const dl = await window.claude.use('downloads');
-                if (dl) { await dl.save({ filename: backupName(), data }); auditAdd({ kind: 'export', filename: backupName(), outcome: 'Concluída', fileOps: rows.length, fileFlows: flows.length }); return; }
+                if (dl) { await dl.save({ filename: backupName(), data }); auditAdd({ kind: 'export', filename: backupName(), outcome: 'Concluída', fileOps: rows.length, fileFlows: flows.length }); backupMark(); return; }
             } catch (e) { if (e && e.code === 'declined') return; }
             const a = document.createElement('a');
             a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(data);
             a.download = backupName();
             document.body.appendChild(a); a.click(); a.remove();
-            auditAdd({ kind: 'export', filename: backupName(), outcome: 'Concluída', fileOps: rows.length, fileFlows: flows.length });
+            auditAdd({ kind: 'export', filename: backupName(), outcome: 'Concluída', fileOps: rows.length, fileFlows: flows.length }); backupMark();
         }
 
         /* ===== Bloco Mês atual × mês anterior (só operações) ===== */
@@ -1598,8 +1742,8 @@ hmoDb = db;
                 if (setupProfits[s] > maxProfit) { maxProfit = setupProfits[s]; bestSetup = s; }
             }
             const best = document.getElementById('metricBestSetup');
-            best.innerText = bestSetup;
-            best.dataset.full = bestSetup;
+            best.innerText = setupLbl(bestSetup);
+            best.dataset.full = setupLbl(bestSetup);
             const bestSub = document.getElementById('metricBestSetupSub');
             if (bestSetup === 'N/A') bestSub.textContent = '';
             else {
@@ -1637,7 +1781,7 @@ hmoDb = db;
                     <td class="py-3 px-2 text-gray-400">${esc(row.timeOut)}</td>
                     <td class="py-3 px-2 text-center font-mono text-indigo-300 bg-indigo-950/30 rounded">${calculateDuration(row.timeIn, row.timeOut)}</td>
                     <td class="py-3 px-2 font-mono text-blue-400">${esc(row.asset)}</td>
-                    <td class="py-3 px-2 truncate max-w-xs" data-tip="${esc(row.setup)}">${esc(row.setup)}</td>
+                    <td class="py-3 px-2 truncate max-w-xs" data-tip="${esc(setupLbl(row.setup))}">${esc(setupLbl(row.setup))}</td>
                     <td class="py-3 px-2 text-center font-mono">${esc(row.contracts)}</td>
                     <td class="py-3 px-2 text-center">
                         <span class="px-2 py-0.5 rounded text-[10px] font-bold ${row.type === 'Gain' ? 'chip-pos' : 'chip-neg'}">${row.type === 'Gain' ? '▲ ' : '▼ '}${esc(row.type)}</span>
@@ -1711,7 +1855,8 @@ hmoDb = db;
                 setField('tContracts', row.contracts);
                 setField('tType', row.type);
                 setField('tPoints', Math.abs(Number(row.points) || 0));
-                setField('tMoney', fmtMoneyBR(Math.abs(Number(row.result) || 0)));
+                setField('tMoney', fmtMoneyBR(Math.abs(Number(row.gross != null ? row.gross : row.result) || 0)));
+                setField('tCosts', (Number(row.costs) || 0) > 0 ? fmtMoneyBR(row.costs) : '');
                 fillSetupSelect(row.setup);
                 const sel = document.getElementById('tSetup');
                 if (![...sel.options].some(o => o.value === row.setup)) {
@@ -1727,12 +1872,14 @@ hmoDb = db;
                 setField('tAsset', 'WIN - Mini Índice');
                 setField('tContracts', 1);
                 setField('tType', 'Gain');
-                setField('tPoints', 300);
-                setField('tMoney', '60,00');
-                fillSetupSelect(DEFAULT_SETUP);
-                { const sl = document.getElementById('tSetup'); sl.value = DEFAULT_SETUP; if (!sl.value) sl.selectedIndex = 0; }
+                setField('tPoints', '');
+                setField('tMoney', '0,00');
+                setField('tCosts', '');
+                fillSetupSelect('');
+                document.getElementById('tSetup').value = '';
             }
             paintEntryTabs('op', !!row);
+            tradeNetUpdate();
             const m = document.getElementById('tradeModal');
             m.classList.remove('hidden'); m.classList.add('flex');
         }
@@ -1743,6 +1890,14 @@ hmoDb = db;
 
         // Valor em reais: 1238 vira 1.238 e, ao sair do campo, 1.238,00 (vírgula digitada vira decimal)
         function fmtInt(d) { return d.replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+        // Líquido da operação = bruto (com sinal do Tipo) − custos
+        function tradeNetUpdate() {
+            const el = document.getElementById('tNet'); if (!el) return;
+            const g = Math.abs(parseMoney(document.getElementById('tMoney').value)) * (document.getElementById('tType').value === 'Loss' ? -1 : 1);
+            const c = Math.abs(parseMoney(document.getElementById('tCosts').value)), n = Math.round((g - c) * 100) / 100;
+            el.value = (n < 0 ? '− ' : '') + 'R$ ' + fmtMoneyBR(Math.abs(n));
+            el.classList.toggle('gl-pos', n >= 0); el.classList.toggle('gl-neg', n < 0);
+        }
         function fmtMoneyBR(n) { const [i, d] = (Number(n) || 0).toFixed(2).split('.'); return fmtInt(i) + ',' + d; }
         function parseMoney(v) { return parseFloat(String(v).replace(/\./g, '').replace(',', '.')) || 0; }
         function maskMoney(el, ev) {
@@ -1754,7 +1909,8 @@ hmoDb = db;
             const dec = rest.join('').replace(/\D/g, '').slice(0, 2);
             el.value = fmtInt(intDigits || (hasComma ? '0' : '')) + (hasComma ? ',' + dec : '');
         }
-        ['tMoney', 'fAmount'].forEach(id => {
+        ['tMoney', 'tCosts', 'tType'].forEach(id => { const el = document.getElementById(id); el.addEventListener('input', tradeNetUpdate); el.addEventListener('change', tradeNetUpdate); });
+        ['tMoney', 'tCosts', 'fAmount'].forEach(id => {
             const el = document.getElementById(id);
             el.addEventListener('input', ev => maskMoney(el, ev));
             el.addEventListener('blur', () => { if (el.value.trim() !== '') el.value = fmtMoneyBR(parseMoney(el.value)); });
@@ -1793,6 +1949,12 @@ hmoDb = db;
                 showToast('A data não pode ser futura.', 'err');
                 return;
             }
+            const costs = Math.abs(parseMoney(document.getElementById('tCosts').value));
+            if (!document.getElementById('tSetup').value) {
+                showToast('Escolha o setup da operação (ou "Operação fora de Setup").', 'err');
+                document.getElementById('tSetup').focus();
+                return;
+            }
             const date = rawDate.split('-').reverse().join('/');
             const timeIn = normTime(document.getElementById('tTimeIn').value);
             const timeOut = normTime(document.getElementById('tTimeOut').value);
@@ -1814,6 +1976,7 @@ hmoDb = db;
                     type: tradeType,
                     points,
                     result: money,
+                    costs,
                     ts: computeTs(date, timeIn)
                 };
                 if (editingId) await updateTrade(editingId, payload);
@@ -1904,6 +2067,7 @@ hmoDb = db;
         function toggleOptsMenu() {
             const m = $('optsMenu');
             if (!m.classList.contains('hidden')) { closeOptsMenu(); return; }
+            bellClose();
             m.classList.remove('hidden');
             const b = $('btnOpts').getBoundingClientRect(), w = m.offsetWidth || 240;
             m.style.top = (b.bottom + 4) + 'px';
@@ -1915,7 +2079,7 @@ hmoDb = db;
         function toggleMoreMenu() {
             const m = $('moreMenu');
             if (!m.classList.contains('hidden')) { closeMoreMenu(); return; }
-            closeOptsMenu();
+            closeOptsMenu(); bellClose();
             m.classList.remove('hidden');
             const b = $('btnMore').getBoundingClientRect(), w = m.offsetWidth || 224;
             m.style.top = (b.bottom + 4) + 'px';
@@ -2144,27 +2308,31 @@ hmoDb = db;
         }
         function invSetAdmin(on) {
             invIsAdmin = !!on;
-            ['btnInvites', 'fabInv'].forEach(i => { const b = $(i); if (b) b.classList.toggle('hidden', !invIsAdmin); });
+            ['btnAdmin', 'fabInv'].forEach(i => { const b = $(i); if (b) b.classList.toggle('hidden', !invIsAdmin); });
             if (!invIsAdmin) { invCache = []; invCacheAt = 0; ['invBadge', 'fabInvBadge'].forEach(i => { const c = $(i); if (c) c.classList.add('hidden'); }); }
         }
         // Lembrete semanal (sextas, só administrador): abrir o app evita a pausa do Supabase após 7 dias sem atividade
-        function fridayAlerts() {
+        function fridayAlerts(ar) {
             if (!invIsAdmin) return [];
             let wd = ''; try { wd = new Date().toLocaleDateString('en-US', { timeZone: 'America/Sao_Paulo', weekday: 'short' }); } catch (e) {}
             if (wd !== 'Fri') return [];
-            return [{ id: 'fri:' + todayLocalISO(), title: 'Sexta-feira: movimente o app', important: true, published_at: Date.now(), expires_at: null, synthetic: true, action: 'none',
-                items: ['Faça um lançamento ou navegue pelas telas hoje.', 'O Supabase pausa o projeto depois de 7 dias seguidos sem atividade, e o app sairia do ar.', 'Este lembrete aparece toda sexta-feira, só para o administrador.'] }];
+            const key = 'fri:' + todayLocalISO();
+            return [{ id: key, key, level: 'crit', canRead: true, read: !!(ar && ar.has(key)), action: 'none',
+                title: 'Lembrete semanal: use o My Trade Dash em produção (mytradedash.com.br) para o Supabase não pausar o projeto.',
+                note: 'No plano gratuito, o Supabase pausa o projeto após 7 dias seguidos sem atividade. Basta entrar no app e abrir o painel ou fazer um lançamento. Se pausar, reative em supabase.com > projeto > Restore project.' }];
         }
-        function invAlerts() {
+        function invAlerts(ar) {
             if (!invIsAdmin) return [];
-            const out = [], now = new Date();
+            const out = [];
             const nw = invCache.filter(x => x.status === 'novo' && !x.archived);
-            if (nw.length) out.push({ id: 'inv:new', title: nw.length === 1 ? '1 pedido de convite novo' : nw.length + ' pedidos de convite novos', important: true, published_at: Date.now(), expires_at: null, synthetic: true, action: 'inv',
-                items: nw.slice(0, 5).map(x => `${x.name}${invUfOf(x.whatsapp) ? ' (' + invUfOf(x.whatsapp) + ')' : ''}`).concat(nw.length > 5 ? ['… e mais ' + (nw.length - 5) + '.'] : []).concat(['Responda pelo WhatsApp e marque como convidado ou recusado.']) });
+            if (nw.length) out.push({ id: 'inv:new', level: 'a', action: 'inv', title: nw.length === 1 ? '1 pedido de convite novo' : nw.length + ' pedidos de convite novos',
+                note: nw.slice(0, 5).map(x => `${x.name}${invUfOf(x.whatsapp) ? ' (' + invUfOf(x.whatsapp) + ')' : ''}`).join(', ') + (nw.length > 5 ? ' e mais ' + (nw.length - 5) : '') + '. Responda pelo WhatsApp ou por e-mail e marque como convidado ou recusado.' });
+            const yr = new Date(Date.now() + 86400000).getFullYear();
             invCache.forEach(x => {
                 const bd = invBdayTomorrow(x); if (!bd) return;
-                out.push({ id: 'bday:' + x.id + ':' + now.getFullYear(), title: `Amanhã é aniversário de ${x.name}`, important: true, published_at: Date.now(), expires_at: null, synthetic: true, action: 'inv',
-                    items: [`Faz ${bd.age} anos em ${String(bd.day).padStart(2, '0')}/${bd.month}.`, `WhatsApp: ${invFmtPhone(x.whatsapp)}${invUfOf(x.whatsapp) ? ' · ' + invUfOf(x.whatsapp) : ''}.`] });
+                const key = 'bday:' + x.id + ':' + yr;
+                out.push({ id: key, key, level: 'a', canRead: true, read: !!(ar && ar.has(key)), action: 'inv', link: invBdayLink(x), link2: invMailBday(x), title: `Amanhã é aniversário de ${x.name}`,
+                    note: `Faz ${bd.age} anos em ${String(bd.day).padStart(2, '0')}/${String(bd.month).padStart(2, '0')}. WhatsApp: ${invFmtPhone(x.whatsapp)}${invUfOf(x.whatsapp) ? ' · ' + invUfOf(x.whatsapp) : ''}.` });
             });
             return out;
         }
@@ -2172,6 +2340,7 @@ hmoDb = db;
             if (!invIsAdmin) return;
             try {
                 await invLoadCache(true);
+                try { excAdminList = await excList(); } catch (e) {}
                 const n = invCache.filter(x => x.status === 'novo' && !x.archived).length;
                 ['invBadge', 'fabInvBadge'].forEach(i => { const c = $(i); if (c) { c.textContent = n; c.classList.toggle('hidden', n === 0); } });
                 if (toast && n > 0) showToast(n === 1 ? '1 pedido de convite novo' : n + ' pedidos de convite novos', 'ok');
@@ -2179,6 +2348,7 @@ hmoDb = db;
             } catch (e) {}
         }
         async function invAdminInit() {
+            excRefreshBar();
             if (MODE === 'claude') { invSetAdmin(true); invRefreshBadge(true); return; }
             try {
                 const { data } = await sb.from('tb_admins').select('user_id').eq('user_id', currentUserId).maybeSingle();
@@ -2202,27 +2372,115 @@ hmoDb = db;
         }
         function invWaLink(r) {
             const first = String(r.name || '').trim().split(/\s+/)[0] || '';
-            const msg = `Olá, ${first}! Seu pedido de convite para o My Trade Dash foi recebido e o acesso será liberado. Seu login será o e-mail ${r.email}. A senha provisória será enviada por aqui. Para entrar, acesse ${INV_SITE}`;
+            const msg = `Olá, ${first}! Seu pedido de convite para o My Trade Dash foi recebido e o acesso será liberado. Seu login será o e-mail ${r.email}. A senha provisória será enviada por aqui, pelo WhatsApp. Para entrar, acesse ${INV_SITE}`;
             return 'https://wa.me/' + r.whatsapp + '?text=' + encodeURIComponent(msg);
+        }
+        const INV_FROM = 'mytradedash@gmail.com', INV_MASTER = 'diogogomes2110@gmail.com', SB_DASH = 'https://supabase.com/dashboard/project/xctsnutlzetvpkmbantr';
+        const invIsMaster = () => MODE === 'claude' || ($('menuUserEmail').textContent || '').trim().toLowerCase() === INV_MASTER;
+        function invMailLink(to, subject, body) {
+            const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '') || ((navigator.maxTouchPoints || 0) > 1 && window.innerWidth < 900);
+            if (mobile) return 'mailto:' + encodeURIComponent(to) + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+            return 'https://mail.google.com/mail/?view=cm&fs=1&authuser=' + encodeURIComponent(INV_FROM) + '&to=' + encodeURIComponent(to) + '&su=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+        }
+        function invMailAccess(r) {
+            const first = String(r.name || '').trim().split(/\s+/)[0] || '';
+            return invMailLink(r.email, 'Seu acesso ao My Trade Dash', `Olá, ${first}!\n\nSeu pedido de convite para o My Trade Dash foi recebido e o acesso será liberado.\nSeu login será este e-mail (${r.email}). A senha provisória será enviada por e-mail.\n\nPara entrar, acesse ${INV_SITE}\n\nUm abraço,\nMy Trade Dash`);
+        }
+        function invMailBday(x) {
+            const first = String(x.name || '').trim().split(/\s+/)[0] || '';
+            return invMailLink(x.email, 'Feliz aniversário!', `Parabéns, ${first}!\n\nMuitas felicidades neste dia. Feliz aniversário e um abraço do My Trade Dash!`);
         }
         const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
         const isLeapY = y => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
-        async function openInvitesModal() {
+        function openInvitesModal() { return openAdminModal('inv'); }
+        async function openAdminModal(startTab) {
             const ov = document.createElement('div');
-            ov.className = 'fixed inset-0 z-[95] flex items-center justify-center p-3 bg-black/70';
+            ov.className = 'fixed inset-0 z-[95] bg-gray-900';
             const now0 = new Date();
             let filter = 'novo', list = [], q = '', armed = null, armedT = null, mode = 'list', calY = now0.getFullYear(), calM = now0.getMonth(), calSel = null;
-            ov.innerHTML = `<div class="w-full max-w-lg max-h-[90vh] flex flex-col rounded-xl border border-gray-600 bg-gray-900 text-sm text-gray-200 shadow-2xl">
-                <div class="flex items-center justify-between gap-2 px-4 py-3 border-b border-gray-700"><h3 class="text-base font-bold">📨 Pedidos de convite</h3><div class="flex gap-2"><button type="button" id="ivMode" class="px-3 py-1 rounded-lg border border-gray-600 text-gray-100 text-xs font-semibold">🎂 Aniversariantes</button><button type="button" id="ivClose" class="px-3 py-1 rounded-lg bg-gray-700 text-white text-xs font-semibold">Fechar</button></div></div>
-                <div id="ivListBox" class="flex flex-col min-h-0">
+            ov.innerHTML = `<div class="w-full max-w-4xl mx-auto h-full flex flex-col bg-gray-900 text-sm text-gray-200">
+                <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b border-gray-700"><h3 class="text-base font-bold whitespace-nowrap">🛡 Gestão Admin</h3><div class="flex flex-wrap gap-2"><button type="button" id="adNewAdmin" class="hidden px-3 py-1 whitespace-nowrap rounded-lg border border-amber-500 text-amber-200 text-xs font-semibold">➕ Cadastrar admin</button><button type="button" id="ivMode" class="px-3 py-1 whitespace-nowrap rounded-lg border border-gray-600 text-gray-100 text-xs font-semibold">🎂 Aniversariantes</button><button type="button" id="ivClose" class="px-3 py-1 whitespace-nowrap rounded-lg bg-gray-700 text-white text-xs font-semibold">Fechar</button></div></div>
+                <div class="flex flex-wrap gap-2 px-4 pt-3" id="adTabs"></div>
+                <div id="adInv" class="flex flex-col min-h-0 flex-1">
+                <div id="ivListBox" class="flex flex-col min-h-0 flex-1">
                     <div class="px-4 pt-3"><div class="relative"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true">🔍</span><input type="search" id="ivSearch" placeholder="Pesquisar por nome, telefone ou e-mail" autocomplete="off" class="w-full bg-darkBg border border-gray-700 rounded-lg pl-9 pr-3 py-2 text-xs text-gray-200"></div></div>
                     <div class="flex flex-wrap gap-2 px-4 pt-3" id="ivTabs"></div>
                     <div id="ivBody" class="p-4 space-y-3 overflow-y-auto"></div>
                 </div>
                 <div id="ivCalBox" class="hidden p-4 overflow-y-auto"></div>
-                <p class="px-4 pb-3 text-[11px] text-gray-400">Arquivar tira da lista sem apagar. Excluir manda para a 🗑 Lixeira, onde o pedido fica 15 dias antes de sumir de vez. Nada desta tela vai para o histórico de auditoria.</p></div>`;
+                <p class="px-4 pb-3 text-[11px] text-gray-400">Arquivar tira da lista sem apagar. Excluir manda para a 🗑 Lixeira, onde o pedido fica 15 dias antes de sumir de vez. Nada desta tela vai para o histórico de auditoria.</p></div>
+                <div id="adUsers" class="hidden flex flex-col min-h-0 flex-1"><div class="px-4 pt-3"><input type="search" id="adSearch" placeholder="Pesquisar por e-mail" autocomplete="off" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div><div id="adUBody" class="p-4 space-y-2 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">Somente consulta. Para apagar o login de um usuário, use o painel do Supabase (Authentication &gt; Users). Nada desta tela vai para o histórico de auditoria.</p></div>
+                <div id="adExc" class="hidden flex flex-col min-h-0 flex-1"><div class="flex flex-wrap gap-2 px-4 pt-3" id="exTabs"></div><div id="exBody" class="p-4 space-y-3 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">Desativar bloqueia o acesso no banco, mas mantém o login e os dados por ${EXC_DAYS} dias. Depois disso, use Excluir dados de vez e apague o login no Supabase.</p></div></div>`;
             document.body.appendChild(ov);
             const close = () => { ov.remove(); invRefreshBadge(false); };
+            let sec = 'inv', uList = { ativos: null, excl: null }, uq = '', exList = null, exF = 'novo', exArm = null;
+            const adTabs = ov.querySelector('#adTabs'), adInv = ov.querySelector('#adInv'), adUsers = ov.querySelector('#adUsers'), adUBody = ov.querySelector('#adUBody'), adSearch = ov.querySelector('#adSearch');
+            const fmtDT = v => { if (!v) return '—'; const d = new Date(v); return isNaN(d) ? '—' : d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); };
+            const drawSecTabs = () => {
+                const nNew = invCache.filter(x => x.status === 'novo' && !x.archived).length;
+                adTabs.innerHTML = [['inv', '📨 Pedidos de convite' + (nNew ? ' (' + nNew + ')' : '')], ['ativos', '👥 Usuários ativos' + (uList.ativos ? ' (' + uList.ativos.length + ')' : '')], ['excl', '🚫 Usuários excluídos' + (uList.excl ? ' (' + uList.excl.length + ')' : '')], ['exc', '🗑 Pedidos de exclusão' + (exList ? ' (' + exList.filter(x => x.status === 'novo').length + ')' : '')]]
+                    .map(([k, t]) => `<button type="button" data-sec="${k}" class="px-3 py-1 rounded-lg text-xs font-semibold border ${sec === k ? 'border-amber-500 bg-gray-800 text-amber-200' : 'border-gray-700 text-gray-300'}">${t}</button>`).join('');
+            };
+            const drawUsers = () => {
+                const arr = uList[sec];
+                if (!arr) { adUBody.innerHTML = '<p class="text-xs text-gray-400 text-center py-6">Carregando…</p>'; return; }
+                const t = invNorm(uq.trim()), items = arr.filter(u => !t || invNorm(u.email).includes(t));
+                adUBody.innerHTML = items.length ? items.map(u => `<div class="rounded-lg border border-gray-700 p-3 text-xs"><p class="font-bold text-gray-100 break-all">${esc(u.email)}</p>
+                    <p class="text-gray-400 mt-1">Cadastro: <span class="text-gray-200">${fmtDT(u.created_at)}</span></p>
+                    ${sec === 'ativos' ? `<p class="text-gray-400">Último acesso: <span class="text-gray-200">${fmtDT(u.last_sign_in_at)}</span></p>` : `<p class="text-gray-400">Excluído em: <span class="text-amber-300">${fmtDT(u.deleted_at)}</span></p>`}</div>`).join('') : '<p class="text-xs text-gray-400 text-center py-6">Nenhum usuário nesta lista.</p>';
+            };
+            const loadUsers = async k => {
+                try { uList[k] = await adminUsersList(k); } catch (e) { adUBody.innerHTML = '<p class="text-xs text-red-400">Não foi possível carregar: ' + esc((e && e.message) || e) + '. Rode o SQL de estrutura (tabelas de usuários) no Supabase.</p>'; return; }
+                drawSecTabs(); if (sec === k) drawUsers();
+            };
+            ov.addEventListener('click', e => { const a = e.target.closest('[data-sbcopy]'); if (a) { try { navigator.clipboard.writeText(a.dataset.sbcopy); showToast('E-mail copiado. Cole na busca do Supabase.', 'ok'); } catch (x) {} } });
+            const nb = ov.querySelector('#adNewAdmin'); if (nb && invIsMaster()) { nb.classList.remove('hidden'); nb.onclick = () => openAddAdmin(); }
+            const adExc = ov.querySelector('#adExc'), exTabs = ov.querySelector('#exTabs'), exBody = ov.querySelector('#exBody');
+            const exInF = (r, f) => f === 'desistiu' ? (r.status === 'desistiu') : r.status === f;
+            const drawExc = () => {
+                if (!exList) { exBody.innerHTML = '<p class="text-xs text-gray-400 text-center py-6">Carregando…</p>'; return; }
+                exTabs.innerHTML = [['novo', 'Novos'], ['desativado', 'Desativados'], ['excluido', 'Excluídos'], ['desistiu', 'Desistiram']].map(([k, t]) => `<button type="button" data-f="${k}" class="px-3 py-1 rounded-lg text-xs font-semibold border ${exF === k ? 'border-blue-500 bg-blue-950 text-blue-200' : 'border-gray-700 text-gray-300'}">${t} (${exList.filter(x => exInF(x, k)).length})</button>`).join('');
+                const items = exList.filter(x => exInF(x, exF));
+                exBody.innerHTML = items.length ? items.map(r => {
+                    const cv = invCache.find(c => String(c.email || '').toLowerCase() === String(r.email || '').toLowerCase()) || list.find(c => String(c.email || '').toLowerCase() === String(r.email || '').toLowerCase());
+                    const nm = r.name || (cv && cv.name) || r.email, wa = cv && cv.whatsapp, uf = wa ? invUfOf(wa) : '', rr = { ...r, name: nm };
+                    const d30 = r.status === 'desativado' && excDaysDeact(r) >= EXC_DAYS;
+                    return `<div class="rounded-lg border border-gray-700 p-3 text-xs" data-id="${esc(r.id)}">
+                        <div class="flex items-start justify-between gap-2"><p class="font-bold text-gray-100 break-words text-sm">${esc(nm)}</p><span class="shrink-0 text-[10px] px-2 py-0.5 rounded-full border ${r.status === 'novo' ? 'border-red-500 text-red-300' : 'border-gray-600 text-gray-400'}">${EXC_ST[r.status] || r.status}${r.status === 'novo' ? ' · ' + excAge(r) + (excAge(r) === 1 ? ' dia' : ' dias') : ''}</span></div>
+                        <p class="text-gray-400 break-all">${esc(r.email)}${wa ? ' · ' + esc(invFmtPhone(wa)) : ''}${uf ? ' · ' + esc(uf) : ''}</p>
+                        <p class="text-gray-400">Pedido em ${excDay(r.created_at)}${r.deactivated_at ? ' · desativado em ' + excDay(r.deactivated_at) : ''}</p>
+                        <div class="rounded-md bg-darkBg border border-gray-700 px-2 py-1.5 mt-2"><p><b class="text-gray-100">Motivo:</b> ${esc(r.reason || '—')}</p>${r.comment ? `<p class="text-gray-300 mt-0.5">“${esc(r.comment)}”</p>` : ''}</div>
+                        ${r.status === 'excluido' ? '' : `<div class="flex flex-wrap gap-2 mt-2">
+                            <a href="${esc(excMailLink(rr))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">✉ Responder por e-mail</a>
+                            ${wa ? `<a href="${esc(excWaLink(rr, wa))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">💬 Responder pelo WhatsApp</a>` : ''}
+                            ${r.status === 'novo' ? `<button type="button" data-ea="deact" class="px-3 py-1.5 rounded-lg bg-red-700 text-white font-semibold">${exArm === 'D:' + r.id ? 'Confirmar: desativar acesso' : '🔒 Desativar acesso'}</button>` : ''}
+                            ${r.status === 'desativado' ? `<button type="button" data-ea="react" class="px-3 py-1.5 rounded-lg bg-gray-700 text-gray-100 font-semibold">Reativar</button>` : ''}
+                            ${d30 ? `<button type="button" data-ea="purge" class="px-3 py-1.5 rounded-lg bg-red-700 text-white font-semibold">${exArm === 'P:' + r.id ? 'Confirmar: apagar dados, sem volta' : 'Excluir dados de vez'}</button><a href="${SB_DASH}/auth/users" target="_blank" rel="noopener" data-sbcopy="${esc(r.email)}" class="px-3 py-1.5 rounded-lg border border-gray-600 text-gray-100 font-semibold">↗ Apagar login (Supabase Users)</a>` : ''}
+                            <a href="${SB_DASH}/editor" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg border border-gray-600 text-gray-100 font-semibold">↗ Tabela tb_exclusoes no Supabase</a>
+                        </div>${r.status === 'desativado' && !d30 ? `<p class="text-[11px] text-gray-500 mt-2">Exclusão de vez liberada a partir do ${EXC_DAYS}º dia (faltam ${EXC_DAYS - excDaysDeact(r)}).</p>` : ''}`}</div>`; }).join('') : '<p class="text-xs text-gray-400 text-center py-6">Nenhum pedido nesta lista.</p>';
+            };
+            const loadExc = async () => { try { exList = await excList(); excAdminList = exList; } catch (e) { exBody.innerHTML = '<p class="text-xs text-red-400">Não foi possível carregar: ' + esc((e && e.message) || e) + '. Rode o SQL de estrutura (tb_exclusoes) no Supabase.</p>'; return; } drawSecTabs(); if (sec === 'exc') drawExc(); };
+            exTabs.addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (b) { exF = b.dataset.f; drawExc(); } });
+            exBody.addEventListener('click', async e => {
+                const b = e.target.closest('[data-ea]'); if (!b) return;
+                const id = b.closest('[data-id]').dataset.id, a = b.dataset.ea, r = exList.find(x => x.id === id);
+                const arm = key => { if (exArm !== key) { exArm = key; setTimeout(() => { if (exArm === key) { exArm = null; drawExc(); } }, 4000); drawExc(); return false; } exArm = null; return true; };
+                try {
+                    if (a === 'deact') { if (!arm('D:' + id)) return; const p = { status: 'desativado', deactivated_at: new Date().toISOString() }; await excAdminSet(r, p); Object.assign(r, p); showToast('Acesso desativado', 'ok'); }
+                    else if (a === 'react') { const p = { status: 'desistiu', deactivated_at: null }; await excAdminSet(r, p); Object.assign(r, p); showToast('Acesso reativado', 'ok'); }
+                    else if (a === 'purge') { if (!arm('P:' + id)) return; await excPurge(r); r.status = 'excluido'; showToast('Dados excluídos. Agora apague o login no Supabase.', 'ok'); }
+                    drawSecTabs(); drawExc(); if (bellInit) refreshBell();
+                } catch (ex) { showToast('Não foi possível concluir: ' + ((ex && ex.message) || ex), 'err'); }
+            });
+            const setSec = k => {
+                sec = k; adInv.classList.toggle('hidden', k !== 'inv'); adUsers.classList.toggle('hidden', k !== 'ativos' && k !== 'excl'); adExc.classList.toggle('hidden', k !== 'exc');
+                ov.querySelector('#ivMode').classList.toggle('hidden', k !== 'inv');
+                drawSecTabs();
+                if (k === 'exc') drawExc(); else if (k !== 'inv') { drawUsers(); if (!uList[k]) loadUsers(k); }
+            };
+            adTabs.addEventListener('click', e => { const b = e.target.closest('[data-sec]'); if (b) setSec(b.dataset.sec); });
+            adSearch.addEventListener('input', () => { uq = adSearch.value; drawUsers(); });
+            loadUsers('ativos'); loadUsers('excl'); loadExc();
             ov.querySelector('#ivClose').onclick = close;
             ov.addEventListener('click', ev => { if (ev.target === ov) close(); });
             const body = ov.querySelector('#ivBody'), tabs = ov.querySelector('#ivTabs'), search = ov.querySelector('#ivSearch'), calBox = ov.querySelector('#ivCalBox'), listBox = ov.querySelector('#ivListBox'), modeBtn = ov.querySelector('#ivMode');
@@ -2236,7 +2494,7 @@ hmoDb = db;
                 const trashHead = (!searching && filter === 'lixeira') ? `<div class="rounded-lg border border-gray-700 p-3 text-xs text-gray-300"><p>Os pedidos excluídos ficam aqui por ${INV_TRASH_DAYS} dias e depois somem de vez. Daqui você pode restaurar.</p>${items.length ? `<button type="button" data-empty class="mt-2 px-3 py-1.5 rounded-lg bg-red-700 text-white text-xs font-semibold">${armed === 'EMPTY' ? 'Confirmar: apagar tudo, sem volta' : '🧹 Esvaziar lixeira (' + items.length + ')'}</button>` : ''}</div>` : '';
                 const head = searching ? `<p class="text-[11px] text-gray-400">Resultado da pesquisa em todos os pedidos, inclusive arquivados: ${items.length}.</p>` : '';
                 body.innerHTML = head + trashHead + (items.length ? items.map(r => { const uf = invUfOf(r.whatsapp), bd = invBdayNear(r); return `<div class="rounded-lg border border-gray-700 p-3" data-id="${esc(r.id)}">
-                    <div class="flex items-start justify-between gap-2"><div class="min-w-0"><p class="font-bold text-gray-100 break-words">${esc(r.name)}</p><p class="text-xs text-gray-400 break-all">${esc(r.email)}</p><p class="text-xs text-gray-300">💬 ${esc(invFmtPhone(r.whatsapp))}${uf ? ' · ' + esc(uf) : ''}</p>${r.birth_date ? `<p class="text-xs text-gray-300">🎂 ${esc(invBirthBR(r.birth_date))}</p>` : ''}</div>
+                    <div class="flex items-start justify-between gap-2"><div class="min-w-0"><p class="font-bold text-gray-100 break-words">${esc(r.name)}</p><p class="text-xs text-gray-400 break-all">${esc(r.email)}</p>${r.deleted_at ? '' : `<a href="${SB_DASH}/auth/users" target="_blank" rel="noopener" data-sbcopy="${esc(r.email)}" class="inline-block mt-1 px-2 py-0.5 rounded border border-gray-600 text-[11px] text-blue-300 underline">↗ Abrir Supabase (Users)</a>`}<p class="text-xs text-gray-300">💬 ${esc(invFmtPhone(r.whatsapp))}${uf ? ' · ' + esc(uf) : ''}</p>${r.birth_date ? `<p class="text-xs text-gray-300">🎂 ${esc(invBirthBR(r.birth_date))}</p>` : ''}</div>
                     <div class="shrink-0 flex flex-col items-end gap-1"><span class="text-[10px] px-2 py-0.5 rounded-full border ${r.status === 'novo' ? 'border-blue-500 text-blue-300' : 'border-gray-600 text-gray-400'}">${esc(INV_ST[r.status] || r.status)}</span>${r.archived ? '<span class="text-[10px] px-2 py-0.5 rounded-full border border-gray-600 text-gray-400">🗄 Arquivado</span>' : ''}</div></div>
                     <p class="text-xs text-gray-400 mt-1">Como soube: <span class="text-gray-200">${esc(r.how_known)}</span></p>
                     <p class="text-[11px] text-gray-500">${esc(invWhen(r.created_at))}</p>
@@ -2245,7 +2503,8 @@ hmoDb = db;
                     <div class="flex flex-wrap gap-2 mt-2"><button type="button" data-a="restore" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold">♻ Restaurar</button><button type="button" data-a="purge" class="px-3 py-1.5 rounded-lg bg-red-700 text-white text-xs font-semibold">${armed === r.id ? 'Confirmar: apagar sem volta' : 'Excluir de vez'}</button></div></div>` : `
                     <div class="flex flex-wrap gap-2 mt-2">
                         <a href="${esc(invWaLink(r))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold">💬 WhatsApp</a>
-                        ${bd ? `<a href="${esc(invBdayLink(r))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold">💬 Parabenizar</a>` : ''}
+                        <a href="${esc(invMailAccess(r))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold">✉ Enviar e-mail</a>
+                        ${bd ? `<a href="${esc(invBdayLink(r))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold">💬 Parabenizar</a><a href="${esc(invMailBday(r))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold">✉ Parabenizar por e-mail</a>` : ''}
                         ${r.status !== 'convidado' ? '<button type="button" data-a="convidado" class="px-3 py-1.5 rounded-lg bg-gray-700 text-gray-100 text-xs font-semibold">Marcar convidado</button>' : ''}
                         ${r.status !== 'recusado' ? '<button type="button" data-a="recusado" class="px-3 py-1.5 rounded-lg bg-gray-700 text-gray-100 text-xs font-semibold">Recusar</button>' : ''}
                         ${r.status !== 'novo' ? '<button type="button" data-a="novo" class="px-3 py-1.5 rounded-lg bg-gray-700 text-gray-100 text-xs font-semibold">Reabrir</button>' : ''}
@@ -2274,7 +2533,7 @@ hmoDb = db;
                     <div class="grid grid-cols-7 gap-1 text-center text-[10px] text-gray-400 mb-1">${['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(x => `<span>${x}</span>`).join('')}</div>
                     <div class="grid grid-cols-7 gap-1">${cells}</div>
                     <p class="text-[11px] text-gray-400 mt-2">🎂 marca dias com aniversariantes (todos os pedidos, menos os recusados, inclusive arquivados). Toque em um dia para filtrar.</p>
-                    <div class="mt-3 space-y-2">${shown.length ? shown.map(x => `<div class="rounded-lg border border-gray-700 p-3 flex items-center justify-between gap-2"><div class="min-w-0"><p class="font-bold text-gray-100 break-words">${String(x.day).padStart(2, '0')}/${String(calM + 1).padStart(2, '0')} · ${esc(x.name)}</p><p class="text-xs text-gray-400">Faz ${x.age} anos${invUfOf(x.whatsapp) ? ' · ' + esc(invUfOf(x.whatsapp)) : ''}</p></div><a href="${esc(waB(x))}" target="_blank" rel="noopener" class="shrink-0 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold">💬 Parabenizar</a></div>`).join('') : `<p class="text-xs text-gray-400 text-center py-4">Nenhum aniversariante ${calSel ? 'neste dia' : 'neste mês'}.</p>`}</div>`;
+                    <div class="mt-3 space-y-2">${shown.length ? shown.map(x => `<div class="rounded-lg border border-gray-700 p-3 flex items-center justify-between gap-2"><div class="min-w-0"><p class="font-bold text-gray-100 break-words">${String(x.day).padStart(2, '0')}/${String(calM + 1).padStart(2, '0')} · ${esc(x.name)}</p><p class="text-xs text-gray-400">Faz ${x.age} anos${invUfOf(x.whatsapp) ? ' · ' + esc(invUfOf(x.whatsapp)) : ''}</p></div><span class="shrink-0 flex flex-wrap justify-end gap-1"><a href="${esc(waB(x))}" target="_blank" rel="noopener" class="shrink-0 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold">💬 Parabenizar</a><a href="${esc(invMailBday(x))}" target="_blank" rel="noopener" class="shrink-0 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold">✉ E-mail</a></span></div>`).join('') : `<p class="text-xs text-gray-400 text-center py-4">Nenhum aniversariante ${calSel ? 'neste dia' : 'neste mês'}.</p>`}</div>`;
             };
             const setMode = m => {
                 mode = m; listBox.classList.toggle('hidden', m === 'cal'); calBox.classList.toggle('hidden', m !== 'cal');
@@ -2308,6 +2567,146 @@ hmoDb = db;
                 } catch (ex) { showToast('Não foi possível concluir: ' + ((ex && ex.message) || ex), 'err'); }
             });
             await load();
+            drawSecTabs(); setSec(['ativos', 'excl', 'exc'].includes(startTab) ? startTab : 'inv');
+        }
+        async function adminUsersList(k) {
+            const hm = k === 'ativos' ? 'usuarios' : 'usuarios_excluidos', tb = k === 'ativos' ? 'tb_usuarios' : 'tb_usuarios_excluidos', ord = k === 'ativos' ? 'created_at' : 'deleted_at';
+            if (MODE === 'claude') {
+                let docs = (await hmoDb.collection(hm).get()).docs.map(d => ({ id: d.id, ...d.data() }));
+                if (!docs.length && !adminSeeded[k]) { adminSeeded[k] = true; const seed = k === 'ativos' ? [['ana.silva@exemplo.com', 40, 1], ['carlos.souza@exemplo.com', 25, 0], ['diogo@exemplo.com', 120, 0]] : [['teste.antigo@exemplo.com', 60, 10]]; for (const [em, c, l] of seed) { const rec = k === 'ativos' ? { email: em, created_at: Date.now() - c * 86400000, last_sign_in_at: Date.now() - l * 86400000 } : { email: em, created_at: Date.now() - c * 86400000, deleted_at: Date.now() - l * 86400000 }; await hmoDb.collection(hm).add(rec); } docs = (await hmoDb.collection(hm).get()).docs.map(d => ({ id: d.id, ...d.data() })); }
+                return docs.sort((a, b) => new Date(b[ord]) - new Date(a[ord]));
+            }
+            const { data, error } = await sb.from(tb).select('*').order(ord, { ascending: false }).limit(2000);
+            if (error) throw error; return data || [];
+        }
+        const adminSeeded = {};
+        function openAddAdmin() {
+            if (!invIsMaster()) return;
+            const o = document.createElement('div'); o.className = 'fixed inset-0 z-[110] flex items-center justify-center p-3 bg-black/70'; o.dataset.keepBell = '1';
+            o.innerHTML = `<div class="w-full max-w-sm rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl"><p class="font-bold mb-1">➕ Cadastrar admin</p><p class="text-xs text-gray-400 mb-2">Informe o e-mail de um usuário que já tenha conta ativa no app.</p><input type="email" id="aaMail" autocomplete="off" placeholder="e-mail do usuário" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200 mb-2"><p id="aaMsg" class="text-xs text-red-400 mb-2 hidden"></p><a href="${SB_DASH}/editor" target="_blank" rel="noopener" class="block text-[11px] text-blue-300 underline mb-3">↗ Abrir tabela tb_admins no Supabase</a><div class="flex justify-end gap-2"><button type="button" data-n class="px-3 py-2 rounded-lg border border-gray-600 text-xs font-semibold">Cancelar</button><button type="button" data-y class="px-3 py-2 rounded-lg bg-amber-600 text-white text-xs font-semibold">Cadastrar</button></div></div>`;
+            document.body.appendChild(o);
+            o.querySelector('[data-n]').onclick = () => o.remove();
+            o.querySelector('[data-y]').onclick = async () => {
+                const em = o.querySelector('#aaMail').value.trim().toLowerCase(), msg = o.querySelector('#aaMsg');
+                const bad = t => { msg.textContent = t; msg.classList.remove('hidden'); };
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return bad('Informe um e-mail válido.');
+                try {
+                    if (MODE === 'claude') { await hmoDb.collection('admins').add({ email: em, created_at: Date.now() }); }
+                    else {
+                        const { data: u } = await sb.from('tb_usuarios').select('user_id').ilike('email', em).maybeSingle();
+                        if (!u) return bad('Usuário não encontrado entre os ativos.');
+                        const { error } = await sb.from('tb_admins').insert({ user_id: u.user_id }); if (error) throw error;
+                    }
+                    o.remove(); showToast('Admin cadastrado: ' + em, 'ok');
+                } catch (e) { bad('Não foi possível cadastrar: ' + ((e && e.message) || e)); }
+            };
+        }
+
+        /* ===== Exclusão de conta (V138) ===== */
+        const EXC_DAYS = 30, EXC_REASONS = ['Parei de operar', 'O app não atendeu o que eu precisava', 'Achei difícil de usar', 'Vou usar outro app ou planilha', 'Preocupação com meus dados', 'Outro motivo'];
+        const EXC_ST = { novo: 'Novo', desativado: 'Desativado', excluido: 'Excluído', desistiu: 'Desistiu' };
+        const excDay = v => v ? new Date(v).toLocaleDateString('pt-BR') : '—';
+        const excAge = r => Math.floor((Date.now() - new Date(r.created_at).getTime()) / 86400000);
+        const excDaysDeact = r => r.deactivated_at ? Math.floor((Date.now() - new Date(r.deactivated_at).getTime()) / 86400000) : 0;
+        let excMine = null;
+        async function excGetMine() {
+            if (MODE === 'claude') { const d = await hmoDb.collection('exclusoes').doc('mine').get(); return d && d.exists ? { id: 'mine', ...d.data() } : null; }
+            const { data } = await sb.from('tb_exclusoes').select('*').eq('user_id', currentUserId).maybeSingle();
+            return data || null;
+        }
+        async function excCreate(reason, comment) {
+            const now = new Date().toISOString();
+            if (MODE === 'claude') { await hmoDb.collection('exclusoes').doc('mine').set({ user_id: 'hmo', email: 'teste@hmo.local', name: (hmoCred && hmoCred.user) || 'Teste', reason, comment, status: 'novo', created_at: now, deactivated_at: null }); return; }
+            const email = ($('menuUserEmail').textContent || '').trim();
+            const { error } = await sb.from('tb_exclusoes').upsert({ user_id: currentUserId, email, reason, comment, status: 'novo', created_at: now, deactivated_at: null }, { onConflict: 'user_id' });
+            if (error) throw error;
+        }
+        async function excWithdraw() {
+            if (MODE === 'claude') { await hmoDb.collection('exclusoes').doc('mine').update({ status: 'desistiu' }); return; }
+            const { error } = await sb.from('tb_exclusoes').update({ status: 'desistiu' }).eq('user_id', currentUserId); if (error) throw error;
+        }
+        async function excList() {
+            if (MODE === 'claude') {
+                let docs = (await hmoDb.collection('exclusoes').get()).docs.map(d => ({ id: d.id, ...d.data() }));
+                if (!docs.some(x => x.id !== 'mine') && !excSeeded) { excSeeded = true; await hmoDb.collection('exclusoes').add({ user_id: 'u1', email: 'ana@email.com', name: 'Ana Teste', reason: 'O app não atendeu o que eu precisava', comment: 'Queria lançar pela foto do extrato.', status: 'novo', created_at: new Date(Date.now() - 2 * 86400000).toISOString(), deactivated_at: null }); await hmoDb.collection('exclusoes').add({ user_id: 'u2', email: 'bruno@email.com', name: 'Bruno Teste', reason: 'Parei de operar', comment: '', status: 'desativado', created_at: new Date(Date.now() - 36 * 86400000).toISOString(), deactivated_at: new Date(Date.now() - 31 * 86400000).toISOString() }); docs = (await hmoDb.collection('exclusoes').get()).docs.map(d => ({ id: d.id, ...d.data() })); }
+                return docs.filter(x => x.id !== 'mine' || !docs.some(y => y.id !== 'mine' && false)).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            }
+            const { data, error } = await sb.from('tb_exclusoes').select('*').order('created_at', { ascending: false }).limit(1000);
+            if (error) throw error; return data || [];
+        }
+        let excSeeded = false;
+        async function excAdminSet(r, patch) {
+            if (MODE === 'claude') { await hmoDb.collection('exclusoes').doc(r.id).update(patch); return; }
+            const { error } = await sb.from('tb_exclusoes').update(patch).eq('id', r.id); if (error) throw error;
+        }
+        async function excPurge(r) {
+            if (MODE !== 'claude') { const { error } = await sb.rpc('mtd_excluir_dados', { p_user: r.user_id }); if (error) throw error; }
+            await excAdminSet(r, { status: 'excluido' });
+        }
+        function excMailLink(r) {
+            const first = String(r.name || r.email || '').trim().split(/[\s@]+/)[0] || '';
+            return invMailLink(r.email, 'Seu pedido de exclusão no My Trade Dash', `Olá, ${first}!\n\nRecebemos seu pedido de exclusão da conta no My Trade Dash. Seu acesso será desativado e seus dados ficam guardados por ${EXC_DAYS} dias, caso você queira voltar atrás. Depois disso, eles são apagados de vez.\n\nSe quiser desistir, responda esta mensagem.\n\nUm abraço,\nMy Trade Dash`);
+        }
+        function excWaLink(r, wa) {
+            const first = String(r.name || '').trim().split(/\s+/)[0] || '';
+            return 'https://wa.me/' + wa + '?text=' + encodeURIComponent(`Olá, ${first}! Recebemos seu pedido de exclusão da conta no My Trade Dash. Seu acesso será desativado e seus dados ficam guardados por ${EXC_DAYS} dias, caso você queira voltar atrás. Depois disso, eles são apagados de vez. Se quiser desistir, é só responder por aqui.`);
+        }
+        function excAlerts(list) {
+            if (!invIsAdmin || !list) return [];
+            const out = [], nw = list.filter(x => x.status === 'novo');
+            if (nw.length) out.push({ id: 'exc:new', level: 'crit', action: 'exc', title: nw.length === 1 ? '1 pedido de exclusão aguardando' : nw.length + ' pedidos de exclusão aguardando',
+                note: nw.slice(0, 5).map(x => x.name || x.email).join(', ') + '. Sugestão: responder em até 15 dias (prazo da LGPD para pedidos do titular).' });
+            list.filter(x => x.status === 'desativado' && excDaysDeact(x) >= EXC_DAYS).forEach(x => out.push({ id: 'exc:due:' + x.id, level: 'a', action: 'exc', title: `Excluir dados de ${x.name || x.email}: prazo de ${EXC_DAYS} dias concluído`, note: 'Abra Gestão Admin > Pedidos de exclusão para excluir os dados de vez e apagar o login no Supabase.' }));
+            return out;
+        }
+        let excAdminList = null;
+        async function excRefreshBar() {
+            const bar = $('excBar'), old = $('excBlock'); if (old) old.remove();
+            try { excMine = await excGetMine(); } catch (e) { excMine = null; }
+            const m = excMine;
+            if (m && m.status === 'novo') {
+                bar.classList.remove('hidden');
+                bar.innerHTML = `<span class="min-w-0">🗑 Pedido de exclusão enviado em ${excDay(m.created_at)}. Seu acesso será desativado pela administração.</span><button type="button" id="excUndo" class="px-3 py-1 rounded-lg border border-amber-400 text-amber-100 font-semibold underline">Desistir do pedido</button>`;
+                $('excUndo').onclick = async () => { try { await excWithdraw(); showToast('Pedido de exclusão cancelado', 'ok'); excRefreshBar(); } catch (e) { showToast('Não foi possível cancelar: ' + ((e && e.message) || e), 'err'); } };
+            } else bar.classList.add('hidden');
+            if (m && m.status === 'desativado') {
+                const ov = document.createElement('div'); ov.id = 'excBlock'; ov.className = 'fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/90';
+                ov.innerHTML = `<div class="w-full max-w-sm rounded-xl border border-gray-600 bg-gray-900 p-5 text-sm text-gray-200 text-center"><p class="text-3xl mb-2" aria-hidden="true">🔒</p><p class="font-bold mb-2">Conta desativada</p><p class="text-gray-300 mb-4">Sua conta está desativada conforme sua solicitação. Fale com ${INV_FROM}.</p><button type="button" class="px-4 py-2 rounded-lg bg-gray-700 text-white text-xs font-semibold">Sair</button></div>`;
+                ov.querySelector('button').onclick = () => { ov.remove(); lockNow(); };
+                document.body.appendChild(ov);
+            }
+        }
+        function openExclModal() {
+            const m = excMine;
+            const ov = document.createElement('div'); ov.className = 'fixed inset-0 z-[95] flex items-center justify-center p-3 bg-black/70';
+            const pend = m && m.status === 'novo';
+            ov.innerHTML = `<div class="w-full max-w-md max-h-[92vh] overflow-y-auto rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl">
+                <h3 class="text-base font-bold mb-2">🗑 Excluir minha conta</h3>
+                ${pend ? `<p class="text-gray-300 mb-3">Você já pediu a exclusão em ${excDay(m.created_at)}. Seu acesso será desativado pela administração.</p><div class="flex justify-end gap-2"><button type="button" data-x class="px-3 py-2 rounded-lg border border-gray-600 text-xs font-semibold">Voltar</button><button type="button" data-undo class="px-3 py-2 rounded-lg bg-amber-600 text-white text-xs font-semibold">Desistir do pedido</button></div>` : `
+                <p class="text-gray-300 mb-3">Seu acesso será desativado. Seus dados ficam guardados por ${EXC_DAYS} dias (dá para voltar atrás) e depois são apagados de vez.</p>
+                <div class="rounded-lg border border-amber-500/60 bg-amber-950/30 px-3 py-2 text-xs text-amber-100 mb-3">⬇ Antes, exporte um backup dos seus dados. <button type="button" data-bk class="underline font-semibold">Exportar backup</button></div>
+                <fieldset class="mb-3"><legend class="text-xs font-bold text-gray-100 mb-1">Por que você quer sair?</legend>${EXC_REASONS.map((t, i) => `<label class="flex items-center gap-2 py-1 text-xs"><input type="radio" name="excR" value="${i}"> ${t}</label>`).join('')}</fieldset>
+                <label class="block text-xs font-bold text-gray-100 mb-1" for="excC">Quer contar mais? (opcional)</label><textarea id="excC" rows="3" maxlength="500" placeholder="O que podemos melhorar" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200 mb-3"></textarea>
+                <label class="flex items-start gap-2 text-xs mb-3"><input type="checkbox" id="excOk" class="mt-0.5"> Entendo que, após ${EXC_DAYS} dias, meus dados serão apagados e não poderão ser recuperados.</label>
+                <p id="excMsg" class="text-xs text-red-400 mb-2 hidden"></p>
+                <div class="flex justify-end gap-2"><button type="button" data-x class="px-3 py-2 rounded-lg border border-gray-600 text-xs font-semibold">Voltar</button><button type="button" data-go class="px-3 py-2 rounded-lg bg-red-600 text-white text-xs font-semibold">Confirmar exclusão</button></div>`}</div>`;
+            document.body.appendChild(ov);
+            const close = () => ov.remove();
+            ov.addEventListener('click', e => { if (e.target === ov) close(); });
+            ov.querySelectorAll('[data-x]').forEach(b => b.onclick = close);
+            const bk = ov.querySelector('[data-bk]'); if (bk) bk.onclick = () => exportData();
+            const un = ov.querySelector('[data-undo]'); if (un) un.onclick = async () => { try { await excWithdraw(); close(); showToast('Pedido de exclusão cancelado', 'ok'); excRefreshBar(); } catch (e) { showToast('Não foi possível cancelar', 'err'); } };
+            const go = ov.querySelector('[data-go]');
+            if (go) go.onclick = async () => {
+                const msg = ov.querySelector('#excMsg'), r = ov.querySelector('input[name="excR"]:checked');
+                const bad = t => { msg.textContent = t; msg.classList.remove('hidden'); };
+                if (!r) return bad('Escolha um motivo.');
+                if (!ov.querySelector('#excOk').checked) return bad('Marque a confirmação para continuar.');
+                if (!await askBox('Confirmar exclusão da conta?', 'Seu acesso será desativado e, após ' + EXC_DAYS + ' dias, seus dados serão apagados de vez. Deseja continuar?', 'Confirmar', 'Voltar')) return;
+                go.disabled = true;
+                try { await excCreate(EXC_REASONS[+r.value], ov.querySelector('#excC').value.trim()); close(); showToast('Pedido de exclusão enviado', 'ok'); excRefreshBar(); if (invIsAdmin && bellInit) refreshBell(); }
+                catch (e) { go.disabled = false; bad('Não foi possível enviar: ' + ((e && e.message) || e)); }
+            };
         }
         (function () {
             const link = $('invOpen'), form = $('invForm'), lf = $('lockForm'), sub = $('lockSub'), msg = $('invMsg');
@@ -2703,9 +3102,9 @@ hmoDb = db;
             $('flowCards').innerHTML =
                 card('↓ Total depositado', 'R$ ' + brl(dep), `${nDep} depósito${nDep === 1 ? '' : 's'}`) +
                 card('↑ Total sacado', 'R$ ' + brl(saq), `${nSaq} saque${nSaq === 1 ? '' : 's'}`) +
-                card('Valor investido', 'R$ ' + brl(inv), (inv === 0 && dep > 0) ? 'capital recuperado' : 'capital ainda na corretora', true) +
+                card('Valor investido<span class="block normal-case tracking-normal text-[9px] sm:text-[10px] text-gray-500">(Aportado e ainda na sua corretora)</span>', 'R$ ' + brl(inv), (inv === 0 && dep > 0) ? 'capital recuperado' : 'capital ainda na corretora', true) +
                 card('Lucro já sacado', 'R$ ' + brl(out), out > 0 ? 'saques além do capital' : 'nenhum, só capital') +
-                card('Capital atual', 'R$ ' + brl(cap), 'depositado − sacado + lucro', true) +
+                card('Capital atual<span class="block normal-case tracking-normal text-[9px] sm:text-[10px] text-gray-500">(Saldo na sua corretora)</span>', 'R$ ' + brl(cap), 'depositado − sacado + lucro', true) +
                 card('Retorno s/ depositado', ret === null ? '—' : (ret >= 0 ? '+' : '−') + ' ' + pct(Math.abs(ret)), ret === null ? 'sem depósitos' : `lucro ${brl(net)} ÷ ${brl(dep)}`);
 
             const bk = Object.entries(banks).sort((a, b) => (b[1].d - b[1].s) - (a[1].d - a[1].s));
@@ -2850,7 +3249,7 @@ hmoDb = db;
             const sel = $(id), cur = sel.value, sig = vals.join('|');
             if (sel.dataset.sig === sig) return;
             sel.dataset.sig = sig;
-            sel.innerHTML = '<option value="">Todos</option>' + vals.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+            sel.innerHTML = '<option value="">Todos</option>' + vals.map(v => `<option value="${esc(v)}">${esc(id === 'repSetup' ? setupLbl(v) : v)}</option>`).join('');
             sel.value = vals.includes(cur) ? cur : '';
         }
 
@@ -2872,7 +3271,7 @@ hmoDb = db;
             $('repClearBtn').classList.toggle('hidden', pv.value === 'all' && !su && !as);
         }
         function repToggle(k) { repOpen = (repOpen === k) ? null : k; renderReports(); }
-        const rsec = (k, t, h, note, extra) => { const o = repOpen === k; return `<div class="bg-cardBg border border-gray-800 rounded-xl shadow-lg overflow-hidden"><div class="px-4 sm:px-6 py-3 ${o ? 'border-b border-gray-800' : ''} flex flex-wrap gap-2 justify-between items-center"><button type="button" onclick="repToggle('${k}')" aria-expanded="${o}" class="flex-1 min-w-0 text-left flex items-start gap-2"><span class="inline-block w-5 text-center font-mono text-gray-300 border border-gray-700 rounded shrink-0">${o ? '−' : '+'}</span><span><span class="block font-bold text-gray-200 text-xs sm:text-sm">${t}</span>${note ? `<span class="block text-[10px] sm:text-[11px] text-gray-500 mt-0.5 font-normal">${note}</span>` : ''}</span></button>${o ? (extra || '') : ''}</div>${o ? `<div class="overflow-x-auto">${h}</div>` : ''}</div>`; };
+        const rsec = (k, t, h, note, extra, pre) => { const o = repOpen === k; return `<div class="bg-cardBg border border-gray-800 rounded-xl shadow-lg overflow-hidden"><div class="px-4 sm:px-6 py-3 ${o ? 'border-b border-gray-800' : ''} flex flex-wrap gap-2 justify-between items-center"><button type="button" onclick="repToggle('${k}')" aria-expanded="${o}" class="flex-1 min-w-0 text-left flex items-start gap-2"><span class="inline-block w-5 text-center font-mono text-gray-300 border border-gray-700 rounded shrink-0">${o ? '−' : '+'}</span><span><span class="block font-bold text-gray-200 text-xs sm:text-sm">${t}</span>${note ? `<span class="block text-[10px] sm:text-[11px] text-gray-500 mt-0.5 font-normal">${note}</span>` : ''}</span></button>${o ? (extra || '') : ''}</div>${pre || ''}${o ? `<div class="overflow-x-auto">${h}</div>` : ''}</div>`; };
         const rtable = (head, body) => `<table class="w-full text-left text-xs whitespace-nowrap"><thead><tr class="bg-gray-900/50 text-gray-400 border-b border-gray-800 uppercase tracking-wider">${head.map((h, i) => `<th class="py-2 px-3 ${i ? 'text-right' : ''}">${h}</th>`).join('')}</tr></thead><tbody class="divide-y divide-gray-800 text-gray-300">${body}</tbody></table>`;
         const lbl = (t, w) => `<td class="py-2 px-3 ${w ? 'max-w-xs truncate' : ''}"${w ? ` data-tip="${esc(t)}"` : ''}>${esc(t)}</td>`;
         const nOps = s => `${s.n}${s.n < 30 ? ' ⚠' : ''}`;
@@ -2881,7 +3280,7 @@ hmoDb = db;
         }
 
         function secSetup(ops) {
-            const g = [...group(ops, r => r.setup)].sort((a, b) => stats(b[1]).net - stats(a[1]).net);
+            const g = [...group(ops, r => r.setup)].sort((a, b) => stats(b[1]).net - stats(a[1]).net).map(([k, l]) => [setupLbl(k), l]);
             return rsec('2', '3. Desempenho por setup', rtable(['Setup', 'Operações', 'Win rate', 'Resultado', 'Pontos', 'Média/op.'], simpleRows(g, true)), '⚠ = menos de 30 operações.');
         }
         function secRisk(s) {
@@ -2981,7 +3380,7 @@ hmoDb = db;
         function taxEngine(opRows, noteRows, paid, todayIso) {
             const days = new Map();
             const get = i => { let d = days.get(i); if (!d) { d = { iso: i, ops: 0, nOps: 0, note: null }; days.set(i, d); } return d; };
-            opRows.forEach(r => { const d = get(isoOf(r.date)); d.ops += num(r.result); d.nOps++; });
+            opRows.forEach(r => { const d = get(isoOf(r.date)); d.ops += num(r.gross != null ? r.gross : r.result); d.nOps++; });
             noteRows.forEach(n => { get(isoOf(n.date)).note = n; });
             const byM = new Map();
             days.forEach(d => {
@@ -3032,7 +3431,7 @@ hmoDb = db;
 
         // Alertas de DARF no sino: meses fechados com DARF a pagar (>= R$ 10), não marcados como pagos,
         // com vencimento em até DARF_ALERT_DAYS dias úteis (só fins de semana; feriados não entram) ou já vencidos.
-        const DARF_ALERT_DAYS = 3;
+        const DARF_ALERT_DAYS = 7;
         function bizDaysTo(todayIso, dueIso) {
             if (dueIso < todayIso) return -1;
             let n = 0; const d = new Date(todayIso + 'T12:00:00');
@@ -3051,12 +3450,24 @@ hmoDb = db;
                     if (x.partial || x.status !== 'pay' || x.paidAt) return;
                     const n = bizDaysTo(todayIso, x.due); if (n > DARF_ALERT_DAYS) return;
                     const [yy, mm] = x.ym.split('-');
-                    const title = n < 0 ? `DARF de ${mm}/${yy} atrasado` : (n === 0 ? `DARF de ${mm}/${yy} vence hoje` : `DARF de ${mm}/${yy} vence em ${n} ${n === 1 ? 'dia útil' : 'dias úteis'}`);
-                    out.push({ id: 'darf:' + x.ym, title, important: true, published_at: Date.now(), expires_at: null, synthetic: true,
-                        items: [`Valor estimado: R$ ${brl(x.total)}.`, `Vencimento: ${fmtBR(x.due)} (considera só fins de semana; feriados não entram).`, 'Quando pagar, marque como pago em Relatórios → 2. Custos e imposto (DARF). O aviso some sozinho.'] });
+                    const suf = n < 0 ? ' (vencido)' : (n === 0 ? ' (vence hoje)' : ` (em ${n} ${n === 1 ? 'dia útil' : 'dias úteis'})`);
+                    out.push({ id: 'darf:' + x.ym, level: n <= 0 ? 'r' : 'a', action: 'darf',
+                        title: `DARF de ${mm}/${yy}: R$ ${brl(x.total)} · vence ${fmtBR(x.due)}${suf}`,
+                        note: n < 0 ? 'Valor estimado, sem multa e juros por atraso: gere a guia oficial atualizada no Sicalc da Receita. Ao marcar como pago em Relatórios, o alerta some.'
+                            : 'Valor estimado: gere a guia oficial no Sicalc da Receita. O prazo considera só fins de semana (feriados não entram). Ao marcar como pago em Relatórios, o alerta some.' });
                 });
             } catch (e) {}
             return out;
+        }
+        // Backup: avisa quando faz 30 dias ou mais desde o último Exportar backup (ou desde o cadastro, se nunca exportou)
+        const BACKUP_DAYS = 30;
+        function backupAlerts(c) {
+            if (!c || c.fail) return [];
+            const ref = Math.max(c.last || 0, c.baseline || 0), days = Math.floor((Date.now() - ref) / DAY_MS);
+            if (days < BACKUP_DAYS) return [];
+            return [{ id: 'backup:old', level: 'a', action: 'export',
+                title: c.last ? `Faz ${days} dias desde o último backup` : 'Você ainda não exportou um backup',
+                note: 'Toque em Exportar backup e guarde o arquivo fora do aparelho. O alerta some ao exportar e volta depois de 30 dias.' }];
         }
         let bellT = null;
         function bellSoon() { clearTimeout(bellT); bellT = setTimeout(() => { if (bellInit) refreshBell(); }, 1200); }
@@ -3076,7 +3487,7 @@ hmoDb = db;
             else { const iso = $('nDate').value; closeNoteModal(); openModal(); if (iso) setField('tDate', iso); }
         }
         let pendingNoteDeleteId = null, editingNoteId = null, noteNetTouched = false, taxOpen = {}, notesListOpen = false;
-        const dayOpsSum = iso => rows.filter(r => isoOf(r.date) === iso).reduce((t, r) => t + num(r.result), 0);
+        const dayOpsSum = iso => rows.filter(r => isoOf(r.date) === iso).reduce((t, r) => t + num(r.gross != null ? r.gross : r.result), 0);
         const dayOpsCount = iso => rows.filter(r => isoOf(r.date) === iso).length;
         function noteHint() {
             const iso = $('nDate').value, n = parseMoney($('nNet').value) * ($('nType').value === 'Perda' ? -1 : 1);
@@ -3213,7 +3624,13 @@ hmoDb = db;
                     <div class="px-1 pb-3"><table class="w-full text-xs"><tbody>${rows_}</tbody></table>${saldos ? `<p class="px-3 pt-2 text-[11px] text-gray-400">Saldos para o mês seguinte: ${saldos}.</p>` : ''}${pay}</div></details>`;
             });
             h += '</div>';
-            return rsec('1', '2. Custos e imposto (DARF)', h, 'Estimativa. Vencimento no último dia útil do mês seguinte, sem considerar feriados.', btn);
+
+            h += `<div class="mx-4 mb-4 rounded-lg border border-gray-700 bg-gray-800/40 px-3 py-2.5 text-[11px] leading-relaxed text-gray-300"><p class="font-bold text-gray-100 mb-1">📚 Referências oficiais</p><ul class="list-disc pl-4 space-y-0.5">
+                <li><a class="underline text-blue-300 hover:text-blue-200" href="https://www.gov.br/receitafederal/pt-br/assuntos/meu-imposto-de-renda/pagamento/renda-variavel/bolsa-de-valores-1" target="_blank" rel="noopener">Receita Federal: renda variável na Bolsa (como apurar e pagar)</a></li>
+                <li><a class="underline text-blue-300 hover:text-blue-200" href="https://normas.receita.fazenda.gov.br/sijut2consulta/link.action?idAto=67494&visao=original" target="_blank" rel="noopener">IN RFB nº 1.585/2015 (regras de apuração em bolsa)</a></li>
+                <li><a class="underline text-blue-300 hover:text-blue-200" href="https://www.gov.br/receitafederal/pt-br/servicos/sicalc" target="_blank" rel="noopener">Sicalc: emitir o DARF oficial (código 6015), com multa e juros</a></li>
+                <li><a class="underline text-blue-300 hover:text-blue-200" href="https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2004/lei/l11033.htm" target="_blank" rel="noopener">Lei nº 11.033/2004 (IRRF sobre operações em bolsa)</a></li></ul></div>`;
+            return rsec('1', '2. Custos e imposto (DARF)', h, 'Estimativa. Vencimento no último dia útil do mês seguinte, sem considerar feriados.', btn, `<div class="mx-4 mt-1 mb-3 rounded-lg border border-amber-500/60 bg-amber-950/20 px-3 py-2.5 text-[11px] leading-relaxed text-gray-300"><p class="font-bold text-amber-300 mb-1">⚠ Valores estimados</p><p>O app calcula o imposto com base nas regras vigentes da Receita Federal (day trade: 20% sobre o ganho líquido, IRRF de 1% e DARF código 6015), mas isto é uma <b>estimativa</b> e não substitui a apuração oficial. Confira os valores e <b>consulte um profissional de contabilidade</b> antes de pagar.</p><p class="mt-1.5 text-gray-400">Fontes: <a class="underline text-blue-300 hover:text-blue-200" href="https://normas.receita.fazenda.gov.br/sijut2consulta/link.action?idAto=67494&visao=original" target="_blank" rel="noopener">IN RFB nº 1.585/2015</a> · <a class="underline text-blue-300 hover:text-blue-200" href="https://www.gov.br/receitafederal/pt-br/assuntos/meu-imposto-de-renda/pagamento/renda-variavel/bolsa-de-valores-1" target="_blank" rel="noopener">Receita Federal: Renda variável, Bolsa de Valores</a></p></div>`);
         }
 
         function renderReports() {
@@ -3238,7 +3655,7 @@ hmoDb = db;
         }
         /* ===== Relatórios: ver dados na tela + exportar (CSV, Excel, Word, PDF) — sem bibliotecas ===== */
         let repShowData = false;
-        const REP_HEAD = ['Data', 'Entrada', 'Saída', 'Ativo', 'Setup', 'Contratos', 'Tipo', 'Pontos', 'Resultado (R$)'];
+        const REP_HEAD = ['Data', 'Entrada', 'Saída', 'Ativo', 'Setup', 'Contratos', 'Tipo', 'Pontos', 'Resultado líquido (R$)'];
         function repData() {
             const ops = filteredOps(true, true).slice().reverse();   // mais recente primeiro
             const pv = $('repPeriod'), pl = pv.options[pv.selectedIndex].text;
@@ -3408,7 +3825,7 @@ hmoDb = db;
             <button type="button" role="menuitem" data-fab="op" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">📈 Nova operação</button>
             <button type="button" role="menuitem" data-fab="rep" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">📊 Relatórios</button>
             <div class="border-t border-gray-600 my-1"></div>
-            <button id="fabInv" type="button" role="menuitem" data-fab="inv" class="hidden w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">📨 Pedidos de convite <span id="fabInvBadge" class="hidden ml-1 px-1.5 py-0.5 rounded-full bg-amber-600 text-white text-[10px] font-bold"></span></button>
+            <button id="fabInv" type="button" role="menuitem" data-fab="inv" class="hidden w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">🛡 Gestão Admin <span id="fabInvBadge" class="hidden ml-1 px-1.5 py-0.5 rounded-full bg-amber-600 text-white text-[10px] font-bold"></span></button>
             <button type="button" role="menuitem" data-fab="theme" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">🌓 Tema</button>
             <button type="button" role="menuitem" data-fab="exit" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100 font-semibold">🚪 Sair</button>
 <p class="px-3 pb-2 pt-0.5 text-[10px] leading-tight text-gray-400">arraste o botão Atalhos para onde preferir</p>
@@ -3465,7 +3882,7 @@ hmoDb = db;
     /* ===== Termos de uso, Política de privacidade e Primeiro acesso guiado (V112) ===== */
     (function () {
         const $ = id => document.getElementById(id);
-        const TERMS_VER = '2026-11-11', TERMS_DATE = '11/11/2026', TERMS_DOC = 'termos_privacidade';
+        const TERMS_VER = '2026-11-12', TERMS_DATE = '12/11/2026', TERMS_DOC = 'termos_privacidade';
         const LEGAL_EMAIL = 'mytradedash@gmail.com';
         const TERMS_HTML = `<h4 class="font-bold text-sm mb-1">Termos de uso do My Trade Dash</h4><p class="text-gray-400 mb-3">Versão de ${TERMS_DATE}</p>
 <p class="mb-2"><b>1. O que é o My Trade Dash.</b> Um diário para quem opera day trade (mini-índice e mini-dólar): registra operações, movimentações financeiras e notas do dia, e mostra indicadores, gráficos, relatórios e alertas de DARF.</p>
@@ -3474,18 +3891,18 @@ hmoDb = db;
 <p class="mb-2"><b>4. Disponibilidade.</b> Seus dados ficam guardados em um banco de dados na nuvem: não se perdem se você trocar de celular ou se o app ficar fora do ar por um tempo. O app pode ter pausas rápidas para manutenção. O backup (⚙ Opções &gt; Exportar backup) é uma cópia extra, útil para guardar um retrato dos seus dados ou recuperar algo excluído por engano.</p>
 <p class="mb-2"><b>5. Segurança dos dados.</b> O My Trade Dash adota medidas técnicas para proteger seus dados contra acessos não autorizados, como conexão criptografada e acesso restrito a cada conta, conforme a LGPD (Lei nº 13.709/2018, art. 46).</p>
 <p class="mb-2"><b>6. Propriedade.</b> A marca, o nome, a identidade visual e o código do My Trade Dash pertencem ao seu responsável. Os dados que você lança são seus.</p>
-<p class="mb-2"><b>7. Encerramento.</b> Você pode pedir a exclusão da conta e dos dados a qualquer momento pelo e-mail ${LEGAL_EMAIL}.</p>
+<p class="mb-2"><b>7. Encerramento e exclusão da conta.</b> Você pode pedir a exclusão da conta a qualquer momento em Opções &gt; Excluir minha conta. O pedido é feito somente pelo app. Ao confirmar, seu acesso é desativado e seus dados ficam guardados por 30 dias, para o caso de você desistir. Passado esse prazo, os dados são apagados de vez e não podem ser recuperados. Fica guardado apenas o registro mínimo do pedido (e-mail, datas e motivo), para comprovar o atendimento. Antes de pedir, exporte seu backup em Opções.</p>
 <p class="mb-2"><b>8. Mudanças.</b> Estes termos podem ser atualizados. Quando isso acontecer, o app pedirá um novo aceite.</p>
 <p class="mb-2"><b>9. Lei aplicável.</b> Legislação brasileira. Contato: ${LEGAL_EMAIL}.</p>`;
         const PRIV_HTML = `<h4 class="font-bold text-sm mb-1">Política de privacidade do My Trade Dash</h4><p class="text-gray-400 mb-3">Versão de ${TERMS_DATE} · em conformidade com a LGPD (Lei nº 13.709/2018)</p>
-<p class="mb-2"><b>1. Controlador.</b> My Trade Dash. Contato para assuntos de dados pessoais: ${LEGAL_EMAIL}.</p>
+<p class="mb-2"><b>1. Controlador.</b> My Trade Dash. Contato para assuntos de dados pessoais: ${LEGAL_EMAIL}. Podemos responder ao seu pedido de convite, ao seu acesso e a pedidos de exclusão por e-mail ou pelo WhatsApp que você informou.</p>
 <p class="mb-1"><b>2. Dados tratados.</b></p>
 <ul class="list-disc pl-5 mb-2 space-y-0.5"><li>Pedido de convite: nome, e-mail, WhatsApp (com DDD), data de nascimento e como soube do app.</li><li>Conta: e-mail e senha (a senha fica protegida pelo provedor de login e não é vista por ninguém).</li><li>Uso do app: operações (data, horários, ativo, setup, contratos, pontos e resultado), movimentações financeiras (depósitos, saques e bancos informados), notas do dia (valor líquido, IRRF e custos), setups, DARF marcados como pagos e o histórico de auditoria.</li><li>No aparelho: tema escolhido e posição do botão Atalhos (ficam só no seu aparelho).</li></ul>
 <p class="mb-2"><b>3. Para que usamos.</b> Prestar o serviço (calcular resultados, indicadores, relatórios e a estimativa de DARF), liberar o acesso, falar com você pelo WhatsApp sobre o acesso e enviar felicitações de aniversário (com a sua autorização), e manter a segurança. Não vendemos dados nem os usamos para publicidade.</p>
-<p class="mb-2"><b>4. Bases legais.</b> Execução do serviço que você contratou (art. 7º, V), consentimento para contato por WhatsApp e felicitações (art. 7º, I) e legítimo interesse para segurança e prevenção de fraudes (art. 7º, IX).</p>
+<p class="mb-2"><b>4. Bases legais.</b> Execução do serviço que você contratou (art. 7º, V), consentimento para contato por WhatsApp (art. 7º, I) e legítimo interesse para segurança e prevenção de fraudes (art. 7º, IX).</p>
 <p class="mb-2"><b>5. Onde ficam e com quem são compartilhados.</b> Os dados ficam no Supabase (banco de dados e login, servidores em São Paulo). O site é publicado pelo GitHub Pages. Esses fornecedores só armazenam e processam os dados para o app funcionar. Não há outro compartilhamento, salvo obrigação legal.</p>
 <p class="mb-2"><b>6. Segurança.</b> Conexão criptografada (HTTPS) e regras no banco que fazem cada usuário ver e alterar somente os próprios dados dentro de sua respectiva área logada.</p>
-<p class="mb-2"><b>7. Por quanto tempo.</b> Enquanto a conta estiver ativa. Pedidos de convite ficam até serem excluídos (na lixeira, por até 15 dias). Após o pedido de exclusão da conta, os dados são apagados, salvo o que a lei obrigar a guardar.</p>
+<p class="mb-2"><b>7. Por quanto tempo.</b> Enquanto a conta estiver ativa. Após o pedido de exclusão da conta, os dados são apagados, salvo o que a lei obrigar a guardar.</p>
 <p class="mb-2"><b>8. Seus direitos (art. 18).</b> Confirmar se tratamos seus dados, acessar, corrigir, pedir a exclusão, a portabilidade (o backup em ⚙ Opções &gt; Exportar backup já entrega seus dados) e revogar o consentimento. Peça pelo e-mail ${LEGAL_EMAIL}.</p>
 <p class="mb-2"><b>9. Menores de idade.</b> O app não é destinado a menores de 18 anos e não aceita pedidos deles (LGPD, art. 14).</p>
 <p class="mb-2"><b>10. Mudanças.</b> Esta política pode ser atualizada; o app pedirá um novo aceite quando isso acontecer.</p>`;
@@ -3568,9 +3985,9 @@ hmoDb = db;
             const panel = t => `<p class="mt-3 rounded-lg border border-gray-700 bg-gray-800/40 px-3 py-2 text-[11px] text-gray-300"><b class="text-gray-100">No painel:</b> ${t}</p>`;
             const lead = t => `<p class="text-xs text-gray-400">${t}</p>`;
             const STEPS = {
-                1: { t: 'Bem-vindo ao My Trade Dash', h: () => lead('O My Trade Dash é o seu diário de day trade. Você lança operações, movimentações e notas do dia, e o app calcula resultado, indicadores, gráficos, relatórios e DARF.') + `<p class="mt-2 text-xs text-gray-200"><b>Regra de ouro:</b> os indicadores vêm do que você lança. Sem lançamentos, a Visão geral fica zerada.</p><p class="mt-2 text-xs text-gray-400">Este guia mostra cada tela e leva você ao formulário certo. Dá para voltar, pular e reabrir quando quiser em ⚙ Opções &gt; 🧭 Guia do My Trade Dash.</p>`, b: B('data-next', 'Começar', P) },
-                2: { t: 'Seus setups', h: () => { const act = (typeof setups !== 'undefined' ? setups : []).filter(s => s.active).map(s => s.name);
-                    return lead('Setup é a estratégia de cada operação (por exemplo, pullback ou rompimento). Cada operação é ligada a um setup, e os relatórios mostram qual rende mais. ' + (act.length ? `Há ${act.length} setup(s) ativo(s). Você pode inativar, renomear ou criar outros em 🧩 Gerenciar setups.` : 'Ainda não há setups ativos.'))
+                1: { t: 'Bem-vindo ao My Trade Dash', h: () => lead('O My Trade Dash é o seu diário de day trade. Você lança operações, movimentações e notas do dia, e o app calcula resultado, indicadores, gráficos, relatórios e DARF.') + `<p class="mt-2 text-xs text-gray-200"><b>Regra de ouro:</b> os indicadores vêm do que você lança. Sem lançamentos, a Visão Geral fica zerada.</p><p class="mt-2 text-xs text-gray-400">Este guia mostra cada tela e leva você ao formulário certo. Dá para voltar, pular e reabrir quando quiser em ⚙ Opções &gt; 🧭 Guia do My Trade Dash.</p>`, b: B('data-next', 'Começar', P) },
+                2: { t: 'Seus setups', h: () => { const act = (typeof setups !== 'undefined' ? setups : []).filter(s => s.active && !s.deleted).map(s => s.name);
+                    return lead('Setup é a estratégia de cada operação (por exemplo, pullback ou rompimento). Cada operação é ligada a um setup (a escolha é obrigatória; sem estratégia, use "Operação fora de Setup"), e os relatórios mostram qual rende mais. A lista é sua: você cria, renomeia e exclui os setups. ' + (act.length ? `Há ${act.length} setup(s) ativo(s). Você pode inativar, renomear ou criar outros em 🧩 Gerenciar setups.` : 'Ainda não há setups ativos.'))
                         + `<label class="block text-xs text-gray-400 mt-3 mb-1" for="gdSetup">Novo setup (opcional)</label><div class="flex flex-wrap gap-2"><input id="gdSetup" maxlength="60" autocomplete="off" placeholder="Nome do setup" class="${IN} flex-1 min-w-[10rem]"><select id="gdKind" class="${IN} w-auto"><option value="dentro">Dentro do plano</option><option value="fora">Fora do plano</option></select><button type="button" data-addset class="px-3 py-1.5 rounded-lg ${P} text-xs font-semibold">Adicionar</button></div>`
                         + panel('Best Setup e os relatórios Desempenho por setup e Dentro × fora.'); },
                     b: B('data-act="setups"', '🧩 Gerenciar setups') + B('data-next', 'Continuar', P) },
@@ -3581,20 +3998,20 @@ hmoDb = db;
                         <label class="block text-xs text-gray-400 mb-1" for="gdDate">Data</label><input id="gdDate" type="date" max="${today}" value="${today}" class="${IN} mb-2">
                         <label class="block text-xs text-gray-400 mb-1" for="gdBank" id="gdBankLb">Banco de origem</label><input id="gdBank" maxlength="40" autocomplete="off" placeholder="Ex.: Nubank" class="${IN}">` + panel('Valor Investido e Capital Atual.'),
                     b: B('data-save', 'Continuar', P) },
-                4: { t: 'Capital atual', h: () => lead('<b class="text-gray-200">Capital atual</b> é quanto você tem hoje na corretora: o capital investido mais o lucro (ou menos o prejuízo) das operações. Ele muda a cada operação lançada.')
+                4: { t: 'Capital atual', h: () => lead('<b class="text-gray-200">Capital atual</b> é o saldo na sua corretora: o capital investido mais o lucro (ou menos o prejuízo) líquido das operações. O <b class="text-gray-200">Valor investido</b> é o que você aportou e ainda está lá. O Capital atual muda a cada operação lançada.')
                         + `<div class="mt-3 rounded-lg border border-gray-700 bg-gray-800/40 px-3 py-2 text-xs space-y-1"><p>Capital investido hoje: <b class="text-gray-100">${esc(g('metricInvested'))}</b></p><p>Capital atual hoje: <b class="text-gray-100">${esc(g('metricCapital'))}</b></p></div>` + panel('Capital Atual e a curva Capital Curve (Evolução Patrimonial).'),
                     b: B('data-next', 'Continuar', P) },
-                5: { t: 'Suas operações', h: () => lead('Cada operação vai em <b class="text-gray-200">📈 Nova operação</b> (ou no ⚡ Atalhos): data, horários, ativo, contratos, setup, tipo (Gain ou Loss), pontos e resultado em R$. No histórico, abra o mês para ver, editar ou excluir cada linha.') + panel('Total Net Profit, Capital Atual, Gain/Loss, Win Rate, Best Setup, Capital Curve e o bloco Mês atual × mês anterior.'),
+                5: { t: 'Suas operações', h: () => lead('Cada operação vai em <b class="text-gray-200">📈 Nova operação</b> (ou no ⚡ Atalhos): data, horários, ativo, contratos, setup (obrigatório), tipo (Gain ou Loss), pontos e <b class=\"text-gray-200\">resultado bruto</b> em R$. Se quiser, informe também os <b class=\"text-gray-200\">custos da corretora</b>: o app calcula o <b class=\"text-gray-200\">líquido</b>, que alimenta o Capital atual e os relatórios (o Gain/Loss segue o bruto). No histórico, abra o mês para ver, editar ou excluir cada linha.') + panel('Total Net Profit, Capital Atual, Gain/Loss, Win Rate, Best Setup, Capital Curve e o bloco Mês atual × mês anterior.'),
                     b: B('data-act="op"', '📈 Lançar minha primeira operação') + B('data-next', 'Continuar', P) },
                 6: { t: 'Notas do dia', h: () => lead('A <b class="text-gray-200">nota do dia</b> traz o valor líquido, o IRRF e os custos do dia, como na nota de corretagem. Com ela o DARF fica exato; sem ela, o app estima a partir das operações. Fica em <b class="text-gray-200">Mais lançamentos &gt; 🧾 Nota do dia</b>.') + panel('o card DARF do bloco do mês e os alertas de vencimento.'),
                     b: B('data-act="note"', '🧾 Lançar nota do dia') + B('data-next', 'Continuar', P) },
-                7: { t: 'DARF e impostos', h: () => lead('Em <b class="text-gray-200">Relatórios &gt; 2. Custos e imposto (DARF)</b> o app apura o IR de 20% do day trade mês a mês, compensa prejuízos e abate o IRRF. O DARF (código 6015) vence no último dia útil do mês seguinte. Quando faltam 3 dias úteis, o sino 🔔 avisa. Marque como pago quando pagar.') + panel('card DARF e alerta importante no sino.'),
+                7: { t: 'DARF e impostos', h: () => lead('Em <b class="text-gray-200">Relatórios &gt; 2. Custos e imposto (DARF)</b> o app apura o IR de 20% do day trade mês a mês, compensa prejuízos e abate o IRRF. O DARF (código 6015) vence no último dia útil do mês seguinte. Quando faltam 7 dias úteis, o sino 🔔 avisa. Marque como pago quando pagar. Os valores são <b class=\"text-gray-200\">estimativas</b> feitas com as regras da Receita Federal e não substituem a apuração oficial: consulte um profissional de contabilidade e use as 📚 Referências oficiais (com o Sicalc) para gerar a guia.') + panel('card DARF e alerta importante no sino.'),
                     b: B('data-act="darf"', '📄 Abrir Custos e imposto') + B('data-next', 'Continuar', P) },
                 8: { t: 'Relatórios', h: () => lead('Em <b class="text-gray-200">Relatórios</b> você filtra por período, setup e ativo e vê: custos e imposto, desempenho por setup, métricas de risco, dentro × fora do setup, resumo mensal e semanal, por horário, por dia da semana, fluxo financeiro e calendário de resultados. Dá para exportar em PDF, Word, Excel ou CSV.'),
                     b: B('data-act="rep"', '📊 Abrir Relatórios') + B('data-next', 'Continuar', P) },
-                9: { t: 'Mês atual × mês anterior', h: () => lead('Abaixo da Visão geral, o bloco compara o mês atual (até hoje) com o mês anterior fechado: <b class="text-gray-200">Gain</b>, <b class="text-gray-200">Loss</b> e a <b class="text-gray-200">DARF</b> estimada. Use ◀ ▶ para ver outros meses e Hoje para voltar. Em Loss e DARF, a seta para baixo é melhora.'),
+                9: { t: 'Mês atual × mês anterior', h: () => lead('Abaixo da Visão Geral, o bloco compara o mês atual (até hoje) com o mês anterior fechado: <b class="text-gray-200">Gain</b>, <b class="text-gray-200">Loss</b> e a <b class="text-gray-200">DARF</b> estimada. Use ◀ ▶ para ver outros meses e Hoje para voltar. Em Loss e DARF, a seta para baixo é melhora.'),
                     b: B('data-act="mc"', '📆 Ver o bloco') + B('data-next', 'Continuar', P) },
-                10: { t: 'Para acompanhar', h: () => `<ul class="list-disc pl-5 text-xs text-gray-400 space-y-1"><li><b class="text-gray-200">🔔 Sino:</b> novidades e alertas, como o vencimento do DARF.</li><li><b class="text-gray-200">⚡ Atalhos:</b> lançar e navegar rápido; arraste o botão para onde preferir.</li><li><b class="text-gray-200">⚙ Opções:</b> trocar senha, exportar e importar backup, histórico de auditoria, tema e termos.</li><li><b class="text-gray-200">Celular:</b> o gesto de voltar fecha janelas e volta as abas.</li></ul><p class="mt-2 text-xs text-gray-400">Para reabrir este guia: ⚙ Opções &gt; 🧭 Guia do My Trade Dash.</p>`,
+                10: { t: 'Para acompanhar', h: () => `<ul class="list-disc pl-5 text-xs text-gray-400 space-y-1"><li><b class="text-gray-200">🔔 Sino:</b> abas Alertas e Novidades. Alertas urgentes vêm primeiro, como o vencimento do DARF, e há um lembrete de backup depois de 30 dias.</li><li><b class="text-gray-200">⚡ Atalhos:</b> lançar e navegar rápido; arraste o botão para onde preferir.</li><li><b class="text-gray-200">⚙ Opções:</b> trocar senha, exportar e importar backup, histórico de auditoria, tema e termos. Também é lá que fica <b class="text-gray-200">🗑 Excluir minha conta</b>, se um dia quiser encerrar (exporte o backup antes).</li><li><b class="text-gray-200">Celular:</b> o gesto de voltar fecha janelas e volta as abas.</li></ul><p class="mt-2 text-xs text-gray-400">Para reabrir este guia: ⚙ Opções &gt; 🧭 Guia do My Trade Dash.</p>`,
                     b: B('data-flow', '➕ Registrar movimentação') + B('data-skipall', 'Concluir', P) }
             };
             const frame = (inner, btns) => `<div role="dialog" aria-modal="true" class="w-full max-w-md max-h-[92vh] overflow-y-auto rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl">
@@ -3660,14 +4077,14 @@ hmoDb = db;
         }
         window.openGuide = () => openGuide(false);
 
-        /* ---- card "Primeiros passos" no topo da Visão geral ---- */
+        /* ---- card "Primeiros passos" no topo da Visão Geral ---- */
         const fsKey = () => 'mtd_fs_dismiss_' + uidNow();
         window.fsRender = function () {
             const box = $('fsBlock'); if (!box) return;
             const uid = uidNow(); let dismissed = false;
             try { dismissed = localStorage.getItem(fsKey()) === '1'; } catch (e) {}
             if (!uid || dismissed || typeof setups === 'undefined') { box.classList.add('hidden'); return; }
-            const defs = new Set(SETUP_DEFAULTS.map(d => d.name));
+            const defs = new Set(SETUP_DEFAULTS.concat(SETUP_LEGACY).map(d => d.name));
             const items = [
                 { ok: setups.some(s => !defs.has(s.name)) || setups.some(s => !s.active), label: 'Revisar ou criar seus setups', fn: 'openSetupsModal()' },
                 { ok: flows.length > 0, label: 'Registrar o capital investido (primeira movimentação)', fn: 'openFlowModal()' },
