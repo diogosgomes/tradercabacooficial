@@ -186,6 +186,7 @@
                 <p id="lockError" class="text-xs text-red-400 min-h-[1rem]"></p>
                 <button type="submit" id="lockBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">Entrar</button>
             </form>
+            <div class="text-center"><button type="button" id="pwdForgot" class="text-xs text-blue-400 hover:text-blue-300 underline">Esqueci minha senha</button></div>
             <div class="text-center"><button type="button" id="invOpen" class="text-xs text-blue-400 hover:text-blue-300 underline">Quer usar o app? Peça um convite</button></div>
             <form id="invForm" class="hidden space-y-3" autocomplete="off" novalidate>
                 <div id="invFields" class="space-y-3">
@@ -624,11 +625,12 @@
     <div id="pwdModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
         <div class="bg-cardBg border border-gray-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
             <div class="flex justify-between items-center border-b border-gray-800 pb-3">
-                <h3 class="text-lg font-bold text-gray-100">Trocar senha</h3>
-                <button onclick="closePwdModal()" class="text-gray-400 hover:text-gray-200 text-xl font-bold">&times;</button>
+                <h3 class="text-lg font-bold text-gray-100" id="pwdTitle">Trocar senha</h3>
+                <button id="pwdX" onclick="closePwdModal()" class="text-gray-400 hover:text-gray-200 text-xl font-bold">&times;</button>
             </div>
             <form id="pwdForm" class="space-y-3" autocomplete="off">
-                <div><label class="block text-xs font-medium text-gray-400 mb-1">Senha atual</label>
+                <p id="pwdForcedMsg" class="hidden text-xs text-gray-300">Você entrou com uma senha provisória. Crie a sua própria senha para continuar.</p>
+                <div id="pwdCurRow"><label class="block text-xs font-medium text-gray-400 mb-1">Senha atual</label>
                     <input type="password" id="pwdCur" autocomplete="current-password" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200"></div>
                 <div><label class="block text-xs font-medium text-gray-400 mb-1">Nova senha (mínimo 8 caracteres)</label>
                     <input type="password" id="pwdNew" autocomplete="new-password" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200"></div>
@@ -636,7 +638,8 @@
                     <input type="password" id="pwdNew2" autocomplete="new-password" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200"></div>
                 <p id="pwdError" class="text-xs text-red-400 min-h-[1rem]"></p>
                 <div class="flex justify-end space-x-3 pt-3 border-t border-gray-800">
-                    <button type="button" onclick="closePwdModal()" class="px-4 py-2 rounded-lg text-xs font-medium text-gray-400">Cancelar</button>
+                    <button type="button" id="pwdCancel" onclick="closePwdModal()" class="px-4 py-2 rounded-lg text-xs font-medium text-gray-400">Cancelar</button>
+                    <button type="button" id="pwdLogout" class="hidden px-4 py-2 rounded-lg text-xs font-medium text-gray-400">Sair</button>
                     <button type="submit" id="pwdBtn" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-xs font-semibold">Salvar senha</button>
                 </div>
             </form>
@@ -652,7 +655,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V139';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V140';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -943,7 +946,7 @@
         }
         // Ordem: alertas do administrador (Supabase, convites, aniversários), depois críticos, depois os demais
         function alertsBuild(c) {
-            const admin = fridayAlerts(c.ar).concat(invAlerts(c.ar), excAlerts(excAdminList));
+            const admin = fridayAlerts(c.ar).concat(invAlerts(c.ar), pwdAlerts(pwdAdminList), excAlerts(excAdminList));
             const rest = darfAlerts().concat(backupAlerts(c));
             return admin.concat(rest.filter(a => a.level === 'crit'), rest.filter(a => a.level !== 'crit'));
         }
@@ -1004,6 +1007,7 @@
                 if (a.action === 'darf') { bellClose(); repOpen = '1'; switchTab('report'); }
                 else if (a.action === 'inv') { bellClose(); openInvitesModal(); }
                 else if (a.action === 'exc') { bellClose(); openAdminModal('exc'); }
+                else if (a.action === 'pwd') { bellClose(); openAdminModal('pwd'); }
                 else if (a.action === 'export') doExport(a);
                 else bellClose();
             };
@@ -2091,6 +2095,7 @@ hmoDb = db;
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMoreMenu(); });
         document.addEventListener('click', (e) => { if (!e.target.closest('#optsMenu') && !e.target.closest('#btnOpts')) closeOptsMenu(); });
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeOptsMenu(); });
+        document.addEventListener('click', e => { if (e.target && e.target.id === 'pwdLogout') { pwdSetForced(false); closePwdModal(); lockNow(); } });
         window.addEventListener('resize', closeOptsMenu);
         window.addEventListener('scroll', closeOptsMenu, { passive: true });
 
@@ -2341,6 +2346,7 @@ hmoDb = db;
             try {
                 await invLoadCache(true);
                 try { excAdminList = await excList(); } catch (e) {}
+                try { pwdAdminList = await pwdList(); } catch (e) {}
                 const n = invCache.filter(x => x.status === 'novo' && !x.archived).length;
                 ['invBadge', 'fabInvBadge'].forEach(i => { const c = $(i); if (c) { c.textContent = n; c.classList.toggle('hidden', n === 0); } });
                 if (toast && n > 0) showToast(n === 1 ? '1 pedido de convite novo' : n + ' pedidos de convite novos', 'ok');
@@ -2410,15 +2416,16 @@ hmoDb = db;
                 <div id="ivCalBox" class="hidden p-4 overflow-y-auto"></div>
                 <p class="px-4 pb-3 text-[11px] text-gray-400">Arquivar tira da lista sem apagar. Excluir manda para a 🗑 Lixeira, onde o pedido fica 15 dias antes de sumir de vez. Nada desta tela vai para o histórico de auditoria.</p></div>
                 <div id="adUsers" class="hidden flex flex-col min-h-0 flex-1"><div class="px-4 pt-3"><input type="search" id="adSearch" placeholder="Pesquisar por e-mail" autocomplete="off" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div><div id="adUBody" class="p-4 space-y-2 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">Somente consulta. Para apagar o login de um usuário, use o painel do Supabase (Authentication &gt; Users). Nada desta tela vai para o histórico de auditoria.</p></div>
+                <div id="adPwd" class="hidden flex flex-col min-h-0 flex-1"><div class="flex flex-wrap gap-2 px-4 pt-3" id="pwTabs"></div><div id="pwBody" class="p-4 space-y-3 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">"Gerar senha temporária" grava a senha no Supabase na hora e obriga a pessoa a criar a própria ao entrar. A senha aparece só nesta tela: envie por e-mail ou WhatsApp em seguida.</p></div>
                 <div id="adExc" class="hidden flex flex-col min-h-0 flex-1"><div class="flex flex-wrap gap-2 px-4 pt-3" id="exTabs"></div><div id="exBody" class="p-4 space-y-3 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">Desativar bloqueia o acesso no banco, mas mantém o login e os dados por ${EXC_DAYS} dias. Depois disso, use Excluir dados de vez e apague o login no Supabase.</p></div></div>`;
             document.body.appendChild(ov);
             const close = () => { ov.remove(); invRefreshBadge(false); };
-            let sec = 'inv', uList = { ativos: null, excl: null }, uq = '', exList = null, exF = 'novo', exArm = null;
+            let sec = 'inv', uList = { ativos: null, excl: null }, uq = '', exList = null, exF = 'novo', exArm = null, pwList = null, pwF = 'novo';
             const adTabs = ov.querySelector('#adTabs'), adInv = ov.querySelector('#adInv'), adUsers = ov.querySelector('#adUsers'), adUBody = ov.querySelector('#adUBody'), adSearch = ov.querySelector('#adSearch');
             const fmtDT = v => { if (!v) return '—'; const d = new Date(v); return isNaN(d) ? '—' : d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); };
             const drawSecTabs = () => {
                 const nNew = invCache.filter(x => x.status === 'novo' && !x.archived).length;
-                adTabs.innerHTML = [['inv', '📨 Pedidos de convite' + (nNew ? ' (' + nNew + ')' : '')], ['ativos', '👥 Usuários ativos' + (uList.ativos ? ' (' + uList.ativos.length + ')' : '')], ['excl', '🚫 Usuários excluídos' + (uList.excl ? ' (' + uList.excl.length + ')' : '')], ['exc', '🗑 Pedidos de exclusão' + (exList ? ' (' + exList.filter(x => x.status === 'novo').length + ')' : '')]]
+                adTabs.innerHTML = [['inv', '📨 Pedidos de convite' + (nNew ? ' (' + nNew + ')' : '')], ['ativos', '👥 Usuários ativos' + (uList.ativos ? ' (' + uList.ativos.length + ')' : '')], ['excl', '🚫 Usuários excluídos' + (uList.excl ? ' (' + uList.excl.length + ')' : '')], ['exc', '🗑 Pedidos de exclusão' + (exList ? ' (' + exList.filter(x => x.status === 'novo').length + ')' : '')], ['pwd', '🔑 Pedidos de senha' + (pwList ? ' (' + pwList.filter(x => x.status === 'novo').length + ')' : '')]]
                     .map(([k, t]) => `<button type="button" data-sec="${k}" class="px-3 py-1 rounded-lg text-xs font-semibold border ${sec === k ? 'border-amber-500 bg-gray-800 text-amber-200' : 'border-gray-700 text-gray-300'}">${t}</button>`).join('');
             };
             const drawUsers = () => {
@@ -2433,7 +2440,7 @@ hmoDb = db;
                 try { uList[k] = await adminUsersList(k); } catch (e) { adUBody.innerHTML = '<p class="text-xs text-red-400">Não foi possível carregar: ' + esc((e && e.message) || e) + '. Rode o SQL de estrutura (tabelas de usuários) no Supabase.</p>'; return; }
                 drawSecTabs(); if (sec === k) drawUsers();
             };
-            ov.addEventListener('click', e => { const a = e.target.closest('[data-sbcopy]'); if (a) { try { navigator.clipboard.writeText(a.dataset.sbcopy); showToast('E-mail copiado. Cole na busca do Supabase.', 'ok'); } catch (x) {} } });
+            ov.addEventListener('click', e => { const a = e.target.closest('[data-sbcopy]'); if (a) { try { navigator.clipboard.writeText(a.dataset.sbcopy); showToast('Copiado. Cole no Supabase.', 'ok'); } catch (x) {} } });
             const nb = ov.querySelector('#adNewAdmin'); if (nb && invIsMaster()) { nb.classList.remove('hidden'); nb.onclick = () => openAddAdmin(); }
             const adExc = ov.querySelector('#adExc'), exTabs = ov.querySelector('#exTabs'), exBody = ov.querySelector('#exBody');
             const exInF = (r, f) => f === 'desistiu' ? (r.status === 'desistiu') : r.status === f;
@@ -2472,15 +2479,47 @@ hmoDb = db;
                     drawSecTabs(); drawExc(); if (bellInit) refreshBell();
                 } catch (ex) { showToast('Não foi possível concluir: ' + ((ex && ex.message) || ex), 'err'); }
             });
+            const adPwd = ov.querySelector('#adPwd'), pwTabs = ov.querySelector('#pwTabs'), pwBody = ov.querySelector('#pwBody');
+            const drawPwd = () => {
+                if (!pwList) { pwBody.innerHTML = '<p class="text-xs text-gray-400 text-center py-6">Carregando…</p>'; return; }
+                pwTabs.innerHTML = [['novo', 'Novos'], ['atendido', 'Atendidos']].map(([k, t]) => `<button type="button" data-pf="${k}" class="px-3 py-1 rounded-lg text-xs font-semibold border ${pwF === k ? 'border-blue-500 bg-blue-950 text-blue-200' : 'border-gray-700 text-gray-300'}">${t} (${pwList.filter(x => x.status === k).length})</button>`).join('');
+                const items = pwList.filter(x => x.status === pwF);
+                pwBody.innerHTML = items.length ? items.map(r => {
+                    const cv = invCache.find(c => String(c.email || '').toLowerCase() === String(r.email || '').toLowerCase()) || list.find(c => String(c.email || '').toLowerCase() === String(r.email || '').toLowerCase());
+                    const nm = (cv && cv.name) || r.email, wa = cv && cv.whatsapp, pw = pwdShown[r.id], rr = { ...r, name: nm };
+                    const cmd = `update auth.users set encrypted_password = crypt('SENHA_NOVA', gen_salt('bf', 10)) where lower(email) = lower('${String(r.email).replace(/'/g, "''")}');\ninsert into public.tb_senha_troca (user_id, must_change) select id, true from auth.users where lower(email) = lower('${String(r.email).replace(/'/g, "''")}') on conflict (user_id) do update set must_change = true;`;
+                    return `<div class="rounded-lg border border-gray-700 p-3 text-xs" data-id="${esc(r.id)}">
+                        <div class="flex items-start justify-between gap-2"><p class="font-bold text-gray-100 break-all text-sm">${esc(nm)}</p><span class="shrink-0 text-[10px] px-2 py-0.5 rounded-full border ${r.status === 'novo' ? 'border-red-500 text-red-300' : 'border-gray-600 text-gray-400'}">${PWD_ST[r.status] || r.status}</span></div>
+                        <p class="text-gray-400 break-all">${esc(r.email)}${wa ? ' · ' + esc(invFmtPhone(wa)) : ''}</p>
+                        <p class="text-gray-400">Pedido em ${fmtDT(r.created_at)}${r.handled_at ? ' · atendido em ' + fmtDT(r.handled_at) : ''}</p>
+                        ${pw ? `<div class="rounded-md bg-darkBg border border-gray-700 px-2 py-1.5 mt-2"><p>🔑 Senha temporária: <b class="font-mono text-gray-100 select-all">${esc(pw)}</b> <button type="button" data-pa="copy" class="underline text-blue-300">Copiar</button></p><p class="text-gray-400 mt-0.5">Ela aparece só agora: envie em seguida.</p></div>` : (r.status === 'atendido' ? '<p class="text-gray-500 mt-2">A senha já foi gerada e não aparece mais aqui.</p>' : '')}
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            ${r.status === 'novo' ? `<button type="button" data-pa="gen" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold">🔑 Gerar senha temporária</button><a href="${SB_DASH}/sql/new" target="_blank" rel="noopener" data-sbcopy="${esc(cmd)}" class="px-3 py-1.5 rounded-lg border border-gray-600 text-gray-100 font-semibold">↗ Abrir SQL Editor (Supabase)</a>` : ''}
+                            ${pw ? `<a href="${esc(invMailLink(r.email, 'Sua senha temporária do My Trade Dash', pwdMsgText(rr, pw)))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">✉ Enviar senha por e-mail</a>${wa ? `<a href="https://wa.me/${esc(wa)}?text=${encodeURIComponent(pwdMsgText(rr, pw))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">💬 WhatsApp</a>` : ''}${MODE === 'claude' ? '<button type="button" data-pa="test" class="px-3 py-1.5 rounded-lg border border-gray-600 text-gray-300 font-semibold">Testar tela "Crie sua senha" (HMO)</button>' : ''}` : ''}
+                        </div></div>`; }).join('') : '<p class="text-xs text-gray-400 text-center py-6">Nenhum pedido nesta lista.</p>';
+            };
+            const loadPwd = async () => { try { pwList = await pwdList(); pwdAdminList = pwList; } catch (e) { pwBody.innerHTML = '<p class="text-xs text-red-400">Não foi possível carregar: ' + esc((e && e.message) || e) + '. Rode o SQL de estrutura (tb_senha_pedidos) no Supabase.</p>'; return; } drawSecTabs(); if (sec === 'pwd') drawPwd(); };
+            pwTabs.addEventListener('click', e => { const b = e.target.closest('[data-pf]'); if (b) { pwF = b.dataset.pf; drawPwd(); } });
+            pwBody.addEventListener('click', async e => {
+                const b = e.target.closest('[data-pa]'); if (!b) return;
+                const id = b.closest('[data-id]').dataset.id, a = b.dataset.pa, r = pwList.find(x => x.id === id);
+                if (a === 'copy') { try { await navigator.clipboard.writeText(pwdShown[id]); showToast('Senha copiada', 'ok'); } catch (x) { showToast('Copie manualmente: a senha está selecionável', 'err'); } return; }
+                if (a === 'test') { pwdCheckForced(); return; }
+                if (a === 'gen') {
+                    if (!await askBox('Confirmação', `Gerar uma senha temporária para ${r.email}? A senha atual da pessoa deixa de valer e, ao entrar, ela vai criar a própria senha.`, 'Gerar senha', 'Cancelar')) return;
+                    try { const pw = await pwdGerar(r); pwdShown[id] = pw; r.status = 'atendido'; r.handled_at = new Date().toISOString(); pwF = 'atendido'; drawSecTabs(); drawPwd(); if (bellInit) refreshBell(); }
+                    catch (ex) { showToast('Não foi possível gerar: ' + ((ex && ex.message) || ex), 'err'); }
+                }
+            });
             const setSec = k => {
-                sec = k; adInv.classList.toggle('hidden', k !== 'inv'); adUsers.classList.toggle('hidden', k !== 'ativos' && k !== 'excl'); adExc.classList.toggle('hidden', k !== 'exc');
+                sec = k; adInv.classList.toggle('hidden', k !== 'inv'); adUsers.classList.toggle('hidden', k !== 'ativos' && k !== 'excl'); adExc.classList.toggle('hidden', k !== 'exc'); adPwd.classList.toggle('hidden', k !== 'pwd');
                 ov.querySelector('#ivMode').classList.toggle('hidden', k !== 'inv');
                 drawSecTabs();
-                if (k === 'exc') drawExc(); else if (k !== 'inv') { drawUsers(); if (!uList[k]) loadUsers(k); }
+                if (k === 'exc') drawExc(); else if (k === 'pwd') { drawPwd(); if (!pwList) loadPwd(); } else if (k !== 'inv') { drawUsers(); if (!uList[k]) loadUsers(k); }
             };
             adTabs.addEventListener('click', e => { const b = e.target.closest('[data-sec]'); if (b) setSec(b.dataset.sec); });
             adSearch.addEventListener('input', () => { uq = adSearch.value; drawUsers(); });
-            loadUsers('ativos'); loadUsers('excl'); loadExc();
+            loadUsers('ativos'); loadUsers('excl'); loadExc(); loadPwd();
             ov.querySelector('#ivClose').onclick = close;
             ov.addEventListener('click', ev => { if (ev.target === ov) close(); });
             const body = ov.querySelector('#ivBody'), tabs = ov.querySelector('#ivTabs'), search = ov.querySelector('#ivSearch'), calBox = ov.querySelector('#ivCalBox'), listBox = ov.querySelector('#ivListBox'), modeBtn = ov.querySelector('#ivMode');
@@ -2567,7 +2606,7 @@ hmoDb = db;
                 } catch (ex) { showToast('Não foi possível concluir: ' + ((ex && ex.message) || ex), 'err'); }
             });
             await load();
-            drawSecTabs(); setSec(['ativos', 'excl', 'exc'].includes(startTab) ? startTab : 'inv');
+            drawSecTabs(); setSec(['ativos', 'excl', 'exc', 'pwd'].includes(startTab) ? startTab : 'inv');
         }
         async function adminUsersList(k) {
             const hm = k === 'ativos' ? 'usuarios' : 'usuarios_excluidos', tb = k === 'ativos' ? 'tb_usuarios' : 'tb_usuarios_excluidos', ord = k === 'ativos' ? 'created_at' : 'deleted_at';
@@ -2580,6 +2619,62 @@ hmoDb = db;
             if (error) throw error; return data || [];
         }
         const adminSeeded = {};
+
+        /* ===== Senha provisória e "Esqueci minha senha" (V140) ===== */
+        const PWD_ST = { novo: 'Novo', atendido: 'Atendido' };
+        let pwdAdminList = null; const pwdShown = {};
+        const pwdGen = () => { const al = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789', a = new Uint8Array(12); crypto.getRandomValues(a); return Array.from(a, x => al[x % al.length]).join(''); };
+        async function pwdAsk(email) {
+            if (MODE === 'claude') {
+                const col = hmoDb.collection('senha_pedidos'), docs = (await col.get()).docs.map(d => d.data());
+                const em = email.toLowerCase();
+                if (!docs.some(x => String(x.email).toLowerCase() === em && (x.status === 'novo' || Date.now() - new Date(x.created_at).getTime() < 3600000))) await col.add({ email, status: 'novo', created_at: new Date().toISOString() });
+                return;
+            }
+            const { error } = await sb.rpc('mtd_pedir_senha', { p_email: email }); if (error) throw error;
+        }
+        async function pwdList() {
+            if (MODE === 'claude') {
+                const docs = (await hmoDb.collection('senha_pedidos').get()).docs.map(d => ({ id: d.id, ...d.data() }));
+                return docs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            }
+            const { data, error } = await sb.from('tb_senha_pedidos').select('*').order('created_at', { ascending: false }).limit(500);
+            if (error) throw error; return data || [];
+        }
+        async function pwdGerar(r) {
+            if (MODE === 'claude') { const pw = pwdGen(); await hmoDb.collection('senha_pedidos').doc(r.id).update({ status: 'atendido', handled_at: new Date().toISOString() }); await hmoDb.collection('senha_troca').doc('mine').set({ must_change: true }); return pw; }
+            const { data, error } = await sb.rpc('mtd_gerar_senha', { p_id: r.id }); if (error) throw error; return data;
+        }
+        function pwdMsgText(r, pw, via) {
+            const first = String((r.name || r.email) || '').trim().split(/[\s@]+/)[0] || '';
+            return `Olá, ${first}! Aqui está a sua senha provisória do My Trade Dash.\n\nLogin: ${r.email}\nSenha provisória: ${pw}\n\nAcesse ${INV_SITE} e entre com ela. Ao entrar, você vai criar a sua própria senha, e a provisória deixa de valer.\n\nUm abraço,\nMy Trade Dash`;
+        }
+        function pwdAlerts(list) {
+            if (!invIsAdmin || !list) return [];
+            const n = list.filter(x => x.status === 'novo').length;
+            return n ? [{ id: 'pwd:new', level: 'crit', action: 'pwd', title: n === 1 ? '1 pedido de nova senha aguardando' : n + ' pedidos de nova senha aguardando', note: 'Abra Gestão Admin > Pedidos de senha para gerar a senha temporária e enviar à pessoa.' }] : [];
+        }
+        function openForgot() {
+            const o = document.createElement('div'); o.className = 'fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70'; o.style.zIndex = '200'; o.dataset.keepBell = '1';
+            o.innerHTML = `<div class="w-full max-w-sm rounded-2xl border border-gray-700 bg-gray-900 p-5 text-sm text-gray-200 shadow-2xl"><h3 class="text-base font-bold mb-2">🔑 Receber nova senha temporária</h3>
+                <p class="text-xs text-gray-300 mb-3">Informe o e-mail cadastrado no My Trade Dash. A nova senha temporária será enviada por e-mail e, ao entrar com ela, você cria a sua.</p>
+                <label class="block text-xs font-medium text-gray-400 mb-1" for="fgMail">E-mail cadastrado no My Trade Dash</label><input type="email" id="fgMail" autocomplete="email" autocapitalize="none" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200">
+                <p id="fgMsg" class="text-xs mt-3 min-h-[1rem]" role="status"></p>
+                <div class="flex justify-end gap-2 mt-3"><button type="button" data-n class="px-3 py-2 rounded-lg border border-gray-600 text-xs font-semibold">Voltar</button><button type="button" data-y class="px-3 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold">Pedir nova senha</button></div></div>`;
+            document.body.appendChild(o);
+            const msg = o.querySelector('#fgMsg'), y = o.querySelector('[data-y]'), n = o.querySelector('[data-n]');
+            n.onclick = () => o.remove();
+            y.onclick = async () => {
+                const em = o.querySelector('#fgMail').value.trim();
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em) || em.length > 120) { msg.className = 'text-xs mt-3 text-red-400'; msg.textContent = 'Informe um e-mail válido.'; return; }
+                y.disabled = true;
+                try { await pwdAsk(em); } catch (e) { /* resposta neutra: não revela se o e-mail existe */ }
+                msg.className = 'text-xs mt-3 rounded-lg bg-blue-950 text-blue-100 px-3 py-2'; msg.textContent = 'Pedido recebido. Se o e-mail estiver cadastrado no My Trade Dash, você vai receber a nova senha temporária no seu e-mail em breve.';
+                o.querySelector('#fgMail').disabled = true; y.classList.add('hidden'); n.textContent = 'Voltar ao login';
+            };
+            setTimeout(() => o.querySelector('#fgMail').focus(), 50);
+        }
+        document.addEventListener('click', e => { if (e.target && e.target.id === 'pwdForgot') openForgot(); });
         function openAddAdmin() {
             if (!invIsMaster()) return;
             const o = document.createElement('div'); o.className = 'fixed inset-0 z-[110] flex items-center justify-center p-3 bg-black/70'; o.dataset.keepBell = '1';
@@ -2661,6 +2756,7 @@ hmoDb = db;
         }
         let excAdminList = null;
         async function excRefreshBar() {
+            pwdCheckForced();
             const bar = $('excBar'), old = $('excBlock'); if (old) old.remove();
             try { excMine = await excGetMine(); } catch (e) { excMine = null; }
             const m = excMine;
@@ -2838,17 +2934,33 @@ hmoDb = db;
             $('pwdError').textContent = ''; $('pwdCur').value = ''; $('pwdNew').value = ''; $('pwdNew2').value = '';
             $('pwdModal').classList.remove('hidden'); $('pwdModal').classList.add('flex');
         }
-        function closePwdModal() { resetEyes(); $('pwdModal').classList.remove('flex'); $('pwdModal').classList.add('hidden'); }
+        let pwdForced = false;
+        function pwdSetForced(on) {
+            pwdForced = on; $('pwdModal').style.zIndex = on ? '130' : '';
+            $('pwdTitle').textContent = on ? '🔑 Crie sua senha' : 'Trocar senha';
+            ['pwdX', 'pwdCancel'].forEach(i => $(i).classList.toggle('hidden', on));
+            $('pwdLogout').classList.toggle('hidden', !on); $('pwdCurRow').classList.toggle('hidden', on); $('pwdForcedMsg').classList.toggle('hidden', !on);
+        }
+        function openPwdForced() { openPwdModal(); pwdSetForced(true); }
+        async function pwdCheckForced() {
+            let must = false;
+            try {
+                if (MODE === 'claude') { const d = await hmoDb.collection('senha_troca').doc('mine').get(); must = !!(d && d.exists && d.data().must_change); }
+                else { const { data } = await sb.from('tb_senha_troca').select('must_change').eq('user_id', currentUserId).maybeSingle(); must = !!(data && data.must_change); }
+            } catch (e) { must = false; }
+            if (must && !pwdForced) openPwdForced();
+        }
+        function closePwdModal() { if (pwdForced) return; resetEyes(); $('pwdModal').classList.remove('flex'); $('pwdModal').classList.add('hidden'); }
         let pwdFails = 0, pwdBlockedUntil = 0;
         $('pwdForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const err = $('pwdError'), cur = $('pwdCur').value, a = $('pwdNew').value, b = $('pwdNew2').value, now = Date.now();
             err.textContent = '';
             if (now < pwdBlockedUntil) { err.textContent = `Muitas tentativas. Aguarde ${Math.ceil((pwdBlockedUntil - now) / 1000)} s.`; return; }
-            if (!cur) { err.textContent = 'Informe a senha atual.'; return; }
+            if (!pwdForced && !cur) { err.textContent = 'Informe a senha atual.'; return; }
             if (a.length < 8) { err.textContent = 'Use pelo menos 8 caracteres.'; return; }
             if (a !== b) { err.textContent = 'As senhas não conferem.'; return; }
-            if (a === cur) { err.textContent = 'A nova senha deve ser diferente da atual.'; return; }
+            if (!pwdForced && a === cur) { err.textContent = 'A nova senha deve ser diferente da atual.'; return; }
             const btn = $('pwdBtn'); btn.disabled = true;
             // senha atual errada: conta a tentativa, bloqueia 30 s após 5 erros e registra na auditoria
             const wrongCur = () => {
@@ -2858,6 +2970,17 @@ hmoDb = db;
                 auditAdd({ kind: 'password', outcome: 'Erro', detail: 'Troca de senha recusada: senha atual incorreta' });
             };
             try {
+                if (pwdForced) {
+                    if (MODE === 'claude') { await hmoDb.collection('senha_troca').doc('mine').set({ must_change: false }); }
+                    else {
+                        const { error } = await sb.auth.updateUser({ password: a });
+                        if (error) { err.textContent = /different/i.test(error.message || '') ? 'A nova senha deve ser diferente da provisória.' : 'Não foi possível criar a senha: ' + error.message; return; }
+                        const r = await sb.rpc('mtd_senha_trocada'); if (r.error) { err.textContent = 'Senha criada, mas não foi possível liberar o acesso: ' + r.error.message; return; }
+                    }
+                    pwdForced = false; pwdSetForced(false); closePwdModal();
+                    auditAdd({ kind: 'password', outcome: 'Concluída', detail: 'Senha provisória trocada pela própria' });
+                    showToast('Senha criada. Bem-vindo!', 'ok'); return;
+                }
                 if (MODE === 'claude') {
                     const h = await sha256Hex(`${hmoCred.salt}:${hmoCred.userNorm}:${cur}`);
                     if (h !== hmoCred.hash) { wrongCur(); return; }
@@ -4011,7 +4134,7 @@ hmoDb = db;
                     b: B('data-act="rep"', '📊 Abrir Relatórios') + B('data-next', 'Continuar', P) },
                 9: { t: 'Mês atual × mês anterior', h: () => lead('Abaixo da Visão Geral, o bloco compara o mês atual (até hoje) com o mês anterior fechado: <b class="text-gray-200">Gain</b>, <b class="text-gray-200">Loss</b> e a <b class="text-gray-200">DARF</b> estimada. Use ◀ ▶ para ver outros meses e Hoje para voltar. Em Loss e DARF, a seta para baixo é melhora.'),
                     b: B('data-act="mc"', '📆 Ver o bloco') + B('data-next', 'Continuar', P) },
-                10: { t: 'Para acompanhar', h: () => `<ul class="list-disc pl-5 text-xs text-gray-400 space-y-1"><li><b class="text-gray-200">🔔 Sino:</b> abas Alertas e Novidades. Alertas urgentes vêm primeiro, como o vencimento do DARF, e há um lembrete de backup depois de 30 dias.</li><li><b class="text-gray-200">⚡ Atalhos:</b> lançar e navegar rápido; arraste o botão para onde preferir.</li><li><b class="text-gray-200">⚙ Opções:</b> trocar senha, exportar e importar backup, histórico de auditoria, tema e termos. Também é lá que fica <b class="text-gray-200">🗑 Excluir minha conta</b>, se um dia quiser encerrar (exporte o backup antes).</li><li><b class="text-gray-200">Celular:</b> o gesto de voltar fecha janelas e volta as abas.</li></ul><p class="mt-2 text-xs text-gray-400">Para reabrir este guia: ⚙ Opções &gt; 🧭 Guia do My Trade Dash.</p>`,
+                10: { t: 'Para acompanhar', h: () => `<ul class="list-disc pl-5 text-xs text-gray-400 space-y-1"><li><b class="text-gray-200">🔔 Sino:</b> abas Alertas e Novidades. Alertas urgentes vêm primeiro, como o vencimento do DARF, e há um lembrete de backup depois de 30 dias.</li><li><b class="text-gray-200">⚡ Atalhos:</b> lançar e navegar rápido; arraste o botão para onde preferir.</li><li><b class="text-gray-200">⚙ Opções:</b> trocar senha (se esquecer, use <b class="text-gray-200">Esqueci minha senha</b> na tela de entrada; a senha provisória deve ser trocada no primeiro acesso), exportar e importar backup, histórico de auditoria, tema e termos. Também é lá que fica <b class="text-gray-200">🗑 Excluir minha conta</b>, se um dia quiser encerrar (exporte o backup antes).</li><li><b class="text-gray-200">Celular:</b> o gesto de voltar fecha janelas e volta as abas.</li></ul><p class="mt-2 text-xs text-gray-400">Para reabrir este guia: ⚙ Opções &gt; 🧭 Guia do My Trade Dash.</p>`,
                     b: B('data-flow', '➕ Registrar movimentação') + B('data-skipall', 'Concluir', P) }
             };
             const frame = (inner, btns) => `<div role="dialog" aria-modal="true" class="w-full max-w-md max-h-[92vh] overflow-y-auto rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl">
