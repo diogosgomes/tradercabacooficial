@@ -656,7 +656,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V147';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V149';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -2431,6 +2431,16 @@ hmoDb = db;
                 <div id="ivCalBox" class="hidden p-4 overflow-y-auto"></div>
                 <p class="px-4 pb-3 text-[11px] text-gray-400">Arquivar tira da lista sem apagar. Excluir manda para a 🗑 Lixeira, onde o pedido fica 15 dias antes de sumir de vez. Nada desta tela vai para o histórico de auditoria.</p></div>
                 <div id="adUsers" class="hidden flex flex-col min-h-0 flex-1"><div class="px-4 pt-3"><input type="search" id="adSearch" placeholder="Pesquisar por e-mail" autocomplete="off" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div><div id="adUBody" class="p-4 space-y-2 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">Somente consulta. Para apagar o login de um usuário, use o painel do Supabase (Authentication &gt; Users). Nada desta tela vai para o histórico de auditoria.</p></div>
+                <div id="adRel" class="hidden flex flex-col min-h-0 flex-1 overflow-y-auto"><div class="p-4 space-y-3">
+                    <p class="text-sm font-bold text-gray-100">📑 Relatórios</p>
+                    <p class="text-[11px] text-gray-400">Exporta o que está nas outras abas. O arquivo leva dados pessoais de outras pessoas: guarde com cuidado e apague quando não precisar mais. Cada exportação entra no histórico de auditoria.</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2"><div><label class="block text-xs font-medium text-gray-400 mb-1" for="rlFrom">De</label><input type="date" id="rlFrom" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div><div><label class="block text-xs font-medium text-gray-400 mb-1" for="rlTo">Até</label><input type="date" id="rlTo" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div></div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3"><div><p class="text-xs font-medium text-gray-400 mb-1">O que entra no relatório</p><div id="rlChecks" class="space-y-1"></div>
+                    <div class="flex flex-wrap gap-2 mt-2"><button type="button" id="rlAll" class="px-3 py-1 rounded-lg border border-gray-600 text-xs font-semibold">Marcar todas</button><button type="button" id="rlNone" class="px-3 py-1 rounded-lg border border-gray-600 text-xs font-semibold">Desmarcar</button></div></div>
+                    <div class="rounded-lg border border-gray-700 p-2"><div class="flex items-baseline justify-between gap-2 mb-1"><p class="text-xs font-semibold text-gray-200">Situação por seção</p><p class="text-[10px] text-gray-500">no período</p></div><div class="h-44"><canvas id="rlChart"></canvas></div><p class="text-[10px] text-gray-500 mt-1">Pendentes = esperando você. Concluídos = já tratados. Outros = recusados, descartados ou desistências.</p></div></div>
+                    <p id="rlSum" class="text-[11px] text-gray-400"></p>
+                    <div class="flex flex-wrap items-center gap-2"><button type="button" id="rlShow" class="px-3 py-1.5 rounded-lg border border-gray-600 text-xs font-semibold">Ver dados</button><button type="button" id="rlClear" class="px-3 py-1.5 rounded-lg border border-gray-600 text-xs font-semibold">Limpar filtro</button><span class="ml-auto flex flex-wrap items-center gap-2 text-xs text-gray-400">Baixar:<button type="button" data-rx="pdf" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold">PDF</button><button type="button" data-rx="docx" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold">Word</button><button type="button" data-rx="xlsx" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold">Excel</button></span></div>
+                    <div id="rlBody" class="space-y-2"></div></div></div>
                 <div id="adApo" class="hidden flex flex-col min-h-0 flex-1"><p class="px-4 pt-3 text-[11px] text-gray-400">Contribuição é voluntária: ninguém fica sem o app por não contribuir, e o app nunca cobra. Confira o Pix no seu banco antes de confirmar; confirmar gera o número do recibo. O WhatsApp e o e-mail abrem com o texto pronto; para mandar o recibo em PDF, baixe e anexe.</p><div id="doCards" class="grid grid-cols-1 sm:grid-cols-3 gap-2 px-4 pt-3"></div><div class="flex flex-wrap gap-2 px-4 pt-3" id="doTabs"></div><div id="doBody" class="p-4 space-y-3 overflow-y-auto"></div></div>
                 <div id="adPwd" class="hidden flex flex-col min-h-0 flex-1"><div class="flex flex-wrap gap-2 px-4 pt-3" id="pwTabs"></div><div id="pwBody" class="p-4 space-y-3 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">"Gerar senha temporária" grava a senha no Supabase na hora e obriga a pessoa a criar a própria ao entrar. A senha aparece só nesta tela: envie por e-mail ou WhatsApp em seguida.</p></div>
                 <div id="adExc" class="hidden flex flex-col min-h-0 flex-1"><div class="flex flex-wrap gap-2 px-4 pt-3" id="exTabs"></div><div id="exBody" class="p-4 space-y-3 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">Desativar bloqueia o acesso no banco, mas mantém o login e os dados por ${EXC_DAYS} dias. Depois disso, use Excluir dados de vez e apague o login no Supabase.</p></div></div>`;
@@ -2441,7 +2451,9 @@ hmoDb = db;
             const fmtDT = v => { if (!v) return '—'; const d = new Date(v); return isNaN(d) ? '—' : d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); };
             const drawSecTabs = () => {
                 const nNew = invCache.filter(x => x.status === 'novo' && !x.archived).length;
-                adTabs.innerHTML = [['inv', '📨 Pedidos de convite' + (nNew ? ' (' + nNew + ')' : '')], ['ativos', '👥 Usuários ativos' + (uList.ativos ? ' (' + uList.ativos.length + ')' : '')], ['excl', '🚫 Usuários excluídos' + (uList.excl ? ' (' + uList.excl.length + ')' : '')], ['exc', '🗑 Pedidos de exclusão' + (exList ? ' (' + exList.filter(x => x.status === 'novo').length + ')' : '')], ['pwd', '🔑 Pedidos de senha' + (pwList ? ' (' + pwList.filter(x => x.status === 'novo').length + ')' : '')], ['apo', '🤝 Apoiadores' + (doList ? ' (' + doList.filter(x => x.status === 'nova').length + ')' : '')]]
+                const tabs = [['apo', '🤝 Apoiadores' + (doList ? ' (' + doList.filter(x => x.status === 'nova').length + ')' : '')], ['inv', '📨 Pedidos de convite' + (nNew ? ' (' + nNew + ')' : '')], ['exc', '🗑 Pedidos de exclusão' + (exList ? ' (' + exList.filter(x => x.status === 'novo').length + ')' : '')], ['pwd', '🔑 Pedidos de senha' + (pwList ? ' (' + pwList.filter(x => x.status === 'novo').length + ')' : '')], ['ativos', '👥 Usuários ativos' + (uList.ativos ? ' (' + uList.ativos.length + ')' : '')], ['excl', '🚫 Usuários excluídos' + (uList.excl ? ' (' + uList.excl.length + ')' : '')]];
+                if (invIsMaster()) tabs.push(['rel', '📑 Relatórios']);
+                adTabs.innerHTML = tabs
                     .map(([k, t]) => `<button type="button" data-sec="${k}" class="px-3 py-1 rounded-lg text-xs font-semibold border ${sec === k ? 'border-amber-500 bg-gray-800 text-amber-200' : 'border-gray-700 text-gray-300'}">${t}</button>`).join('');
             };
             const drawUsers = () => {
@@ -2454,7 +2466,7 @@ hmoDb = db;
             };
             const loadUsers = async k => {
                 try { uList[k] = await adminUsersList(k); } catch (e) { adUBody.innerHTML = '<p class="text-xs text-red-400">Não foi possível carregar: ' + esc((e && e.message) || e) + '. Rode o SQL de estrutura (tabelas de usuários) no Supabase.</p>'; return; }
-                drawSecTabs(); if (sec === k) drawUsers();
+                drawSecTabs(); if (sec === 'rel') drawRel(); if (sec === k) drawUsers();
             };
             ov.addEventListener('click', e => { const a = e.target.closest('[data-sbcopy]'); if (a) { try { navigator.clipboard.writeText(a.dataset.sbcopy); showToast('Copiado. Cole no Supabase.', 'ok'); } catch (x) {} } });
             const nb = ov.querySelector('#adNewAdmin'); if (nb && invIsMaster()) { nb.classList.remove('hidden'); nb.onclick = () => openAddAdmin(); }
@@ -2482,7 +2494,7 @@ hmoDb = db;
                             <a href="${SB_DASH}/editor" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg border border-gray-600 text-gray-100 font-semibold">↗ Tabela tb_exclusoes no Supabase</a>
                         </div>${r.status === 'desativado' && !d30 ? `<p class="text-[11px] text-gray-500 mt-2">Exclusão de vez liberada a partir do ${EXC_DAYS}º dia (faltam ${EXC_DAYS - excDaysDeact(r)}).</p>` : ''}`}</div>`; }).join('') : '<p class="text-xs text-gray-400 text-center py-6">Nenhum pedido nesta lista.</p>';
             };
-            const loadExc = async () => { try { exList = await excList(); excAdminList = exList; } catch (e) { exBody.innerHTML = '<p class="text-xs text-red-400">Não foi possível carregar: ' + esc((e && e.message) || e) + '. Rode o SQL de estrutura (tb_exclusoes) no Supabase.</p>'; return; } drawSecTabs(); if (sec === 'exc') drawExc(); };
+            const loadExc = async () => { try { exList = await excList(); excAdminList = exList; } catch (e) { exBody.innerHTML = '<p class="text-xs text-red-400">Não foi possível carregar: ' + esc((e && e.message) || e) + '. Rode o SQL de estrutura (tb_exclusoes) no Supabase.</p>'; return; } drawSecTabs(); if (sec === 'rel') drawRel(); if (sec === 'exc') drawExc(); };
             exTabs.addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (b) { exF = b.dataset.f; drawExc(); } });
             exBody.addEventListener('click', async e => {
                 const b = e.target.closest('[data-ea]'); if (!b) return;
@@ -2524,7 +2536,7 @@ hmoDb = db;
                                  <button type="button" data-da="dis" class="px-3 py-1.5 rounded-lg border border-gray-600 text-gray-200 font-semibold">✕ Descartar</button>`}
                         </div></div>`; }).join('') : '<p class="text-xs text-gray-400 text-center py-6">Nenhuma contribuição nesta lista.</p>';
             };
-            const loadDon = async () => { try { await invLoadCache(); doList = await donList(); donAdminList = doList; } catch (e) { doBody.innerHTML = '<p class="text-xs text-red-400">Não foi possível carregar: ' + esc((e && e.message) || e) + '. Rode o SQL de estrutura (tb_contribuicoes) no Supabase.</p>'; return; } drawSecTabs(); if (sec === 'apo') drawDon(); };
+            const loadDon = async () => { try { await invLoadCache(); doList = await donList(); donAdminList = doList; } catch (e) { doBody.innerHTML = '<p class="text-xs text-red-400">Não foi possível carregar: ' + esc((e && e.message) || e) + '. Rode o SQL de estrutura (tb_contribuicoes) no Supabase.</p>'; return; } drawSecTabs(); if (sec === 'rel') drawRel(); if (sec === 'apo') drawDon(); };
             doTabs.addEventListener('click', e => { const b = e.target.closest('[data-df]'); if (b) { doF = b.dataset.df; drawDon(); } });
             doBody.addEventListener('click', async e => {
                 const b = e.target.closest('[data-da]'); if (!b) return;
@@ -2554,6 +2566,108 @@ hmoDb = db;
                     drawSecTabs(); drawDon(); if (bellInit) refreshBell();
                 } catch (ex) { showToast('Não foi possível concluir: ' + ((ex && ex.message) || ex), 'err'); }
             });
+            const adRel = ov.querySelector('#adRel');
+            let rlOn = {}, rlShow = false, rlOpen = null, rlAdm = new Set();
+            const REL_SECS = [
+                { k: 'apo', t: '🤝 Apoiadores', pt: 'Apoiadores', dt: 'data do aviso da contribuição', head: ['Nome', 'E-mail', 'Valor', 'Situação', 'Informada', 'Confirmada', 'Comprov.'], num: [2] },
+                { k: 'inv', t: '📨 Pedidos de convite', pt: 'Pedidos de convite', dt: 'data do pedido', head: ['Nome', 'E-mail', 'WhatsApp', 'UF', 'Nascimento', 'Como soube', 'Situação', 'Pedido em'] },
+                { k: 'exc', t: '🗑 Pedidos de exclusão', pt: 'Pedidos de exclusão', dt: 'data do pedido', head: ['E-mail', 'Motivo', 'Comentário', 'Situação', 'Pedido em', 'Desativado em'] },
+                { k: 'pwd', t: '🔑 Pedidos de senha', pt: 'Pedidos de senha', dt: 'data do pedido', head: ['E-mail', 'Situação', 'Pedido em', 'Atendido em'] },
+                { k: 'ativos', t: '👥 Usuários ativos', pt: 'Usuários ativos', dt: 'data de cadastro', head: ['E-mail', 'Cadastro', 'Último acesso', 'Admin'] },
+                { k: 'excl', t: '🚫 Usuários excluídos', pt: 'Usuários excluídos', dt: 'data da exclusão', head: ['E-mail', 'Cadastro', 'Excluído em'] }];
+            REL_SECS.forEach(x => rlOn[x.k] = true);
+            const rlD = v => v ? new Date(v) : null;
+            const rlIn = v => { const d = rlD(v), a = ov.querySelector('#rlFrom').value, b = ov.querySelector('#rlTo').value; if (!d || isNaN(d)) return false;
+                const ymd = d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+                return (!a || ymd >= a) && (!b || ymd <= b); };
+            const rlDay = v => { const d = rlD(v); return d && !isNaN(d) ? d.toLocaleDateString('pt-BR') : '—'; };
+            const relRows = k => {
+                if (k === 'apo') return (doList || []).filter(x => rlIn(x.created_at)).map(x => [x.name || x.email, x.email, fmtMoneyBR(num(x.amount)), x.status === 'confirmada' ? 'Confirmada' : x.status === 'descartada' ? 'Não localizada' : 'Aguardando conferência', rlDay(x.created_at), rlDay(x.confirmed_at), x.receipt_no ? donNo(x) : '—']);
+                if (k === 'inv') return (list || []).filter(x => rlIn(x.created_at)).map(x => [x.name, x.email, x.whatsapp ? invFmtPhone(x.whatsapp) : '—', x.whatsapp ? (invUfOf(x.whatsapp) || '—') : '—', x.birth_date ? rlDay(x.birth_date + 'T12:00:00') : '—', x.how_known || '—', INV_ST[x.status] || x.status, rlDay(x.created_at)]);
+                if (k === 'exc') return (exList || []).filter(x => rlIn(x.created_at)).map(x => [x.email, x.reason || '—', x.comment || '—', EXC_ST[x.status] || x.status, rlDay(x.created_at), rlDay(x.deactivated_at)]);
+                if (k === 'pwd') return (pwList || []).filter(x => rlIn(x.created_at)).map(x => [x.email, PWD_ST[x.status] || x.status, rlDay(x.created_at), rlDay(x.handled_at)]);
+                if (k === 'ativos') return (uList.ativos || []).filter(x => rlIn(x.created_at)).map(x => [x.email, rlDay(x.created_at), rlDay(x.last_sign_in_at), rlAdm.has(String(x.email || '').toLowerCase()) ? 'Sim' : 'Não']);
+                return (uList.excl || []).filter(x => rlIn(x.deleted_at)).map(x => [x.email, rlDay(x.created_at), rlDay(x.deleted_at)]);
+            };
+            const relInd = k => {
+                if (k !== 'apo') return [];
+                const r = (doList || []).filter(x => rlIn(x.created_at));
+                return [['Confirmado no período', 'R$ ' + fmtMoneyBR(r.filter(x => x.status === 'confirmada').reduce((a, x) => a + num(x.amount), 0))],
+                    ['Apoiadores', String(new Set(r.filter(x => x.status === 'confirmada').map(x => x.user_id || x.email)).size)],
+                    ['Aguardando conferência', String(r.filter(x => x.status === 'nova').length)]];
+            };
+            const relPick = () => REL_SECS.filter(x => rlOn[x.k]).map(x => ({ ...x, rows: relRows(x.k), ind: relInd(x.k) }));
+            const relPer = () => { const a = ov.querySelector('#rlFrom').value, b = ov.querySelector('#rlTo').value; return (a ? isoToBr(a) : 'início') + ' a ' + (b ? isoToBr(b) : 'hoje'); };
+            const RL_BUCKET = { novo: 0, nova: 0, convidado: 1, confirmada: 1, atendido: 1, desativado: 1, ativo: 1, excluido: 1, recusado: 2, descartada: 2, desistiu: 2 };
+            let rlChart = null;
+            const relChart = () => {
+                const cv = ov.querySelector('#rlChart'); if (!cv || typeof Chart === 'undefined') return;
+                const pick = relPick(), labels = pick.map(x => x.pt.replace('Pedidos de ', '').replace('Usuários ', 'Usu. ')), raw = [[], [], []];
+                pick.forEach(sec => { const c = [0, 0, 0];
+                    const src = sec.k === 'apo' ? (doList || []).filter(x => rlIn(x.created_at)).map(x => x.status)
+                        : sec.k === 'inv' ? (list || []).filter(x => rlIn(x.created_at)).map(x => x.status)
+                        : sec.k === 'exc' ? (exList || []).filter(x => rlIn(x.created_at)).map(x => x.status)
+                        : sec.k === 'pwd' ? (pwList || []).filter(x => rlIn(x.created_at)).map(x => x.status)
+                        : sec.k === 'ativos' ? (uList.ativos || []).filter(x => rlIn(x.created_at)).map(() => 'ativo')
+                        : (uList.excl || []).filter(x => rlIn(x.deleted_at)).map(() => 'excluido');
+                    src.forEach(st => c[RL_BUCKET[st] == null ? 2 : RL_BUCKET[st]]++);
+                    raw[0].push(c[0]); raw[1].push(c[1]); raw[2].push(c[2]); });
+                const light = document.documentElement.getAttribute('data-theme') === 'light';
+                const grid = light ? '#e5e7eb' : '#374151', tick = light ? '#4b5563' : '#9ca3af';
+                const ds = [['Pendentes', '#f59e0b'], ['Concluídos', '#3b82f6'], ['Outros', light ? '#9ca3af' : '#6b7280']]
+                    .map(([l, c], i) => ({ label: l, data: raw[i], backgroundColor: c, borderRadius: 3, maxBarThickness: 22 }));
+                const plug = { id: 'vals', afterDatasetsDraw(ch) { const x = ch.ctx; x.save(); x.font = 'bold 9px system-ui'; x.fillStyle = tick; x.textAlign = 'center';
+                    ch.data.datasets.forEach((d, di) => ch.getDatasetMeta(di).data.forEach((b, i) => { const v = d.data[i]; if (v) x.fillText(String(v), b.x, b.y - 3); })); x.restore(); } };
+                if (rlChart) rlChart.destroy();
+                rlChart = new Chart(cv.getContext('2d'), { type: 'bar', data: { labels, datasets: ds },
+                    options: { responsive: true, maintainAspectRatio: false, animation: { duration: 250 },
+                        plugins: { legend: { labels: { color: tick, boxWidth: 10, font: { size: 10 } } }, tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y}` } } },
+                        scales: { x: { grid: { display: false }, ticks: { color: tick, font: { size: 9 }, maxRotation: 30, minRotation: 0 } },
+                            y: { beginAtZero: true, grid: { color: grid }, ticks: { color: tick, precision: 0, font: { size: 9 } } } } }, plugins: [plug] });
+            };
+            const drawRel = () => {
+                ov.querySelector('#rlChecks').innerHTML = REL_SECS.map(x => `<label class="flex items-center gap-2 text-xs"><input type="checkbox" data-rk="${x.k}" ${rlOn[x.k] ? 'checked' : ''}> ${x.t} (${relRows(x.k).length})</label>`).join('');
+                const pick = relPick(), nreg = pick.reduce((a, x) => a + x.rows.length, 0);
+                ov.querySelector('#rlSum').textContent = `${relPer()} · ${pick.length} ${pick.length === 1 ? 'seção' : 'seções'} · ${nreg} ${nreg === 1 ? 'registro' : 'registros'}`;
+                ov.querySelector('#rlShow').textContent = rlShow ? 'Ocultar dados' : 'Ver dados';
+                relChart();
+                const vis = pick.filter(x => x.rows.length);
+                if (rlShow && vis.length && !vis.some(x => x.k === rlOpen)) rlOpen = vis[0].k;
+                ov.querySelector('#rlBody').innerHTML = !rlShow ? '' : (!pick.length ? '<p class="text-xs text-amber-300">Marque ao menos uma seção.</p>' : (!vis.length ? '<p class="text-xs text-gray-400">Nenhum registro no período.</p>' : vis.map((x, i) => {
+                    const op = x.k === rlOpen;
+                    return `<div class="rounded-lg border border-gray-700"><button type="button" data-ro="${x.k}" class="w-full flex items-center justify-between gap-2 px-3 py-2 text-xs font-semibold"><span>${op ? '−' : '+'} ${i + 1}. ${x.t}</span><span class="text-gray-400">${x.rows.length}</span></button>
+                        <div class="${op ? '' : 'hidden'} px-3 pb-3">${x.ind.length ? `<div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">${x.ind.map(([a, b]) => `<div class="rounded-lg border border-gray-700 p-2"><p class="text-[11px] text-gray-400">${esc(a)}</p><p class="text-sm font-bold text-gray-100">${esc(b)}</p></div>`).join('')}</div>` : ''}
+                        <div class="overflow-x-auto"><table class="w-full text-[11px] text-gray-300 whitespace-nowrap"><thead class="text-gray-400"><tr class="border-b border-gray-700 text-left">${x.head.map(h => `<th class="py-1 px-2 font-semibold">${esc(h)}</th>`).join('')}</tr></thead><tbody>${x.rows.map(r => `<tr class="border-b border-gray-800/60">${r.map(c => `<td class="py-1 px-2">${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+                        <p class="text-[10px] text-gray-500 mt-1">Período aplicado sobre a ${esc(x.dt)}.</p></div></div>`; }).join('')));
+            };
+            const relFile = ext => { const d = new Date(); return `${pad2(d.getDate())}${pad2(d.getMonth() + 1)}${String(d.getFullYear()).slice(2)}_${pad2(d.getHours())}${pad2(d.getMinutes())}_MyTradeDash_Relatorio_Painel_Admin.${ext}`; };
+            const relMeta = () => { const pick = relPick(), n = pick.reduce((a, x) => a + x.rows.length, 0), d = new Date();
+                return { pick: pick.filter(x => x.rows.length), nsec: pick.length, n, per: relPer(), gen: `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()} às ${pad2(d.getHours())}:${pad2(d.getMinutes())}`, who: ($('menuUserName').textContent || '').trim() + ' (' + (($('menuUserEmail').textContent || '').trim() || '—') + ')' }; };
+            const REL_LGPD = 'Dados pessoais. Este relatório contém dados pessoais de terceiros, tratados conforme a Política de privacidade do My Trade Dash e a LGPD (Lei nº 13.709/2018). Guarde o arquivo com segurança e apague-o quando não for mais necessário. Esta exportação ficou registrada no histórico de auditoria do app.';
+            ov.querySelector('#rlChecks').addEventListener('change', e => { const c = e.target.closest('[data-rk]'); if (c) { rlOn[c.dataset.rk] = c.checked; drawRel(); } });
+            ov.querySelector('#rlAll').onclick = () => { REL_SECS.forEach(x => rlOn[x.k] = true); drawRel(); };
+            ov.querySelector('#rlNone').onclick = () => { REL_SECS.forEach(x => rlOn[x.k] = false); drawRel(); };
+            ov.querySelector('#rlShow').onclick = () => { rlShow = !rlShow; drawRel(); };
+            ov.querySelector('#rlClear').onclick = () => { relDefaults(); REL_SECS.forEach(x => rlOn[x.k] = true); rlShow = false; drawRel(); };
+            ov.querySelector('#rlBody').addEventListener('click', e => { const b = e.target.closest('[data-ro]'); if (b) { rlOpen = rlOpen === b.dataset.ro ? null : b.dataset.ro; drawRel(); } });
+            ov.querySelector('#rlFrom').addEventListener('change', drawRel);
+            ov.querySelector('#rlTo').addEventListener('change', drawRel);
+            adRel.addEventListener('click', async e => {
+                const b = e.target.closest('[data-rx]'); if (!b) return;
+                const M2 = relMeta();
+                if (!M2.nsec) { showToast('Marque ao menos uma seção', 'err'); return; }
+                if (!M2.pick.length) { showToast('Nenhum registro no período', 'err'); return; }
+                const old = b.textContent; b.disabled = true; b.textContent = 'Gerando…';
+                try { await relExport(b.dataset.rx, M2, relFile(b.dataset.rx), REL_LGPD);
+                    auditAdd({ kind: 'rel_admin', outcome: 'Concluída', detail: `Relatório do painel (${b.dataset.rx.toUpperCase()}): ${M2.per}, ${M2.pick.map(x => x.pt).join(', ')}` });
+                } catch (ex) { showToast('Não foi possível gerar: ' + ((ex && ex.message) || ex), 'err'); }
+                b.disabled = false; b.textContent = old;
+            });
+            const relDefaults = () => { const d = new Date(), a = new Date(d.getFullYear(), d.getMonth() - 1, 1);
+                ov.querySelector('#rlFrom').value = a.getFullYear() + '-' + pad2(a.getMonth() + 1) + '-01';
+                ov.querySelector('#rlTo').value = d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); };
+            relDefaults();
+            adminsList().then(a => { rlAdm = new Set(a.map(x => String(x.email || '').toLowerCase())); if (sec === 'rel') drawRel(); }).catch(() => {});
             const adPwd = ov.querySelector('#adPwd'), pwTabs = ov.querySelector('#pwTabs'), pwBody = ov.querySelector('#pwBody');
             const drawPwd = () => {
                 if (!pwList) { pwBody.innerHTML = '<p class="text-xs text-gray-400 text-center py-6">Carregando…</p>'; return; }
@@ -2573,7 +2687,7 @@ hmoDb = db;
                             ${pw ? `<a href="${esc(invMailLink(r.email, 'Sua senha temporária do My Trade Dash', pwdMsgText(rr, pw)))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">✉ Enviar senha por e-mail</a><button type="button" data-pa="wa" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">💬 Enviar senha pelo WhatsApp</button>${MODE === 'claude' ? '<button type="button" data-pa="test" class="px-3 py-1.5 rounded-lg border border-gray-600 text-gray-300 font-semibold">Testar tela "Crie sua senha" (HMO)</button>' : ''}` : ''}
                         </div></div>`; }).join('') : '<p class="text-xs text-gray-400 text-center py-6">Nenhum pedido nesta lista.</p>';
             };
-            const loadPwd = async () => { try { pwList = await pwdList(); pwdAdminList = pwList; } catch (e) { pwBody.innerHTML = '<p class="text-xs text-red-400">Não foi possível carregar: ' + esc((e && e.message) || e) + '. Rode o SQL de estrutura (tb_senha_pedidos) no Supabase.</p>'; return; } drawSecTabs(); if (sec === 'pwd') drawPwd(); };
+            const loadPwd = async () => { try { pwList = await pwdList(); pwdAdminList = pwList; } catch (e) { pwBody.innerHTML = '<p class="text-xs text-red-400">Não foi possível carregar: ' + esc((e && e.message) || e) + '. Rode o SQL de estrutura (tb_senha_pedidos) no Supabase.</p>'; return; } drawSecTabs(); if (sec === 'rel') drawRel(); if (sec === 'pwd') drawPwd(); };
             pwTabs.addEventListener('click', e => { const b = e.target.closest('[data-pf]'); if (b) { pwF = b.dataset.pf; drawPwd(); } });
             pwBody.addEventListener('click', async e => {
                 const b = e.target.closest('[data-pa]'); if (!b) return;
@@ -2588,10 +2702,10 @@ hmoDb = db;
                 }
             });
             const setSec = k => {
-                sec = k; adInv.classList.toggle('hidden', k !== 'inv'); adUsers.classList.toggle('hidden', k !== 'ativos' && k !== 'excl'); adExc.classList.toggle('hidden', k !== 'exc'); adPwd.classList.toggle('hidden', k !== 'pwd'); adApo.classList.toggle('hidden', k !== 'apo');
+                sec = k; adInv.classList.toggle('hidden', k !== 'inv'); adUsers.classList.toggle('hidden', k !== 'ativos' && k !== 'excl'); adExc.classList.toggle('hidden', k !== 'exc'); adPwd.classList.toggle('hidden', k !== 'pwd'); adApo.classList.toggle('hidden', k !== 'apo'); adRel.classList.toggle('hidden', k !== 'rel');
                 ov.querySelector('#ivMode').classList.toggle('hidden', k !== 'inv');
                 drawSecTabs();
-                if (k === 'exc') drawExc(); else if (k === 'apo') { drawDon(); if (!doList) loadDon(); } else if (k === 'pwd') { drawPwd(); if (!pwList) loadPwd(); } else if (k !== 'inv') { drawUsers(); if (!uList[k]) loadUsers(k); }
+                if (k === 'rel') drawRel(); else if (k === 'exc') drawExc(); else if (k === 'apo') { drawDon(); if (!doList) loadDon(); } else if (k === 'pwd') { drawPwd(); if (!pwList) loadPwd(); } else if (k !== 'inv') { drawUsers(); if (!uList[k]) loadUsers(k); }
             };
             adTabs.addEventListener('click', e => { const b = e.target.closest('[data-sec]'); if (b) setSec(b.dataset.sec); });
             adSearch.addEventListener('input', () => { uq = adSearch.value; drawUsers(); });
@@ -2682,7 +2796,7 @@ hmoDb = db;
                 } catch (ex) { showToast('Não foi possível concluir: ' + ((ex && ex.message) || ex), 'err'); }
             });
             await load();
-            drawSecTabs(); setSec(['ativos', 'excl', 'exc', 'pwd', 'apo'].includes(startTab) ? startTab : 'inv');
+            drawSecTabs(); setSec(['ativos', 'excl', 'exc', 'pwd', 'apo', 'rel'].includes(startTab) ? startTab : 'inv');
         }
         async function adminUsersList(k) {
             const hm = k === 'ativos' ? 'usuarios' : 'usuarios_excluidos', tb = k === 'ativos' ? 'tb_usuarios' : 'tb_usuarios_excluidos', ord = k === 'ativos' ? 'created_at' : 'deleted_at';
@@ -4186,6 +4300,110 @@ hmoDb = db;
             document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
         }
         const X = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
+
+
+        /* ===== Relatório do painel administrativo: PDF, Word e Excel (V148) ===== */
+        const REL_TITLE = 'My Trade Dash - Relatório do painel administrativo';
+        async function relExport(kind, M, file, lgpd) {
+            if (kind === 'pdf') return relPdf(M, file, lgpd);
+            if (kind === 'docx') return relDocx(M, file, lgpd);
+            return relXlsx(M, file, lgpd);
+        }
+        function relPdf(M, file, lgpd) {   // A4 paisagem, escrito à mão (sem emoji: a fonte base não desenha)
+            const PW = 842, PH = 595, MG = 30;
+            const L = t => String(t == null ? '' : t).replace(/[—–]/g, '-').replace(/−/g, '-').replace(/…/g, '...').replace(/[^\x20-\xFF]/g, '?').trim();
+            const esc1 = t => L(t).replace(/[\\()]/g, '\\$&');
+            const tw = (t, sz) => L(t).length * sz * 0.5;
+            const txt = (t, x, y, sz, bold, al) => { const xx = al === 'r' ? x - tw(t, sz) : x; return `BT /${bold ? 'F2' : 'F1'} ${sz} Tf ${xx.toFixed(1)} ${y.toFixed(1)} Td (${esc1(t)}) Tj ET\n`; };
+            const pages = []; let cur, y;
+            const newPage = first => {
+                cur = { c: '' }; pages.push(cur); y = PH - MG;
+                cur.c += txt(REL_TITLE, MG, y - 8, 13, true); y -= 22;
+                if (first) {
+                    cur.c += txt(`Período de ${M.per} · ${M.nsec} ${M.nsec === 1 ? 'seção' : 'seções'} · ${M.n} ${M.n === 1 ? 'registro' : 'registros'}`, MG, y, 8.5); y -= 12;
+                    cur.c += txt(`Gerado em ${M.gen} por ${M.who}`, MG, y, 8); y -= 14;
+                }
+            };
+            const wrap = (t, n) => { const out = []; let r = L(t); if (!r) return ['']; while (r.length > n) { let k = r.lastIndexOf(' ', n); if (k < 10) k = n; out.push(r.slice(0, k)); r = r.slice(k).trim(); } out.push(r); return out; };
+            newPage(true);
+            M.pick.forEach((sec, si) => {
+                const nc = sec.head.length, avail = PW - 2 * MG, w = avail / nc, xs = sec.head.map((_, i) => MG + i * w);
+                const maxc = Math.max(8, Math.floor(w / 4.2));
+                if (y - 40 < MG + 20) newPage(false);
+                y -= 6; cur.c += txt(`${si + 1}. ${sec.pt}`, MG, y, 11, true); y -= 16;
+                sec.ind.forEach((p2, i) => { const x = MG + i * (avail / 3); cur.c += txt(p2[0], x, y, 7.5) + txt(p2[1], x, y - 11, 10, true); });
+                if (sec.ind.length) y -= 28;
+                const head = () => { cur.c += '0.87 0.9 0.96 rg ' + `${MG} ${y - 4} ${avail} 14 re f 0 g\n`; sec.head.forEach((h, i) => cur.c += txt(h, xs[i], y, 7.5, true)); y -= 15; };
+                head();
+                sec.rows.forEach(row => {
+                    const cells = row.map(c => wrap(c, maxc)), h = 10 * Math.max(...cells.map(c => c.length)) + 2;
+                    if (y - h < MG + 16) { newPage(false); head(); }
+                    cells.forEach((lines, i) => lines.forEach((l, k) => cur.c += txt(l, xs[i], y - 10 * k, 7, false)));
+                    y -= h; cur.c += `0.85 g ${MG} ${y + 7} ${avail} 0.4 re f 0 g\n`;
+                });
+                y -= 4; cur.c += txt(`Período aplicado sobre a ${sec.dt}.`, MG, y, 7); y -= 12;
+            });
+            if (y - 34 < MG + 16) newPage(false);
+            y -= 8; wrap(lgpd, 170).forEach(l => { cur.c += txt(l, MG, y, 7); y -= 10; });
+            pages.forEach((pg, i) => pg.c += txt(`My Trade Dash · mytradedash.com.br`, MG, 16, 7) + txt(`Página ${i + 1} de ${pages.length}`, PW - MG, 16, 7, false, 'r'));
+            const objs = ['<< /Type /Catalog /Pages 2 0 R >>', null, '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>', '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>'];
+            const kids = [];
+            pages.forEach(pg => { const pn = objs.length + 1; kids.push(pn + ' 0 R');
+                objs.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW} ${PH}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${pn + 1} 0 R >>`);
+                objs.push(`<< /Length ${pg.c.length} >>\nstream\n${pg.c}endstream`); });
+            objs[1] = `<< /Type /Pages /Kids [${kids.join(' ')}] /Count ${pages.length} >>`;
+            let out = '%PDF-1.4\n'; const offs = [];
+            objs.forEach((o, i) => { offs.push(out.length); out += `${i + 1} 0 obj\n${o}\nendobj\n`; });
+            const xr = out.length;
+            out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n` + offs.map(o => String(o).padStart(10, '0') + ' 00000 n \n').join('') + `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xr}\n%%EOF`;
+            const b = new Uint8Array(out.length); for (let i = 0; i < out.length; i++) b[i] = out.charCodeAt(i) & 255;
+            return saveBin(file, b, 'application/pdf');
+        }
+        function relDocx(M, file, lgpd) {
+            const run = (t, o = {}) => `<w:r><w:rPr>${o.b ? '<w:b/>' : ''}${o.sz ? `<w:sz w:val="${o.sz}"/>` : ''}${o.gray ? '<w:color w:val="666666"/>' : ''}</w:rPr><w:t xml:space="preserve">${X(t)}</w:t></w:r>`;
+            const p2 = (t, o = {}) => `<w:p><w:pPr><w:spacing w:after="${o.after == null ? 80 : o.after}"/></w:pPr>${run(t, o)}</w:p>`;
+            const bd = ['top', 'left', 'bottom', 'right', 'insideH', 'insideV'].map(k => `<w:${k} w:val="single" w:sz="4" w:space="0" w:color="BBBBBB"/>`).join('');
+            let body = p2(REL_TITLE, { b: 1, sz: 32 }) + p2(`Período de ${M.per} · ${M.nsec} ${M.nsec === 1 ? 'seção' : 'seções'} · ${M.n} ${M.n === 1 ? 'registro' : 'registros'}`, { sz: 20 }) + p2(`Gerado em ${M.gen} por ${M.who}`, { sz: 18, gray: 1, after: 200 });
+            M.pick.forEach((sec, si) => {
+                body += p2(`${si + 1}. ${sec.t}`, { b: 1, sz: 26, after: 100 });
+                if (sec.ind.length) body += p2(sec.ind.map(i => i[0] + ': ' + i[1]).join('   |   '), { b: 1, sz: 18 });
+                const nc = sec.head.length, W = Math.floor(14000 / nc);
+                const cell = (t, o = {}) => `<w:tc><w:tcPr><w:tcW w:w="${W}" w:type="dxa"/>${o.fill ? `<w:shd w:val="clear" w:color="auto" w:fill="${o.fill}"/>` : ''}</w:tcPr>${p2(t, { b: o.b, sz: 15, after: 0 })}</w:tc>`;
+                let rowsX = `<w:tr><w:trPr><w:tblHeader/></w:trPr>${sec.head.map(h => cell(h, { b: 1, fill: 'DDE6F5' })).join('')}</w:tr>`;
+                sec.rows.forEach(r => { rowsX += `<w:tr>${r.map(c => cell(c)).join('')}</w:tr>`; });
+                body += `<w:tbl><w:tblPr><w:tblW w:w="${W * nc}" w:type="dxa"/><w:tblBorders>${bd}</w:tblBorders><w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>${sec.head.map(() => `<w:gridCol w:w="${W}"/>`).join('')}</w:tblGrid>${rowsX}</w:tbl>`;
+                body += p2(`Período aplicado sobre a ${sec.dt}.`, { sz: 15, gray: 1, after: 200 });
+            });
+            body += p2(lgpd, { sz: 16, gray: 1 });
+            const doc = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body}<w:sectPr><w:pgSz w:w="16838" w:h="11906" w:orient="landscape"/><w:pgMar w:top="900" w:right="900" w:bottom="900" w:left="900" w:header="400" w:footer="400" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+            const ct = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`;
+            const rels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`;
+            return saveBin(file, zipStore([{ name: '[Content_Types].xml', data: ct }, { name: '_rels/.rels', data: rels }, { name: 'word/document.xml', data: doc }]), 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+        }
+        function relXlsx(M, file) {   // uma aba por seção
+            const S = (v, st) => `<c t="inlineStr"${st ? ` s="${st}"` : ''}><is><t xml:space="preserve">${X(v)}</t></is></c>`;
+            const secs = M.pick, sheets = secs.map((sec, si) => {
+                let r = `<row r="1" ht="22" customHeight="1">${S(sec.pt, 2)}</row><row r="2">${S(`Período de ${M.per} · aplicado sobre a ${sec.dt} · gerado em ${M.gen}`, 3)}</row>`;
+                let ln = 3;
+                sec.ind.forEach(i => { ln++; r += `<row r="${ln}">${S(i[0], 1)}${S(i[1])}</row>`; });
+                ln += 2; r += `<row r="${ln}">${sec.head.map(h => S(h, 1)).join('')}</row>`;
+                sec.rows.forEach(row => { ln++; r += `<row r="${ln}">${row.map(c => S(String(c))).join('')}</row>`; });
+                const widths = sec.head.map(h => Math.max(12, Math.min(34, h.length + 10)));
+                return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><cols>${widths.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join('')}</cols><sheetData>${r}</sheetData></worksheet>`;
+            });
+            const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="4"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="15"/><name val="Calibri"/></font><font><sz val="9"/><color rgb="FF666666"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFDDE6F5"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/><xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="3" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs></styleSheet>`;
+            const ct = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>${sheets.map((_, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`;
+            const R = (id, type, tg) => `<Relationship Id="${id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/${type}" Target="${tg}"/>`;
+            const rel = t => `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${t}</Relationships>`;
+            const nm = t => String(t).replace(/[\\\/\?\*\[\]:]/g, ' ').slice(0, 28);
+            const wb = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${secs.map((sec, i) => `<sheet name="${X(nm(sec.pt))}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets></workbook>`;
+            const files = [{ name: '[Content_Types].xml', data: ct }, { name: '_rels/.rels', data: rel(R('rId1', 'officeDocument', 'xl/workbook.xml')) },
+                { name: 'xl/workbook.xml', data: wb },
+                { name: 'xl/_rels/workbook.xml.rels', data: rel(sheets.map((_, i) => R('rId' + (i + 1), 'worksheet', `worksheets/sheet${i + 1}.xml`)).join('') + R('rId' + (sheets.length + 1), 'styles', 'styles.xml')) },
+                { name: 'xl/styles.xml', data: styles }];
+            sheets.forEach((sh, i) => files.push({ name: `xl/worksheets/sheet${i + 1}.xml`, data: sh }));
+            return saveBin(file, zipStore(files), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        }
 
         function exportReportCsv() {
             const q = v => `"${String(v).replace(/"/g, '""')}"`;
