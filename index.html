@@ -252,7 +252,7 @@
                 <div id="optsMenu" role="menu" class="hidden fixed z-[60] w-60 bg-cardBg border border-gray-700 rounded-lg shadow-2xl py-1 text-xs">
                     <div class="px-3 py-2">
                         <p class="text-[10px] text-gray-500">Conectado como</p>
-                        <p id="menuUserName" class="font-semibold text-gray-100 truncate"></p>
+                        <p class="font-semibold text-gray-100 truncate"><span id="menuUserName"></span><span id="menuUserAdm" class="hidden ml-1 text-[11px] font-semibold text-amber-300">(admin)</span></p>
                         <p id="menuUserEmail" class="text-[11px] text-gray-400 truncate"></p>
                     </div>
                     <div class="border-t border-gray-700 my-1"></div>
@@ -655,7 +655,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V140';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V142';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -2314,6 +2314,8 @@ hmoDb = db;
         function invSetAdmin(on) {
             invIsAdmin = !!on;
             ['btnAdmin', 'fabInv'].forEach(i => { const b = $(i); if (b) b.classList.toggle('hidden', !invIsAdmin); });
+            const bd = $('menuUserAdm'); if (bd) bd.classList.toggle('hidden', !invIsAdmin);
+            const be = $('btnExcl'); if (be) be.classList.toggle('hidden', invIsAdmin);
             if (!invIsAdmin) { invCache = []; invCacheAt = 0; ['invBadge', 'fabInvBadge'].forEach(i => { const c = $(i); if (c) c.classList.add('hidden'); }); }
         }
         // Lembrete semanal (sextas, só administrador): abrir o app evita a pausa do Supabase após 7 dias sem atividade
@@ -2405,7 +2407,7 @@ hmoDb = db;
             const now0 = new Date();
             let filter = 'novo', list = [], q = '', armed = null, armedT = null, mode = 'list', calY = now0.getFullYear(), calM = now0.getMonth(), calSel = null;
             ov.innerHTML = `<div class="w-full max-w-4xl mx-auto h-full flex flex-col bg-gray-900 text-sm text-gray-200">
-                <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b border-gray-700"><h3 class="text-base font-bold whitespace-nowrap">🛡 Gestão Admin</h3><div class="flex flex-wrap gap-2"><button type="button" id="adNewAdmin" class="hidden px-3 py-1 whitespace-nowrap rounded-lg border border-amber-500 text-amber-200 text-xs font-semibold">➕ Cadastrar admin</button><button type="button" id="ivMode" class="px-3 py-1 whitespace-nowrap rounded-lg border border-gray-600 text-gray-100 text-xs font-semibold">🎂 Aniversariantes</button><button type="button" id="ivClose" class="px-3 py-1 whitespace-nowrap rounded-lg bg-gray-700 text-white text-xs font-semibold">Fechar</button></div></div>
+                <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b border-gray-700"><h3 class="text-base font-bold whitespace-nowrap">🛡 Gestão Admin</h3><div class="flex flex-wrap gap-2"><button type="button" id="adNewAdmin" class="hidden px-3 py-1 whitespace-nowrap rounded-lg border border-amber-500 text-amber-200 text-xs font-semibold">🛡 Admins</button><button type="button" id="ivMode" class="px-3 py-1 whitespace-nowrap rounded-lg border border-gray-600 text-gray-100 text-xs font-semibold">🎂 Aniversariantes</button><button type="button" id="ivClose" class="px-3 py-1 whitespace-nowrap rounded-lg bg-gray-700 text-white text-xs font-semibold">Fechar</button></div></div>
                 <div class="flex flex-wrap gap-2 px-4 pt-3" id="adTabs"></div>
                 <div id="adInv" class="flex flex-col min-h-0 flex-1">
                 <div id="ivListBox" class="flex flex-col min-h-0 flex-1">
@@ -2495,7 +2497,7 @@ hmoDb = db;
                         ${pw ? `<div class="rounded-md bg-darkBg border border-gray-700 px-2 py-1.5 mt-2"><p>🔑 Senha temporária: <b class="font-mono text-gray-100 select-all">${esc(pw)}</b> <button type="button" data-pa="copy" class="underline text-blue-300">Copiar</button></p><p class="text-gray-400 mt-0.5">Ela aparece só agora: envie em seguida.</p></div>` : (r.status === 'atendido' ? '<p class="text-gray-500 mt-2">A senha já foi gerada e não aparece mais aqui.</p>' : '')}
                         <div class="flex flex-wrap gap-2 mt-2">
                             ${r.status === 'novo' ? `<button type="button" data-pa="gen" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold">🔑 Gerar senha temporária</button><a href="${SB_DASH}/sql/new" target="_blank" rel="noopener" data-sbcopy="${esc(cmd)}" class="px-3 py-1.5 rounded-lg border border-gray-600 text-gray-100 font-semibold">↗ Abrir SQL Editor (Supabase)</a>` : ''}
-                            ${pw ? `<a href="${esc(invMailLink(r.email, 'Sua senha temporária do My Trade Dash', pwdMsgText(rr, pw)))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">✉ Enviar senha por e-mail</a>${wa ? `<a href="https://wa.me/${esc(wa)}?text=${encodeURIComponent(pwdMsgText(rr, pw))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">💬 WhatsApp</a>` : ''}${MODE === 'claude' ? '<button type="button" data-pa="test" class="px-3 py-1.5 rounded-lg border border-gray-600 text-gray-300 font-semibold">Testar tela "Crie sua senha" (HMO)</button>' : ''}` : ''}
+                            ${pw ? `<a href="${esc(invMailLink(r.email, 'Sua senha temporária do My Trade Dash', pwdMsgText(rr, pw)))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">✉ Enviar senha por e-mail</a><button type="button" data-pa="wa" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">💬 Enviar senha pelo WhatsApp</button>${MODE === 'claude' ? '<button type="button" data-pa="test" class="px-3 py-1.5 rounded-lg border border-gray-600 text-gray-300 font-semibold">Testar tela "Crie sua senha" (HMO)</button>' : ''}` : ''}
                         </div></div>`; }).join('') : '<p class="text-xs text-gray-400 text-center py-6">Nenhum pedido nesta lista.</p>';
             };
             const loadPwd = async () => { try { pwList = await pwdList(); pwdAdminList = pwList; } catch (e) { pwBody.innerHTML = '<p class="text-xs text-red-400">Não foi possível carregar: ' + esc((e && e.message) || e) + '. Rode o SQL de estrutura (tb_senha_pedidos) no Supabase.</p>'; return; } drawSecTabs(); if (sec === 'pwd') drawPwd(); };
@@ -2505,6 +2507,7 @@ hmoDb = db;
                 const id = b.closest('[data-id]').dataset.id, a = b.dataset.pa, r = pwList.find(x => x.id === id);
                 if (a === 'copy') { try { await navigator.clipboard.writeText(pwdShown[id]); showToast('Senha copiada', 'ok'); } catch (x) { showToast('Copie manualmente: a senha está selecionável', 'err'); } return; }
                 if (a === 'test') { pwdCheckForced(); return; }
+                if (a === 'wa') { const cv = invCache.find(c => String(c.email || '').toLowerCase() === String(r.email || '').toLowerCase()); await pwdWaOpen({ ...r, name: (cv && cv.name) || r.email }, pwdShown[id], cv && cv.whatsapp); return; }
                 if (a === 'gen') {
                     if (!await askBox('Confirmação', `Gerar uma senha temporária para ${r.email}? A senha atual da pessoa deixa de valer e, ao entrar, ela vai criar a própria senha.`, 'Gerar senha', 'Cancelar')) return;
                     try { const pw = await pwdGerar(r); pwdShown[id] = pw; r.status = 'atendido'; r.handled_at = new Date().toISOString(); pwF = 'atendido'; drawSecTabs(); drawPwd(); if (bellInit) refreshBell(); }
@@ -2645,6 +2648,28 @@ hmoDb = db;
             if (MODE === 'claude') { const pw = pwdGen(); await hmoDb.collection('senha_pedidos').doc(r.id).update({ status: 'atendido', handled_at: new Date().toISOString() }); await hmoDb.collection('senha_troca').doc('mine').set({ must_change: true }); return pw; }
             const { data, error } = await sb.rpc('mtd_gerar_senha', { p_id: r.id }); if (error) throw error; return data;
         }
+        function askInput(title, msg, label, ph, val) {
+            return new Promise(res => {
+                const o = document.createElement('div'); o.className = 'fixed inset-0 z-[140] flex items-center justify-center p-3 bg-black/70'; o.dataset.keepBell = '1';
+                o.innerHTML = `<div class="w-full max-w-xs rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl"><p class="font-bold mb-1">${esc(title)}</p><p class="text-xs text-gray-400 mb-2">${esc(msg)}</p><label class="block text-[11px] text-gray-400 mb-1" for="qiVal">${esc(label)}</label><input id="qiVal" type="text" inputmode="tel" autocomplete="off" placeholder="${esc(ph || '')}" value="${esc(val || '')}" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"><p id="qiMsg" class="text-xs text-red-400 mt-2 hidden"></p><div class="flex justify-end gap-2 mt-3"><button type="button" data-n class="px-3 py-2 rounded-lg border border-gray-600 text-xs font-semibold">Cancelar</button><button type="button" data-y class="px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold">Abrir WhatsApp</button></div></div>`;
+                document.body.appendChild(o);
+                const inp = o.querySelector('#qiVal'), err = o.querySelector('#qiMsg');
+                const done = v => { o.remove(); res(v); };
+                o.querySelector('[data-n]').onclick = () => done(null);
+                o.querySelector('[data-y]').onclick = () => {
+                    const d = (inp.value || '').replace(/\D/g, '');
+                    if (d.length < 10 || d.length > 13) { err.textContent = 'Informe o número com DDD, só números.'; err.classList.remove('hidden'); return; }
+                    done(d.length <= 11 ? '55' + d : d);
+                };
+                inp.addEventListener('keydown', e => { if (e.key === 'Enter') o.querySelector('[data-y]').click(); });
+                setTimeout(() => inp.focus(), 50);
+            });
+        }
+        async function pwdWaOpen(r, pw, wa) {
+            let n = wa;
+            if (!n) { n = await askInput('💬 Enviar pelo WhatsApp', 'Este e-mail não tem WhatsApp no pedido de convite. Informe o número para abrir a conversa.', 'WhatsApp (com DDD)', '61999999999'); if (!n) return; }
+            window.open('https://wa.me/' + n + '?text=' + encodeURIComponent(pwdMsgText(r, pw)), '_blank', 'noopener');
+        }
         function pwdMsgText(r, pw, via) {
             const first = String((r.name || r.email) || '').trim().split(/[\s@]+/)[0] || '';
             return `Olá, ${first}! Aqui está a sua senha provisória do My Trade Dash.\n\nLogin: ${r.email}\nSenha provisória: ${pw}\n\nAcesse ${INV_SITE} e entre com ela. Ao entrar, você vai criar a sua própria senha, e a provisória deixa de valer.\n\nUm abraço,\nMy Trade Dash`;
@@ -2675,16 +2700,60 @@ hmoDb = db;
             setTimeout(() => o.querySelector('#fgMail').focus(), 50);
         }
         document.addEventListener('click', e => { if (e.target && e.target.id === 'pwdForgot') openForgot(); });
+        async function adminsList() {
+            if (MODE === 'claude') {
+                const col = hmoDb.collection('admins');
+                let docs = (await col.get()).docs.map(d => ({ id: d.id, ...d.data() }));
+                if (!docs.length) { await col.add({ email: INV_MASTER, created_at: Date.now() }); docs = (await col.get()).docs.map(d => ({ id: d.id, ...d.data() })); }
+                return docs.sort((a, b) => String(a.email).localeCompare(String(b.email)));
+            }
+            const { data: ad, error } = await sb.from('tb_admins').select('user_id, created_at');
+            if (error) throw error;
+            const ids = (ad || []).map(x => x.user_id);
+            let mail = {};
+            if (ids.length) { const { data: us } = await sb.from('tb_usuarios').select('user_id, email').in('user_id', ids); (us || []).forEach(u => mail[u.user_id] = u.email); }
+            return (ad || []).map(x => ({ id: x.user_id, email: mail[x.user_id] || '(e-mail não encontrado)', created_at: x.created_at })).sort((a, b) => String(a.email).localeCompare(String(b.email)));
+        }
+        async function adminRemove(r) {
+            if (MODE === 'claude') { await hmoDb.collection('admins').doc(r.id).delete(); return; }
+            const { error } = await sb.from('tb_admins').delete().eq('user_id', r.id); if (error) throw error;
+        }
         function openAddAdmin() {
             if (!invIsMaster()) return;
             const o = document.createElement('div'); o.className = 'fixed inset-0 z-[110] flex items-center justify-center p-3 bg-black/70'; o.dataset.keepBell = '1';
-            o.innerHTML = `<div class="w-full max-w-sm rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl"><p class="font-bold mb-1">➕ Cadastrar admin</p><p class="text-xs text-gray-400 mb-2">Informe o e-mail de um usuário que já tenha conta ativa no app.</p><input type="email" id="aaMail" autocomplete="off" placeholder="e-mail do usuário" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200 mb-2"><p id="aaMsg" class="text-xs text-red-400 mb-2 hidden"></p><a href="${SB_DASH}/editor" target="_blank" rel="noopener" class="block text-[11px] text-blue-300 underline mb-3">↗ Abrir tabela tb_admins no Supabase</a><div class="flex justify-end gap-2"><button type="button" data-n class="px-3 py-2 rounded-lg border border-gray-600 text-xs font-semibold">Cancelar</button><button type="button" data-y class="px-3 py-2 rounded-lg bg-amber-600 text-white text-xs font-semibold">Cadastrar</button></div></div>`;
+            o.innerHTML = `<div class="w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl">
+                <p class="font-bold mb-1">🛡 Admins do app</p>
+                <p class="text-xs text-gray-400 mb-2">Só você, como admin principal, cadastra e descadastra admins.</p>
+                <div id="aaList" class="space-y-2 mb-3"><p class="text-xs text-gray-400">Carregando…</p></div>
+                <p class="text-xs font-bold text-gray-100 mb-1">➕ Cadastrar admin</p>
+                <p class="text-xs text-gray-400 mb-2">Informe o e-mail de um usuário que já tenha conta ativa no app.</p>
+                <input type="email" id="aaMail" autocomplete="off" placeholder="e-mail do usuário" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200 mb-2">
+                <p id="aaMsg" class="text-xs text-red-400 mb-2 hidden"></p>
+                <a href="${SB_DASH}/editor" target="_blank" rel="noopener" class="block text-[11px] text-blue-300 underline mb-3">↗ Abrir tabela tb_admins no Supabase</a>
+                <div class="flex justify-end gap-2"><button type="button" data-n class="px-3 py-2 rounded-lg border border-gray-600 text-xs font-semibold">Fechar</button><button type="button" data-y class="px-3 py-2 rounded-lg bg-amber-600 text-white text-xs font-semibold">Cadastrar</button></div></div>`;
             document.body.appendChild(o);
+            const box = o.querySelector('#aaList'), msg = o.querySelector('#aaMsg');
+            const bad = t => { msg.textContent = t; msg.classList.remove('hidden'); };
+            let arr = [];
+            const draw = () => {
+                box.innerHTML = arr.length ? arr.map(a => {
+                    const me = String(a.email || '').toLowerCase() === INV_MASTER;
+                    return `<div class="flex items-center justify-between gap-2 rounded-lg border border-gray-700 px-2 py-1.5" data-id="${esc(String(a.id))}"><span class="text-xs break-all">${esc(a.email)}${me ? ' <span class="text-[10px] text-amber-300">(você, admin principal)</span>' : ''}</span>${me ? '' : '<button type="button" data-rm class="shrink-0 px-2 py-1 rounded-lg border border-red-500 text-red-300 text-[11px] font-semibold">Remover</button>'}</div>`;
+                }).join('') : '<p class="text-xs text-gray-400">Nenhum admin cadastrado.</p>';
+            };
+            const load = async () => { try { arr = await adminsList(); draw(); } catch (e) { box.innerHTML = '<p class="text-xs text-red-400">Não foi possível carregar a lista: ' + esc((e && e.message) || e) + '</p>'; } };
+            box.addEventListener('click', async e => {
+                const b = e.target.closest('[data-rm]'); if (!b) return;
+                const id = b.closest('[data-id]').dataset.id, a = arr.find(x => String(x.id) === id);
+                if (!await askBox('Confirmação', `Remover o perfil de admin de ${a.email}? A conta e os dados da pessoa continuam como estão; ela passa a ser um usuário comum assim que recarregar o app.`, 'Remover admin', 'Cancelar')) return;
+                try { await adminRemove(a); showToast('Admin removido: ' + a.email, 'ok'); load(); } catch (ex) { showToast('Não foi possível remover: ' + ((ex && ex.message) || ex), 'err'); }
+            });
             o.querySelector('[data-n]').onclick = () => o.remove();
             o.querySelector('[data-y]').onclick = async () => {
-                const em = o.querySelector('#aaMail').value.trim().toLowerCase(), msg = o.querySelector('#aaMsg');
-                const bad = t => { msg.textContent = t; msg.classList.remove('hidden'); };
+                const em = o.querySelector('#aaMail').value.trim().toLowerCase();
+                msg.classList.add('hidden');
                 if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return bad('Informe um e-mail válido.');
+                if (arr.some(x => String(x.email).toLowerCase() === em)) return bad('Esse usuário já é admin.');
                 try {
                     if (MODE === 'claude') { await hmoDb.collection('admins').add({ email: em, created_at: Date.now() }); }
                     else {
@@ -2692,9 +2761,10 @@ hmoDb = db;
                         if (!u) return bad('Usuário não encontrado entre os ativos.');
                         const { error } = await sb.from('tb_admins').insert({ user_id: u.user_id }); if (error) throw error;
                     }
-                    o.remove(); showToast('Admin cadastrado: ' + em, 'ok');
+                    o.querySelector('#aaMail').value = ''; showToast('Admin cadastrado: ' + em, 'ok'); load();
                 } catch (e) { bad('Não foi possível cadastrar: ' + ((e && e.message) || e)); }
             };
+            load();
         }
 
         /* ===== Exclusão de conta (V138) ===== */
