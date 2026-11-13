@@ -656,7 +656,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V149';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V150';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -2435,9 +2435,9 @@ hmoDb = db;
                     <p class="text-sm font-bold text-gray-100">📑 Relatórios</p>
                     <p class="text-[11px] text-gray-400">Exporta o que está nas outras abas. O arquivo leva dados pessoais de outras pessoas: guarde com cuidado e apague quando não precisar mais. Cada exportação entra no histórico de auditoria.</p>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2"><div><label class="block text-xs font-medium text-gray-400 mb-1" for="rlFrom">De</label><input type="date" id="rlFrom" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div><div><label class="block text-xs font-medium text-gray-400 mb-1" for="rlTo">Até</label><input type="date" id="rlTo" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div></div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3"><div><p class="text-xs font-medium text-gray-400 mb-1">O que entra no relatório</p><div id="rlChecks" class="space-y-1"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-stretch gap-3"><div class="flex flex-col sm:w-56 sm:shrink-0"><p class="text-xs font-medium text-gray-400 mb-1">O que entra no relatório</p><div id="rlChecks" class="space-y-1"></div>
                     <div class="flex flex-wrap gap-2 mt-2"><button type="button" id="rlAll" class="px-3 py-1 rounded-lg border border-gray-600 text-xs font-semibold">Marcar todas</button><button type="button" id="rlNone" class="px-3 py-1 rounded-lg border border-gray-600 text-xs font-semibold">Desmarcar</button></div></div>
-                    <div class="rounded-lg border border-gray-700 p-2"><div class="flex items-baseline justify-between gap-2 mb-1"><p class="text-xs font-semibold text-gray-200">Situação por seção</p><p class="text-[10px] text-gray-500">no período</p></div><div class="h-44"><canvas id="rlChart"></canvas></div><p class="text-[10px] text-gray-500 mt-1">Pendentes = esperando você. Concluídos = já tratados. Outros = recusados, descartados ou desistências.</p></div></div>
+                    <div class="rounded-lg border border-gray-700 p-2 flex flex-col min-h-[15rem] sm:flex-1 min-w-0"><div class="flex items-baseline justify-between gap-2"><p class="text-xs font-semibold text-gray-200">Situação por seção</p><p class="text-[10px] text-gray-500">no período</p></div><div class="flex-1 min-h-[9rem] relative"><canvas id="rlChart"></canvas></div><p class="text-[10px] text-gray-500 mt-1">Pendentes = esperando você. Concluídos = já tratados. Outros = recusados, descartados ou desistências.</p></div></div>
                     <p id="rlSum" class="text-[11px] text-gray-400"></p>
                     <div class="flex flex-wrap items-center gap-2"><button type="button" id="rlShow" class="px-3 py-1.5 rounded-lg border border-gray-600 text-xs font-semibold">Ver dados</button><button type="button" id="rlClear" class="px-3 py-1.5 rounded-lg border border-gray-600 text-xs font-semibold">Limpar filtro</button><span class="ml-auto flex flex-wrap items-center gap-2 text-xs text-gray-400">Baixar:<button type="button" data-rx="pdf" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold">PDF</button><button type="button" data-rx="docx" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold">Word</button><button type="button" data-rx="xlsx" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold">Excel</button></span></div>
                     <div id="rlBody" class="space-y-2"></div></div></div>
@@ -2615,15 +2615,15 @@ hmoDb = db;
                 const light = document.documentElement.getAttribute('data-theme') === 'light';
                 const grid = light ? '#e5e7eb' : '#374151', tick = light ? '#4b5563' : '#9ca3af';
                 const ds = [['Pendentes', '#f59e0b'], ['Concluídos', '#3b82f6'], ['Outros', light ? '#9ca3af' : '#6b7280']]
-                    .map(([l, c], i) => ({ label: l, data: raw[i], backgroundColor: c, borderRadius: 3, maxBarThickness: 22 }));
+                    .map(([l, c], i) => ({ label: l, data: raw[i], backgroundColor: c, borderRadius: 3, maxBarThickness: 46, barPercentage: 0.95, categoryPercentage: 0.82 }));
                 const plug = { id: 'vals', afterDatasetsDraw(ch) { const x = ch.ctx; x.save(); x.font = 'bold 9px system-ui'; x.fillStyle = tick; x.textAlign = 'center';
                     ch.data.datasets.forEach((d, di) => ch.getDatasetMeta(di).data.forEach((b, i) => { const v = d.data[i]; if (v) x.fillText(String(v), b.x, b.y - 3); })); x.restore(); } };
                 if (rlChart) rlChart.destroy();
                 rlChart = new Chart(cv.getContext('2d'), { type: 'bar', data: { labels, datasets: ds },
-                    options: { responsive: true, maintainAspectRatio: false, animation: { duration: 250 },
-                        plugins: { legend: { labels: { color: tick, boxWidth: 10, font: { size: 10 } } }, tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y}` } } },
+                    options: { responsive: true, maintainAspectRatio: false, animation: { duration: 250 }, layout: { padding: { top: 12 } },
+                        plugins: { legend: { position: 'bottom', labels: { color: tick, boxWidth: 9, boxHeight: 9, padding: 10, font: { size: 10 } } }, tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y}` } } },
                         scales: { x: { grid: { display: false }, ticks: { color: tick, font: { size: 9 }, maxRotation: 30, minRotation: 0 } },
-                            y: { beginAtZero: true, grid: { color: grid }, ticks: { color: tick, precision: 0, font: { size: 9 } } } } }, plugins: [plug] });
+                            y: { beginAtZero: true, grace: '6%', grid: { color: grid }, ticks: { color: tick, precision: 0, font: { size: 9 }, maxTicksLimit: 5 } } } }, plugins: [plug] });
             };
             const drawRel = () => {
                 ov.querySelector('#rlChecks').innerHTML = REL_SECS.map(x => `<label class="flex items-center gap-2 text-xs"><input type="checkbox" data-rk="${x.k}" ${rlOn[x.k] ? 'checked' : ''}> ${x.t} (${relRows(x.k).length})</label>`).join('');
