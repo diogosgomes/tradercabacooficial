@@ -541,7 +541,7 @@
 
                 <div class="flex justify-end space-x-3 pt-3 border-t border-gray-800">
                     <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-lg text-xs font-medium text-gray-400">Cancelar</button>
-                    <button type="submit" id="submitBtn" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-xs font-semibold">Adicionar à Tabela</button>
+                    <button type="submit" id="submitBtn" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-xs font-semibold">Salvar Operação</button>
                 </div>
             </form>
         </div>
@@ -656,7 +656,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V143';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V147';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -1026,6 +1026,7 @@
                 body.querySelectorAll('[data-ab]').forEach(b => b.onclick = async ev => {
                     ev.stopPropagation(); const [ix, k] = b.dataset.ab.split(':'), a = alerts[+ix];
                     if (k === 'go') { bellClose(); openDonModal(); return; }
+                    if (k === 'apo') { bellClose(); openAdminModal('apo'); return; }
                     b.disabled = true;
                     try { await alertSet(k === 'never' ? 'don:no' : 'don:later:' + new Date().toISOString().slice(0, 10), true); const i2 = alerts.indexOf(a); if (i2 >= 0) alerts.splice(i2, 1); updBell(); showAlerts(); showToast(k === 'never' ? 'Não falo mais nisso.' : 'Combinado, fica para depois.', 'ok'); }
                     catch (e) { b.disabled = false; showToast('Não foi possível atualizar agora.', 'err'); }
@@ -1859,7 +1860,7 @@ hmoDb = db;
             editingId = row ? row.id : null;
             document.getElementById('tDate').max = todayLocalISO();   
             document.getElementById('modalTitle').textContent = row ? 'Editar Operação' : 'Registrar Nova Operação';
-            document.getElementById('submitBtn').textContent = row ? 'Salvar Alterações' : 'Adicionar à Tabela';
+            document.getElementById('submitBtn').textContent = row ? 'Salvar Alterações' : 'Salvar Operação';
 
             if (row) {
                 setField('tDate', String(row.date).split('/').reverse().join('-'));
@@ -2504,24 +2505,26 @@ hmoDb = db;
                 doCards.innerHTML = card('Confirmadas em ' + MESES[now.getMonth()].replace(/^./, c => c.toUpperCase()) + '/' + now.getFullYear(), 'R$ ' + fmtMoneyBR(mes.reduce((a, x) => a + num(x.amount), 0)), mes.length + (mes.length === 1 ? ' contribuição' : ' contribuições'))
                     + card('Para conferir', String(doList.filter(x => x.status === 'nova').length), 'aguardando a sua conferência')
                     + card('Apoiadores', String(new Set(doList.filter(x => x.status === 'confirmada').map(x => x.user_id || x.email)).size), 'pessoas que já contribuíram');
-                doTabs.innerHTML = [['nova', 'Para conferir'], ['confirmada', 'Confirmadas'], ['todas', 'Todas']].map(([k, t]) => `<button type="button" data-df="${k}" class="px-3 py-1 rounded-lg text-xs font-semibold border ${doF === k ? 'border-emerald-500 bg-emerald-950 text-emerald-200' : 'border-gray-700 text-gray-300'}">${t} (${k === 'todas' ? doList.length : doList.filter(x => x.status === k).length})</button>`).join('');
+                doTabs.innerHTML = [['nova', 'Para conferir'], ['confirmada', 'Confirmadas'], ['descartada', 'Descartadas'], ['todas', 'Todas']].map(([k, t]) => `<button type="button" data-df="${k}" class="px-3 py-1 rounded-lg text-xs font-semibold border ${doF === k ? 'border-emerald-500 bg-emerald-950 text-emerald-200' : 'border-gray-700 text-gray-300'}">${t} (${k === 'todas' ? doList.length : doList.filter(x => x.status === k).length})</button>`).join('');
                 const items = doList.filter(x => doF === 'todas' || x.status === doF);
                 doBody.innerHTML = items.length ? items.map(r => {
                     const cv = invCache.find(c => String(c.email || '').toLowerCase() === String(r.email || '').toLowerCase());
-                    const wa = cv && cv.whatsapp, ok = r.status === 'confirmada';
+                    const wa = cv && cv.whatsapp, ok = r.status === 'confirmada', des = r.status === 'descartada';
                     return `<div class="rounded-lg border border-gray-700 p-3 text-xs" data-id="${esc(String(r.id))}">
-                        <div class="flex items-start justify-between gap-2"><p class="font-bold text-gray-100 break-words text-sm">${esc(r.name || r.email)}</p><span class="shrink-0 text-[10px] px-2 py-0.5 rounded-full border ${ok ? 'border-gray-600 text-gray-400' : 'border-amber-500 text-amber-300'}">${ok ? 'Confirmada' : 'Para conferir'}</span></div>
+                        <div class="flex items-start justify-between gap-2"><p class="font-bold text-gray-100 break-words text-sm">${esc(r.name || r.email)}</p><span class="shrink-0 text-[10px] px-2 py-0.5 rounded-full border ${ok || des ? 'border-gray-600 bg-gray-800 text-gray-400' : 'border-amber-500 text-amber-300'}">${ok ? 'Confirmada' : des ? 'Descartada' : 'Para conferir'}</span></div>
                         <p class="text-gray-400 break-all">${esc(r.email)}${wa ? ' · ' + esc(invFmtPhone(wa)) : ''}</p>
-                        <p class="text-gray-300 mt-1"><b class="text-gray-100">R$ ${fmtMoneyBR(num(r.amount))}</b> · informada em ${fmtDT(r.created_at)}${ok ? ' · confirmada em ' + fmtDT(r.confirmed_at) + ' · recibo nº ' + donNo(r) : ''}</p>
+                        <p class="text-gray-300 mt-1"><b class="text-gray-100">R$ ${fmtMoneyBR(num(r.amount))}</b> · informada em ${fmtDT(r.created_at)}${ok ? ' · confirmada em ' + fmtDT(r.confirmed_at) + ' · recibo nº ' + donNo(r) : ''}${des ? ' · descartada em ' + fmtDT(r.descartado_em) : ''}</p>
                         <div class="flex flex-wrap gap-2 mt-2">
                             ${ok ? `<button type="button" data-da="pdf" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold">⬇ Baixar recibo (PDF)</button>
-                                <a href="${esc(invMailLink(r.email, 'Recibo de contribuição nº ' + donNo(r) + ' - My Trade Dash', donMsg(r)))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">✉ Enviar por e-mail</a>
+                                <a href="${esc(invMailLink(r.email, 'Sua contribuição voluntária ao My Trade Dash', donMsg(r)))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">✉ Enviar por e-mail</a>
                                 <button type="button" data-da="wa" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">💬 Enviar pelo WhatsApp</button>
                                 <button type="button" data-da="undo" class="px-3 py-1.5 rounded-lg border border-gray-600 text-gray-200 font-semibold">↩ Desfazer</button>`
-                              : `<button type="button" data-da="ok" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold">✓ Confirmar e gerar recibo</button>`}
+                              : des ? `<button type="button" data-da="undis" class="px-3 py-1.5 rounded-lg border border-gray-600 text-gray-200 font-semibold">↩ Desfazer</button>`
+                              : `<button type="button" data-da="ok" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold">✓ Confirmar e gerar recibo</button>
+                                 <button type="button" data-da="dis" class="px-3 py-1.5 rounded-lg border border-gray-600 text-gray-200 font-semibold">✕ Descartar</button>`}
                         </div></div>`; }).join('') : '<p class="text-xs text-gray-400 text-center py-6">Nenhuma contribuição nesta lista.</p>';
             };
-            const loadDon = async () => { try { doList = await donList(); donAdminList = doList; } catch (e) { doBody.innerHTML = '<p class="text-xs text-red-400">Não foi possível carregar: ' + esc((e && e.message) || e) + '. Rode o SQL de estrutura (tb_contribuicoes) no Supabase.</p>'; return; } drawSecTabs(); if (sec === 'apo') drawDon(); };
+            const loadDon = async () => { try { await invLoadCache(); doList = await donList(); donAdminList = doList; } catch (e) { doBody.innerHTML = '<p class="text-xs text-red-400">Não foi possível carregar: ' + esc((e && e.message) || e) + '. Rode o SQL de estrutura (tb_contribuicoes) no Supabase.</p>'; return; } drawSecTabs(); if (sec === 'apo') drawDon(); };
             doTabs.addEventListener('click', e => { const b = e.target.closest('[data-df]'); if (b) { doF = b.dataset.df; drawDon(); } });
             doBody.addEventListener('click', async e => {
                 const b = e.target.closest('[data-da]'); if (!b) return;
@@ -2533,6 +2536,15 @@ hmoDb = db;
                         if (!await askBox('Confirmação', `Confirmar a contribuição de R$ ${fmtMoneyBR(num(r.amount))} de ${r.name || r.email}? Confira antes no extrato do seu banco. O app gera o número do recibo e você envia por e-mail ou WhatsApp.`, 'Confirmar', 'Cancelar')) return;
                         const up = await donConfirm(r); Object.assign(r, up); doF = 'confirmada'; showToast('Contribuição confirmada', 'ok');
                         auditAdd({ kind: 'don_ok', outcome: 'Concluída', detail: `Contribuição de ${r.email}: R$ ${fmtMoneyBR(num(r.amount))}, recibo nº ${donNo(r)}` });
+                    }
+                    if (a === 'dis') {
+                        if (!await askBox('Descartar contribuição', `Descartar a contribuição de R$ ${fmtMoneyBR(num(r.amount))} de ${r.name || r.email}? Ela sai da fila e, para quem informou, passa a aparecer como "não localizada". Nada é apagado: dá para desfazer no filtro Descartadas.`, 'Descartar', 'Cancelar')) return;
+                        Object.assign(r, await donDiscard(r)); doF = 'descartada'; showToast('Contribuição descartada', 'ok');
+                        auditAdd({ kind: 'don_desc', outcome: 'Concluída', detail: `Contribuição de ${r.email}: R$ ${fmtMoneyBR(num(r.amount))} descartada` });
+                    }
+                    if (a === 'undis') {
+                        Object.assign(r, await donDiscard(r, true)); doF = 'nova'; showToast('Contribuição devolvida para conferência', 'ok');
+                        auditAdd({ kind: 'don_desc', outcome: 'Concluída', detail: `Contribuição de ${r.email}: descarte desfeito` });
                     }
                     if (a === 'undo') {
                         if (!await askBox('Desfazer', `Desfazer a confirmação da contribuição de ${r.name || r.email}? Ela volta para "Para conferir" e o recibo nº ${donNo(r)} deixa de valer.`, 'Desfazer', 'Cancelar')) return;
@@ -2810,13 +2822,23 @@ hmoDb = db;
             const { data, error } = await sb.rpc('mtd_confirmar_contribuicao', { p_id: r.id }); if (error) throw error;
             return { status: 'confirmada', confirmed_at: (data && data.confirmed_at) || new Date().toISOString(), receipt_no: (data && data.receipt_no) || r.receipt_no };
         }
+        async function donDiscard(r, undo) {
+            const up = undo ? { status: 'nova', descartado_em: null } : { status: 'descartada', descartado_em: new Date().toISOString() };
+            if (MODE === 'claude') { await hmoDb.collection('contribuicoes').doc(r.id).update(up); return up; }
+            const { error } = await sb.rpc('mtd_descartar_contribuicao', { p_id: r.id, p_desfazer: !!undo }); if (error) throw error;
+            return up;
+        }
+        async function donMineList() {
+            if (MODE === 'claude') return (await hmoDb.collection('contribuicoes').get()).docs.map(d => ({ id: d.id, ...d.data() })).filter(x => x.mine);
+            const { data, error } = await sb.from('tb_contribuicoes').select('*').eq('user_id', currentUserId).order('created_at', { ascending: false }).limit(500);
+            if (error) throw error; return data || [];
+        }
         async function donUndo(r) {
             if (MODE === 'claude') { await hmoDb.collection('contribuicoes').doc(r.id).update({ status: 'nova', confirmed_at: null }); return; }
             const { error } = await sb.rpc('mtd_desfazer_contribuicao', { p_id: r.id }); if (error) throw error;
         }
         function donMsg(r) {
-            const first = String(r.name || r.email || '').trim().split(/[\s@]+/)[0] || '';
-            return `Olá, ${first}! Obrigado por ajudar a manter o My Trade Dash.\n\nRecibo de contribuição nº ${donNo(r)}\nValor: R$ ${fmtMoneyBR(num(r.amount))}\nForma: Pix\nData da contribuição: ${fmtDT(r.created_at)}\nConfirmado em: ${fmtDT(r.confirmed_at)}\n\nContribuição voluntária ao projeto. O uso do app é gratuito e não depende dela: a ajuda cobre domínio, servidor e as melhorias do app. Recibo simples, emitido por pessoa física, não é documento fiscal.\n\nUm abraço,\nMy Trade Dash`;
+            return `Olá, ${r.name || r.email}!\nEsperamos que você esteja bem!\n\nRecebemos a sua contribuição voluntária e agradecemos muito pelo apoio e confiança no projeto My Trade Dash.\n\nRatificamos que o app continua gratuito para todo mundo, independente da possibilidade de contribuição voluntária ou não! A sua ajuda contribui para amenizar alguns custos para mantermos o App no ar, como domínio, servidores e as melhorias.\n\nAbraços,\nEquipe My Trade Dash`;
         }
         // Recibo em PDF (A4 retrato), escrito à mão, sem bibliotecas — como o PDF dos Relatórios
         async function donPdf(r) {
@@ -2829,11 +2851,11 @@ hmoDb = db;
             c += txt('My Trade Dash', M, y, 20, true); y -= 16;
             c += txt('mytradedash.com.br · ' + donCfg.pix, M, y, 9); y -= 14;
             c += `0.8 g ${M} ${y} ${PW - 2 * M} 0.6 re f 0 g\n`; y -= 28;
-            c += txt('Recibo de contribuição nº ' + donNo(r), M, y, 14, true); y -= 26;
-            [['Recebido de', r.name || r.email], ['E-mail', r.email], ['Valor', 'R$ ' + fmtMoneyBR(num(r.amount))], ['Forma', 'Pix'], ['Data da contribuição', fmtDT(r.created_at)], ['Confirmado em', fmtDT(r.confirmed_at)]]
+            c += txt('Agradecemos por sua contribuição voluntária ao projeto My Trade Dash!', M, y, 13, true); y -= 26;
+            [['Nome', r.name || r.email], ['E-mail', r.email], ['Valor', 'R$ ' + fmtMoneyBR(num(r.amount))], ['Forma', 'Pix'], ['Data de sua sinalização no app', fmtDT(r.created_at)], ['Confirmado em', fmtDT(r.confirmed_at)]]
                 .forEach(([k, v]) => { c += txt(k, M, y, 10) + txt(String(v), M + 180, y, 10, true); y -= 20; });
             y -= 14; c += `0.8 g ${M} ${y} ${PW - 2 * M} 0.6 re f 0 g\n`; y -= 22;
-            const nota = 'Contribuição voluntária ao projeto My Trade Dash. O uso do aplicativo é gratuito e não depende desta contribuição: ela cobre domínio, servidor e as melhorias do app. Este é um recibo simples de quitação, emitido por pessoa física, e não é documento fiscal.';
+            const nota = 'Contribuição voluntária ao projeto My Trade Dash. O App é gratuito e vai continuar sendo! A sua ajuda contribui para amenizar alguns custos para mantermos o App no ar, como domínio, servidores e as melhorias. Seu acesso não está condicionado a sua colaboração! Este é um arquivo simples emitido por pessoa física, não é documento fiscal.';
             let line = '';
             nota.split(' ').forEach(w => { if (tw(line + ' ' + w, 9) > PW - 2 * M) { c += txt(line, M, y, 9); y -= 13; line = w; } else line = line ? line + ' ' + w : w; });
             if (line) c += txt(line, M, y, 9);
@@ -2848,13 +2870,17 @@ hmoDb = db;
             out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n` + offs.map(o => String(o).padStart(10, '0') + ' 00000 n \n').join('') + `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xr}\n%%EOF`;
             const b = new Uint8Array(out.length); for (let i = 0; i < out.length; i++) b[i] = out.charCodeAt(i) & 255;
             const d = new Date();
-            await saveBin(`${pad2(d.getDate())}${pad2(d.getMonth() + 1)}${String(d.getFullYear()).slice(2)}_${pad2(d.getHours())}${pad2(d.getMinutes())}_MyTradeDash_Recibo_${donNo(r)}.pdf`, b, 'application/pdf');
+            const nome = String(r.name || r.email || 'Contribuinte').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '').split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('_');
+            await saveBin(`${pad2(d.getDate())}${pad2(d.getMonth() + 1)}${String(d.getFullYear()).slice(2)}_${pad2(d.getHours())}${pad2(d.getMinutes())}_MyTradeDash_Contribuicao_Voluntaria_${nome}.pdf`, b, 'application/pdf');
         }
         function donAlerts(list) {
             if (!invIsAdmin || !list) return [];
-            const n = list.filter(x => x.status === 'nova').length;
-            return n ? [{ id: 'don:new', level: 'a', action: 'apo', title: n === 1 ? '1 contribuição aguardando conferência' : n + ' contribuições aguardando conferência',
-                note: 'Confira o Pix no seu banco e, em Gestão Admin > Apoiadores, confirme para gerar o recibo.' }] : [];
+            return list.filter(x => x.status === 'nova')
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                .map(x => ({ id: 'don:new:' + x.id, level: 'a', action: 'apo',
+                    title: '💚 ' + (x.name || x.email) + ' contribuiu com R$ ' + fmtMoneyBR(num(x.amount)),
+                    note: 'Sinalizada em ' + fmtDT(x.created_at) + '. Confira o Pix no seu banco antes de confirmar.',
+                    btns: [{ k: 'apo', t: 'Para conferir' }] }));
         }
         // Convite para contribuir: uma vez só, para quem usa o app há mais de 30 dias e ainda não contribuiu
         function donAskAlert(c) {
@@ -2872,15 +2898,16 @@ hmoDb = db;
             const vs = donCfg.vals.map(v => num(v));
             o.innerHTML = `<div class="w-full max-w-md max-h-[92vh] overflow-y-auto rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl">
                 <h3 class="text-base font-bold mb-2">💚 Ajude a manter o My Trade Dash</h3>
-                <p class="text-xs text-gray-300 mb-3">O My Trade Dash é gratuito e vai continuar. Se ele te ajuda, você pode contribuir com o que achar justo: a ajuda cobre o domínio, o servidor e as melhorias de cada mês. Nada no app depende disso.</p>
+                <p class="text-xs text-gray-300 mb-3">O My Trade Dash é gratuito e vai continuar sendo. <b><i>Se ele te ajuda</i></b>, você pode contribuir com o que achar justo: a ajuda contribui para amenizar alguns custos como domínio, servidores e as melhorias. Seu acesso ao My Trade Dash não está condicionado a sua colaboração!</p>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">${vs.map((v, i) => `<button type="button" data-v="${i}" class="rounded-lg border px-2 py-2 text-xs font-semibold ${i === num(donCfg.def) ? 'border-blue-500 bg-blue-950 text-blue-200' : 'border-gray-700 text-gray-200'}">R$ ${fmtMoneyBR(v)}${i === num(donCfg.def) ? '<span class="block text-[10px] font-normal">sugerido</span>' : ''}</button>`).join('')}<button type="button" data-v="o" class="rounded-lg border border-gray-700 px-2 py-2 text-xs font-semibold text-gray-200">Outro valor</button></div>
                 <label class="block text-xs font-medium text-gray-400 mb-1" for="donVal">Quanto você quer contribuir?</label>
                 <input type="text" id="donVal" inputmode="decimal" autocomplete="off" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 mb-3">
                 <label class="block text-xs font-medium text-gray-400 mb-1" for="donPix">Chave Pix</label>
                 <div class="flex gap-2 mb-2"><input type="text" id="donPix" readonly value="${esc(donCfg.pix)}" class="flex-1 min-w-0 bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200 font-mono select-all"><button type="button" data-cp class="px-3 py-2 rounded-lg border border-gray-600 text-xs font-semibold">Copiar</button></div>
-                <p class="text-[11px] text-gray-400 mb-3">Faça o Pix pelo seu banco e depois avise aqui. Nenhum dado de pagamento passa pelo app.</p>
+                <p class="text-[11px] text-gray-400 mb-3">Faça o Pix pelo seu banco e depois avise aqui. Nenhum dado de pagamento passa pelo App My Trade Dash.</p>
                 <p id="donMsg" class="text-xs text-red-400 mb-2 hidden"></p>
-                <div class="flex justify-end gap-2"><button type="button" data-n class="px-3 py-2 rounded-lg border border-gray-600 text-xs font-semibold">Fechar</button><button type="button" data-y class="px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold">Já contribuí</button></div></div>`;
+                <div class="flex justify-end gap-2"><button type="button" data-n class="px-3 py-2 rounded-lg border border-gray-600 text-xs font-semibold">Fechar</button><button type="button" data-y class="px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold">Já contribuí</button></div>
+                <div id="donHist" class="hidden mt-4 pt-3 border-t border-gray-700"></div></div>`;
             document.body.appendChild(o);
             const inp = o.querySelector('#donVal'), msg = o.querySelector('#donMsg');
             const setV = v => { inp.value = fmtMoneyBR(v); };
@@ -2892,6 +2919,26 @@ hmoDb = db;
                 b.className = b.className.replace('border-gray-700 text-gray-200', 'border-blue-500 bg-blue-950 text-blue-200');
                 if (b.dataset.v === 'o') { inp.value = ''; inp.focus(); } else setV(vs[+b.dataset.v]);
             });
+            const hist = o.querySelector('#donHist');
+            const drawHist = async () => {
+                let arr = []; try { arr = await donMineList(); } catch (e) { return; }
+                if (!arr.length) { hist.classList.add('hidden'); return; }
+                const okArr = arr.filter(x => x.status === 'confirmada'), nv = arr.filter(x => x.status === 'nova').length, ds = arr.filter(x => x.status === 'descartada').length;
+                const tot = okArr.reduce((a, x) => a + num(x.amount), 0);
+                const resumo = [okArr.length + (okArr.length === 1 ? ' confirmada' : ' confirmadas'), nv ? nv + (nv === 1 ? ' aguardando conferência' : ' aguardando conferência') : '', ds ? ds + (ds === 1 ? ' não localizada' : ' não localizadas') : ''].filter(Boolean).join(' · ');
+                const by = {};
+                arr.slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).forEach(x => { const k = String(x.created_at).slice(0, 7); (by[k] = by[k] || []).push(x); });
+                const keys = Object.keys(by).sort().reverse();
+                hist.classList.remove('hidden');
+                hist.innerHTML = `<div class="flex items-baseline justify-between gap-2"><p class="font-bold text-sm">💚 Contribuições ao My Trade Dash</p><p class="font-bold text-sm">R$ ${fmtMoneyBR(tot)}</p></div>
+                    <p class="text-[11px] text-gray-400 mb-2">${esc(resumo)}</p>
+                    ${keys.map((k, i) => { const [y, m] = k.split('-'), sub = by[k].filter(x => x.status === 'confirmada').reduce((a, x) => a + num(x.amount), 0), op = i === 0;
+                        return `<div class="mb-1"><button type="button" data-mo="${k}" class="w-full flex items-center justify-between gap-2 rounded-lg border border-gray-700 bg-gray-800/60 px-2 py-1.5 text-xs font-semibold"><span>${op ? '▾' : '▸'} ${m}/${y}</span><span>R$ ${fmtMoneyBR(sub)}</span></button>
+                        <div data-mob="${k}" class="${op ? '' : 'hidden'} px-2">${by[k].map(x => { const st = x.status === 'nova' ? ' · aguardando conferência' : x.status === 'descartada' ? ' · não localizada' : '';
+                            return `<div class="flex items-center justify-between gap-2 py-1 text-xs border-b border-gray-800 last:border-0 ${st ? 'text-gray-500' : 'text-gray-200'}"><span>${new Date(x.created_at).toLocaleDateString('pt-BR')}${st}</span><span class="${st ? '' : 'font-bold'}">R$ ${fmtMoneyBR(num(x.amount))}</span></div>`; }).join('')}</div></div>`; }).join('')}`;
+                hist.querySelectorAll('[data-mo]').forEach(b => b.onclick = () => { const box = hist.querySelector(`[data-mob="${b.dataset.mo}"]`); const on = box.classList.toggle('hidden'); b.firstElementChild.textContent = (on ? '▸ ' : '▾ ') + b.firstElementChild.textContent.slice(2); });
+            };
+            drawHist();
             o.querySelector('[data-cp]').onclick = async () => { try { await navigator.clipboard.writeText(donCfg.pix); showToast('Chave Pix copiada', 'ok'); } catch (e) { o.querySelector('#donPix').select(); showToast('Copie a chave selecionada', 'err'); } };
             o.querySelector('[data-n]').onclick = () => o.remove();
             o.querySelector('[data-y]').onclick = async () => {
@@ -2900,8 +2947,8 @@ hmoDb = db;
                 if (!(v > 0)) { msg.textContent = 'Informe o valor que você contribuiu.'; msg.classList.remove('hidden'); return; }
                 const y = o.querySelector('[data-y]'); y.disabled = true;
                 try {
-                    await donAdd(v); donMineHas = true; o.remove();
-                    await askInfo('💚 Contribuição registrada', 'Obrigado! Avisei o administrador. Assim que ele conferir o Pix, você recebe o recibo por e-mail ou WhatsApp.');
+                    await donAdd(v); donMineHas = true; drawHist(); inp.value = ''; y.disabled = false;
+                    await askInfo('💚 Contribuição registrada', 'Agradecemos pela sua contribuição e confiança no projeto! Sua ajuda voluntária faz toda a diferença para manter o My Trade Dash no ar, contribuindo para amenizar alguns custos estruturais e viabilizando novas evoluções.');
                     auditAdd({ kind: 'don', outcome: 'Concluída', detail: 'Contribuição informada: R$ ' + fmtMoneyBR(v) });
                     if (bellInit) refreshBell();
                 } catch (e) { y.disabled = false; msg.textContent = 'Não foi possível registrar: ' + ((e && e.message) || e); msg.classList.remove('hidden'); }
@@ -4317,30 +4364,33 @@ hmoDb = db;
     /* ===== Termos de uso, Política de privacidade e Primeiro acesso guiado (V112) ===== */
     (function () {
         const $ = id => document.getElementById(id);
-        const TERMS_VER = '2026-11-12', TERMS_DATE = '12/11/2026', TERMS_DOC = 'termos_privacidade';
+        const TERMS_VER = '2026-11-13', TERMS_DATE = '13/11/2026', TERMS_DOC = 'termos_privacidade';
         const LEGAL_EMAIL = 'mytradedash@gmail.com';
         const TERMS_HTML = `<h4 class="font-bold text-sm mb-1">Termos de uso do My Trade Dash</h4><p class="text-gray-400 mb-3">Versão de ${TERMS_DATE}</p>
-<p class="mb-2"><b>1. O que é o My Trade Dash.</b> Um diário para quem opera day trade (mini-índice e mini-dólar): registra operações, movimentações financeiras e notas do dia, e mostra indicadores, gráficos, relatórios e alertas de DARF.</p>
+<p class="mb-2"><b>1. O que é o My Trade Dash.</b> Um diário para quem opera day trade (mini-índice e mini-dólar): registra operações, movimentações financeiras e notas do dia, e mostra indicadores, gráficos, relatórios e alertas de DARF. Ele nasceu de uma necessidade do próprio criador, que controlava essas mesmas informações à mão, espalhadas por mais de uma planilha. Ao perceber que outros operadores provavelmente passavam pela mesma dificuldade, decidiu transformar esse controle em um aplicativo e compartilhá-lo.</p>
 <p class="mb-2"><b>2. Quem pode usar.</b> Somente maiores de 18 anos (Código Civil, art. 5º), com acesso liberado por convite. A conta é pessoal: login e senha não devem ser compartilhados.</p>
 <p class="mb-2"><b>3. Responsabilidade pelas informações.</b> Os valores mostrados vêm do que você lança. Os cálculos de resultado, DARF e indicadores são estimativas de apoio e não substituem a orientação de um profissional de Contabilidade nem os sistemas oficiais da Receita Federal (como o Sicalc). O My Trade Dash não é corretora, não executa ordens e não faz recomendação de investimento.</p>
-<p class="mb-2"><b>4. Disponibilidade.</b> Seus dados ficam guardados em um banco de dados na nuvem: não se perdem se você trocar de celular ou se o app ficar fora do ar por um tempo. O app pode ter pausas rápidas para manutenção. O backup (⚙ Opções &gt; Exportar backup) é uma cópia extra, útil para guardar um retrato dos seus dados ou recuperar algo excluído por engano.</p>
-<p class="mb-2"><b>5. Segurança dos dados.</b> O My Trade Dash adota medidas técnicas para proteger seus dados contra acessos não autorizados, como conexão criptografada e acesso restrito a cada conta, conforme a LGPD (Lei nº 13.709/2018, art. 46).</p>
-<p class="mb-2"><b>6. Propriedade.</b> A marca, o nome, a identidade visual e o código do My Trade Dash pertencem ao seu responsável. Os dados que você lança são seus.</p>
-<p class="mb-2"><b>7. Encerramento e exclusão da conta.</b> Você pode pedir a exclusão da conta a qualquer momento em Opções &gt; Excluir minha conta. O pedido é feito somente pelo app. Ao confirmar, seu acesso é desativado e seus dados ficam guardados por 30 dias, para o caso de você desistir. Passado esse prazo, os dados são apagados de vez e não podem ser recuperados. Fica guardado apenas o registro mínimo do pedido (e-mail, datas e motivo), para comprovar o atendimento. Antes de pedir, exporte seu backup em Opções.</p>
-<p class="mb-2"><b>8. Mudanças.</b> Estes termos podem ser atualizados. Quando isso acontecer, o app pedirá um novo aceite.</p>
-<p class="mb-2"><b>9. Lei aplicável.</b> Legislação brasileira. Contato: ${LEGAL_EMAIL}.</p>`;
+<p class="mb-2"><b>4. Contribuição voluntária.</b> O My Trade Dash é gratuito e vai continuar sendo. Em ⚙ Opções &gt; 💚 Ajude a manter o My Trade Dash você pode, se quiser, contribuir com o valor que achar justo, por Pix, para ajudar a amenizar custos como domínio, servidores e as melhorias do app. A contribuição é opcional e não dá nenhum direito, vantagem ou recurso extra: o seu acesso não está condicionado a ela. O app não processa pagamentos: o Pix é feito pelo seu banco e nenhum dado de pagamento passa pelo My Trade Dash. Você avisa pelo app que contribuiu, o responsável confere no extrato e confirma; se o pagamento não for localizado, o registro é descartado e passa a aparecer para você como "não localizada". O comprovante enviado após a confirmação é um arquivo simples, emitido por pessoa física, e não é documento fiscal.</p>
+<p class="mb-2"><b>5. Disponibilidade.</b> Seus dados ficam guardados em um banco de dados na nuvem: não se perdem se você trocar de celular ou se o app ficar fora do ar por um tempo. O app pode ter pausas rápidas para manutenção. O backup (⚙ Opções &gt; Exportar backup) é uma cópia extra, útil para guardar um retrato dos seus dados ou recuperar algo excluído por engano.</p>
+<p class="mb-2"><b>6. Segurança dos dados.</b> O My Trade Dash adota medidas técnicas para proteger seus dados contra acessos não autorizados, como conexão criptografada e acesso restrito a cada conta, conforme a LGPD (Lei nº 13.709/2018, art. 46).</p>
+<p class="mb-2"><b>7. Propriedade.</b> A marca, o nome, a identidade visual e o código do My Trade Dash pertencem ao seu responsável. Os dados que você lança são seus.</p>
+<p class="mb-2"><b>8. Encerramento da sua conta.</b> Você pode pedir a exclusão da conta e dos dados a qualquer momento em ⚙ Opções &gt; Excluir minha conta. O acesso é desativado e, após 30 dias, os dados são apagados de vez (veja o item "Como excluir sua conta" da Política de privacidade). O pedido de exclusão só pode ser feito pelo app.</p>
+<p class="mb-2"><b>9. Encerramento do aplicativo.</b> Assim como você pode encerrar a sua conta quando quiser, o My Trade Dash também pode ser descontinuado a qualquer momento. Se isso acontecer, todos os usuários serão avisados pelo app com, no mínimo, 30 dias de antecedência, contados a partir do aviso, para que haja tempo de exportar os dados em ⚙ Opções &gt; Exportar backup. Encerrado esse prazo, o acesso é desativado e os dados são apagados. Por se tratar de contribuição voluntária, e não de pagamento por um serviço contratado, não há devolução de valores já contribuídos.</p>
+<p class="mb-2"><b>10. Mudanças.</b> Estes termos podem ser atualizados. Quando isso acontecer, o app pedirá um novo aceite.</p>
+<p class="mb-2"><b>11. Lei aplicável.</b> Legislação brasileira. Contato: ${LEGAL_EMAIL}.</p>`;
         const PRIV_HTML = `<h4 class="font-bold text-sm mb-1">Política de privacidade do My Trade Dash</h4><p class="text-gray-400 mb-3">Versão de ${TERMS_DATE} · em conformidade com a LGPD (Lei nº 13.709/2018)</p>
-<p class="mb-2"><b>1. Controlador.</b> My Trade Dash. Contato para assuntos de dados pessoais: ${LEGAL_EMAIL}. Podemos responder ao seu pedido de convite, ao seu acesso e a pedidos de exclusão por e-mail ou pelo WhatsApp que você informou.</p>
+<p class="mb-2"><b>1. Controlador.</b> My Trade Dash. Contato para assuntos de dados pessoais: ${LEGAL_EMAIL}.</p>
 <p class="mb-1"><b>2. Dados tratados.</b></p>
-<ul class="list-disc pl-5 mb-2 space-y-0.5"><li>Pedido de convite: nome, e-mail, WhatsApp (com DDD), data de nascimento e como soube do app.</li><li>Conta: e-mail e senha (a senha fica protegida pelo provedor de login e não é vista por ninguém).</li><li>Uso do app: operações (data, horários, ativo, setup, contratos, pontos e resultado), movimentações financeiras (depósitos, saques e bancos informados), notas do dia (valor líquido, IRRF e custos), setups, DARF marcados como pagos e o histórico de auditoria.</li><li>No aparelho: tema escolhido e posição do botão Atalhos (ficam só no seu aparelho).</li></ul>
-<p class="mb-2"><b>3. Para que usamos.</b> Prestar o serviço (calcular resultados, indicadores, relatórios e a estimativa de DARF), liberar o acesso, falar com você pelo WhatsApp sobre o acesso e enviar felicitações de aniversário (com a sua autorização), e manter a segurança. Não vendemos dados nem os usamos para publicidade.</p>
-<p class="mb-2"><b>4. Bases legais.</b> Execução do serviço que você contratou (art. 7º, V), consentimento para contato por WhatsApp (art. 7º, I) e legítimo interesse para segurança e prevenção de fraudes (art. 7º, IX).</p>
+<ul class="list-disc pl-5 mb-2 space-y-0.5"><li>Pedido de convite: nome, e-mail, WhatsApp (com DDD), data de nascimento e como soube do app.</li><li>Conta: e-mail e senha (a senha fica protegida pelo provedor de login e não é vista por ninguém).</li><li>Uso do app: operações (data, horários, ativo, setup, contratos, pontos, resultado bruto e custos), movimentações financeiras (depósitos, saques e bancos informados), notas do dia (valor líquido, IRRF e custos), setups, DARF marcados como pagos e o histórico de auditoria.</li><li>Contribuição voluntária: valor, data do aviso, forma, situação (aguardando conferência, confirmada ou não localizada) e número do comprovante. Não recebemos nem guardamos dados de pagamento.</li><li>No aparelho: tema escolhido e posição do botão Atalhos (ficam só no seu aparelho).</li></ul>
+<p class="mb-2"><b>3. Para que usamos.</b> Prestar o serviço (calcular resultados, indicadores, relatórios e a estimativa de DARF), liberar o acesso, falar com você por e-mail ou WhatsApp sobre o acesso e enviar felicitações de aniversário (com a sua autorização), registrar e dar comprovante das contribuições voluntárias, e manter a segurança. Não vendemos dados nem os usamos para publicidade.</p>
+<p class="mb-2"><b>4. Bases legais.</b> Execução do serviço que você contratou (art. 7º, V), consentimento para contato por e-mail e WhatsApp e para o registro da contribuição voluntária, que parte de você (art. 7º, I), e legítimo interesse para segurança e prevenção de fraudes (art. 7º, IX).</p>
 <p class="mb-2"><b>5. Onde ficam e com quem são compartilhados.</b> Os dados ficam no Supabase (banco de dados e login, servidores em São Paulo). O site é publicado pelo GitHub Pages. Esses fornecedores só armazenam e processam os dados para o app funcionar. Não há outro compartilhamento, salvo obrigação legal.</p>
 <p class="mb-2"><b>6. Segurança.</b> Conexão criptografada (HTTPS) e regras no banco que fazem cada usuário ver e alterar somente os próprios dados dentro de sua respectiva área logada.</p>
-<p class="mb-2"><b>7. Por quanto tempo.</b> Enquanto a conta estiver ativa. Após o pedido de exclusão da conta, os dados são apagados, salvo o que a lei obrigar a guardar.</p>
-<p class="mb-2"><b>8. Seus direitos (art. 18).</b> Confirmar se tratamos seus dados, acessar, corrigir, pedir a exclusão, a portabilidade (o backup em ⚙ Opções &gt; Exportar backup já entrega seus dados) e revogar o consentimento. Peça pelo e-mail ${LEGAL_EMAIL}.</p>
-<p class="mb-2"><b>9. Menores de idade.</b> O app não é destinado a menores de 18 anos e não aceita pedidos deles (LGPD, art. 14).</p>
-<p class="mb-2"><b>10. Mudanças.</b> Esta política pode ser atualizada; o app pedirá um novo aceite quando isso acontecer.</p>`;
+<p class="mb-2"><b>7. Por quanto tempo.</b> Enquanto a conta estiver ativa. Após o pedido de exclusão da conta, os dados são apagados, inclusive o registro das contribuições voluntárias, salvo o que a lei obrigar a guardar.</p>
+<p class="mb-2"><b>8. Como excluir sua conta.</b> Em ⚙ Opções &gt; Excluir minha conta, escolha o motivo e confirme. Até o acesso ser desativado, você pode desistir. Depois de desativada, a conta fica bloqueada e seus dados ficam guardados por 30 dias, para o caso de você mudar de ideia (é só escrever para ${LEGAL_EMAIL}). Passado esse prazo, todos os seus dados são apagados de vez. Guardamos apenas um registro mínimo do pedido (e-mail, motivo, comentário e datas), para comprovar que ele foi atendido. Antes de pedir, exporte um backup em ⚙ Opções &gt; Exportar backup.</p>
+<p class="mb-2"><b>9. Seus direitos (art. 18).</b> Confirmar se tratamos seus dados, acessar, corrigir, pedir a exclusão, a portabilidade (o backup em ⚙ Opções &gt; Exportar backup já entrega seus dados) e revogar o consentimento. A exclusão da conta é pedida pelo app, em ⚙ Opções &gt; Excluir minha conta (veja o item 8). Os demais pedidos, pelo e-mail ${LEGAL_EMAIL}.</p>
+<p class="mb-2"><b>10. Menores de idade.</b> O app não é destinado a menores de 18 anos e não aceita pedidos deles (LGPD, art. 14).</p>
+<p class="mb-2"><b>11. Mudanças.</b> Esta política pode ser atualizada; o app pedirá um novo aceite quando isso acontecer.</p>`;
 
         /* ---- janela de termos (aceite obrigatório ou leitura) ---- */
         function termsModal(mode, tab0) {
@@ -4446,7 +4496,7 @@ hmoDb = db;
                     b: B('data-act="rep"', '📊 Abrir Relatórios') + B('data-next', 'Continuar', P) },
                 9: { t: 'Mês atual × mês anterior', h: () => lead('Abaixo da Visão Geral, o bloco compara o mês atual (até hoje) com o mês anterior fechado: <b class="text-gray-200">Gain</b>, <b class="text-gray-200">Loss</b> e a <b class="text-gray-200">DARF</b> estimada. Use ◀ ▶ para ver outros meses e Hoje para voltar. Em Loss e DARF, a seta para baixo é melhora.'),
                     b: B('data-act="mc"', '📆 Ver o bloco') + B('data-next', 'Continuar', P) },
-                10: { t: 'Para acompanhar', h: () => `<ul class="list-disc pl-5 text-xs text-gray-400 space-y-1"><li><b class="text-gray-200">🔔 Sino:</b> abas Alertas e Novidades. Alertas urgentes vêm primeiro, como o vencimento do DARF, e há um lembrete de backup depois de 30 dias.</li><li><b class="text-gray-200">⚡ Atalhos:</b> lançar e navegar rápido; arraste o botão para onde preferir.</li><li><b class="text-gray-200">⚙ Opções:</b> trocar senha (se esquecer, use <b class="text-gray-200">Esqueci minha senha</b> na tela de entrada; a senha provisória deve ser trocada no primeiro acesso), exportar e importar backup, histórico de auditoria, tema e termos. Se o app te ajuda, em <b class="text-gray-200">💚 Ajude a manter o My Trade Dash</b> você pode contribuir com o que achar justo: é opcional, e nada no app depende disso. Também é lá que fica <b class="text-gray-200">🗑 Excluir minha conta</b>, se um dia quiser encerrar (exporte o backup antes).</li><li><b class="text-gray-200">Celular:</b> o gesto de voltar fecha janelas e volta as abas.</li></ul><p class="mt-2 text-xs text-gray-400">Para reabrir este guia: ⚙ Opções &gt; 🧭 Guia do My Trade Dash.</p>`,
+                10: { t: 'Para acompanhar', h: () => `<ul class="list-disc pl-5 text-xs text-gray-400 space-y-1"><li><b class="text-gray-200">🔔 Sino:</b> abas Alertas e Novidades. Alertas urgentes vêm primeiro, como o vencimento do DARF, e há um lembrete de backup depois de 30 dias.</li><li><b class="text-gray-200">⚡ Atalhos:</b> lançar e navegar rápido; arraste o botão para onde preferir.</li><li><b class="text-gray-200">⚙ Opções:</b> trocar senha (se esquecer, use <b class="text-gray-200">Esqueci minha senha</b> na tela de entrada; a senha provisória deve ser trocada no primeiro acesso), exportar e importar backup, histórico de auditoria, tema e termos. Se o app te ajuda, em <b class="text-gray-200">💚 Ajude a manter o My Trade Dash</b> você pode contribuir com o que achar justo, por Pix: é opcional, e o seu acesso não depende disso. Lá mesmo você acompanha as suas contribuições e a situação de cada uma. Também é lá que fica <b class="text-gray-200">🗑 Excluir minha conta</b>, se um dia quiser encerrar (exporte o backup antes).</li><li><b class="text-gray-200">Celular:</b> o gesto de voltar fecha janelas e volta as abas.</li></ul><p class="mt-2 text-xs text-gray-400">Para reabrir este guia: ⚙ Opções &gt; 🧭 Guia do My Trade Dash.</p>`,
                     b: B('data-flow', '➕ Registrar movimentação') + B('data-skipall', 'Concluir', P) }
             };
             const frame = (inner, btns) => `<div role="dialog" aria-modal="true" class="w-full max-w-md max-h-[92vh] overflow-y-auto rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl">
