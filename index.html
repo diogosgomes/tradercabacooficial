@@ -201,7 +201,7 @@
                         <p class="text-[11px] text-gray-400">💬 O número precisa ter WhatsApp: é por ele que vamos te responder.</p></div>
                     <div><label for="invHow" class="block text-xs font-medium text-gray-400 mb-1">Como soube do app?</label><input type="text" id="invHow" maxlength="140" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200"></div>
                     <div style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden" aria-hidden="true"><label>Não preencha<input type="text" id="invWeb" tabindex="-1" autocomplete="off"></label></div>
-                    <label class="flex items-start gap-2 text-[11px] text-gray-400"><input type="checkbox" id="invOk" class="mt-0.5"><span>Em conformidade com a Lei Geral de Proteção de Dados (LGPD, Lei nº 13.709/2018), autorizo o contato por WhatsApp sobre o meu acesso e o uso dos meus dados somente para essa finalidade e para receber felicitações de aniversário.</span></label>
+                    <label class="flex items-start gap-2 text-[11px] text-gray-400"><input type="checkbox" id="invOk" class="mt-0.5"><span>Em conformidade com a Lei Geral de Proteção de Dados (LGPD, Lei nº 13.709/2018), autorizo o contato por e-mail e WhatsApp sobre o meu acesso e o uso dos meus dados somente para essa finalidade. Li os <button type="button" data-il="t" class="underline text-blue-400 hover:text-blue-300">Termos de uso</button> e a <button type="button" data-il="p" class="underline text-blue-400 hover:text-blue-300">Política de privacidade</button>.</span></label>
                     <p id="invMsg" class="text-xs min-h-[1rem] text-red-400" role="alert"></p>
                     <button type="submit" id="invBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">Enviar pedido</button>
                     <button type="button" id="invClose" class="hidden w-full bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Fechar</button>
@@ -209,7 +209,7 @@
                 <div id="invDone" class="hidden space-y-3 text-center">
                     <p class="text-2xl">✅</p>
                     <p class="text-sm font-semibold text-gray-100">Recebemos seu pedido!</p>
-                    <p class="text-xs text-gray-400">Em breve entraremos em contato com você pelo WhatsApp que informou.</p>
+                    <p class="text-xs text-gray-400">Em breve entraremos em contato com você pelo e-mail ou WhatsApp que informou.</p>
                     <button type="button" id="invDoneBack" class="w-full bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">Fechar</button>
                 </div>
             </form>
@@ -218,7 +218,7 @@
             <svg viewBox="0 0 200 200" role="img" aria-label="Escudo My Trade Dash" class="h-12 w-12 shrink-0"><use href="#escudoMTD"/></svg>
             <p class="text-[11px] text-gray-400 leading-snug">Seus dados protegidos por login e regras de acesso.</p>
         </div>
-        <p class="mt-3 text-center text-[11px] text-gray-500">© 2026 My Trade Dash · Todos os direitos reservados.</p>
+        <p class="mt-3 text-center text-[11px] text-gray-500">© 2026 My Trade Dash™ · Todos os direitos reservados.</p>
     </div>
 
     <!-- Cabeçalho e abas fixos no topo -->
@@ -450,7 +450,7 @@
 
     </main>
 
-    <footer class="w-full text-center py-6 px-3 text-[11px] text-gray-500">© 2026 My Trade Dash · Todos os direitos reservados.</footer>
+    <footer class="w-full text-center py-6 px-3 text-[11px] text-gray-500">© 2026 My Trade Dash™ · Todos os direitos reservados.</footer>
 
     <div id="bestTip" role="tooltip" class="hidden fixed z-[70] w-72 max-w-[calc(100vw-16px)] pointer-events-none bg-cardBg border border-gray-600 rounded-lg shadow-2xl px-3 py-2 text-xs">
         <p class="text-[10px] text-gray-500 uppercase tracking-wider">Best Setup</p>
@@ -656,7 +656,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V150';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V153';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -2266,6 +2266,7 @@ hmoDb = db;
         let invIsAdmin = false, invCache = [], invCacheAt = 0;
         const invDigits = v => String(v || '').replace(/\D/g, '');
         const invUfOf = w => { const d = String(w || ''); return DDD_UF[d.startsWith('55') ? d.slice(2, 4) : d.slice(0, 2)] || ''; };
+        const invConsent = r => '🔒 <b class="text-gray-200">Autorização LGPD:</b> aceita em ' + (r.created_at ? new Date(r.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }) + ', ' + new Date(r.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—') + ' · texto ' + (r.consent_v ? esc(r.consent_v) : 'anterior a 13/11/2026');
         const invFmtPhone = d => { d = String(d || ''); if (d.startsWith('55') && d.length >= 12) { const l = d.slice(2); return '(' + l.slice(0, 2) + ') ' + l.slice(2, l.length - 4) + '-' + l.slice(-4); } return d; };
         const invWhen = v => { const t = new Date(v); return isNaN(t) ? '' : t.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }); };
         const invBirthBR = s => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || '')); return m ? `${m[3]}/${m[2]}/${m[1]}` : ''; };
@@ -2275,10 +2276,10 @@ hmoDb = db;
                 const all = (await hmoDb.collection('convites').get()).docs.map(d => d.data());
                 if (all.some(x => invLive(x) && String(x.email).toLowerCase() === rec.email.toLowerCase())) return { dup: 'email' };
                 if (all.some(x => invLive(x) && x.whatsapp === rec.whatsapp)) return { dup: 'whatsapp' };
-                await hmoDb.collection('convites').add({ ...rec, status: 'novo', archived: false, created_at: Date.now() });
+                await hmoDb.collection('convites').add({ ...rec, consent: true, consent_v: window.TERMS_VER || null, status: 'novo', archived: false, created_at: Date.now() });
                 return { dup: null };
             }
-            const { error } = await sb.from('tb_convites').insert({ name: rec.name, email: rec.email, whatsapp: rec.whatsapp, birth_date: rec.birth_date, how_known: rec.how_known, consent: true });
+            const { error } = await sb.from('tb_convites').insert({ name: rec.name, email: rec.email, whatsapp: rec.whatsapp, birth_date: rec.birth_date, how_known: rec.how_known, consent: true, consent_v: window.TERMS_VER || null });
             if (error) { if (error.code === '23505') return { dup: /email/i.test((error.message || '') + (error.details || '')) ? 'email' : 'whatsapp' }; throw error; }
             return { dup: null };
         }
@@ -2389,13 +2390,14 @@ hmoDb = db;
         const invBdayNear = x => { const h = invBdayOn(x, 0); if (h) return { ...h, when: 'hoje' }; const a = invBdayOn(x, 1); return a ? { ...a, when: 'amanhã' } : null; };
         function invBdayLink(x) {
             const first = String(x.name || '').trim().split(/\s+/)[0] || '';
-            return 'https://wa.me/' + x.whatsapp + '?text=' + encodeURIComponent(`Parabéns, ${first}! Muitas felicidades neste dia. Feliz aniversário e um abraço do My Trade Dash!`);
+            return 'https://wa.me/' + x.whatsapp + '?text=' + encodeURIComponent(`Parabéns, ${first}! Muitas felicidades neste dia. Feliz aniversário!${SIGN}`);
         }
         function invWaLink(r) {
             const first = String(r.name || '').trim().split(/\s+/)[0] || '';
             const msg = `Olá, ${first}! Seu pedido de convite para o My Trade Dash foi recebido e o acesso será liberado. Seu login será o e-mail ${r.email}. A senha provisória será enviada por aqui, pelo WhatsApp. Para entrar, acesse ${INV_SITE}`;
             return 'https://wa.me/' + r.whatsapp + '?text=' + encodeURIComponent(msg);
         }
+        const APP_OWNER = 'Diogo Gomes', SIGN = `\n\nAtenciosamente,\n${'Diogo Gomes'}\nEquipe My Trade Dash`;
         const INV_FROM = 'mytradedash@gmail.com', INV_MASTER = 'diogogomes2110@gmail.com', SB_DASH = 'https://supabase.com/dashboard/project/xctsnutlzetvpkmbantr';
         const invIsMaster = () => MODE === 'claude' || ($('menuUserEmail').textContent || '').trim().toLowerCase() === INV_MASTER;
         function invMailLink(to, subject, body) {
@@ -2405,11 +2407,11 @@ hmoDb = db;
         }
         function invMailAccess(r) {
             const first = String(r.name || '').trim().split(/\s+/)[0] || '';
-            return invMailLink(r.email, 'Seu acesso ao My Trade Dash', `Olá, ${first}!\n\nSeu pedido de convite para o My Trade Dash foi recebido e o acesso será liberado.\nSeu login será este e-mail (${r.email}). A senha provisória será enviada por e-mail.\n\nPara entrar, acesse ${INV_SITE}\n\nUm abraço,\nMy Trade Dash`);
+            return invMailLink(r.email, 'Seu acesso ao My Trade Dash', `Olá, ${first}!\n\nSeu pedido de convite para o My Trade Dash foi recebido e o acesso será liberado.\nSeu login será este e-mail (${r.email}). A senha provisória será enviada por e-mail.\n\nPara entrar, acesse ${INV_SITE}${SIGN}`);
         }
         function invMailBday(x) {
             const first = String(x.name || '').trim().split(/\s+/)[0] || '';
-            return invMailLink(x.email, 'Feliz aniversário!', `Parabéns, ${first}!\n\nMuitas felicidades neste dia. Feliz aniversário e um abraço do My Trade Dash!`);
+            return invMailLink(x.email, 'Feliz aniversário!', `Parabéns, ${first}!\n\nMuitas felicidades neste dia. Feliz aniversário!${SIGN}`);
         }
         const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
         const isLeapY = y => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
@@ -2460,9 +2462,14 @@ hmoDb = db;
                 const arr = uList[sec];
                 if (!arr) { adUBody.innerHTML = '<p class="text-xs text-gray-400 text-center py-6">Carregando…</p>'; return; }
                 const t = invNorm(uq.trim()), items = arr.filter(u => !t || invNorm(u.email).includes(t));
-                adUBody.innerHTML = items.length ? items.map(u => `<div class="rounded-lg border border-gray-700 p-3 text-xs"><p class="font-bold text-gray-100 break-all">${esc(u.email)}</p>
-                    <p class="text-gray-400 mt-1">Cadastro: <span class="text-gray-200">${fmtDT(u.created_at)}</span></p>
-                    ${sec === 'ativos' ? `<p class="text-gray-400">Último acesso: <span class="text-gray-200">${fmtDT(u.last_sign_in_at)}</span></p>` : `<p class="text-gray-400">Excluído em: <span class="text-amber-300">${fmtDT(u.deleted_at)}</span></p>`}</div>`).join('') : '<p class="text-xs text-gray-400 text-center py-6">Nenhum usuário nesta lista.</p>';
+                adUBody.innerHTML = items.length ? items.map(u => { const cv = usrConv(u.email), wa = cv && cv.whatsapp;
+                    return `<div class="rounded-lg border border-gray-700 p-3 text-xs" data-um="${esc(u.email)}">
+                    <p class="font-bold text-gray-100 break-words text-sm">${esc((cv && cv.name) || u.email)}</p>
+                    <p class="text-gray-400 break-all">${esc(u.email)}${cv ? '' : ' · sem pedido de convite com este e-mail'}</p>
+                    <p class="text-gray-400 mt-1">Cadastro: <span class="text-gray-200">${fmtDT(u.created_at)}</span>${sec === 'ativos' ? ` · Último acesso: <span class="text-gray-200">${fmtDT(u.last_sign_in_at)}</span>` : ` · Excluído em: <span class="text-amber-300">${fmtDT(u.deleted_at)}</span>`}</p>
+                    <div class="flex flex-wrap gap-2 mt-2"><button type="button" data-ua="ver" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold">📄 Dados desta pessoa</button>
+                    <a href="${esc(invMailLink(u.email, 'Seus dados pessoais no My Trade Dash', usrMsgText(u, cv)))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">✉ Responder o pedido</a>
+                    ${wa ? `<a href="https://wa.me/${esc(wa)}?text=${encodeURIComponent(usrMsgText(u, cv))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">💬 WhatsApp</a>` : ''}</div></div>`; }).join('') : '<p class="text-xs text-gray-400 text-center py-6">Nenhum usuário nesta lista.</p>';
             };
             const loadUsers = async k => {
                 try { uList[k] = await adminUsersList(k); } catch (e) { adUBody.innerHTML = '<p class="text-xs text-red-400">Não foi possível carregar: ' + esc((e && e.message) || e) + '. Rode o SQL de estrutura (tabelas de usuários) no Supabase.</p>'; return; }
@@ -2709,6 +2716,46 @@ hmoDb = db;
             };
             adTabs.addEventListener('click', e => { const b = e.target.closest('[data-sec]'); if (b) setSec(b.dataset.sec); });
             adSearch.addEventListener('input', () => { uq = adSearch.value; drawUsers(); });
+            const usrConv = em => (invCache || []).concat(list || []).find(c => String(c.email || '').toLowerCase() === String(em || '').toLowerCase());
+            const usrSections = u => {
+                const em = String(u.email || '').toLowerCase(), cv = usrConv(em), out = [];
+                if (cv) out.push({ t: 'Pedido de convite', rows: [['Nome', cv.name || '—'], ['E-mail', cv.email], ['WhatsApp', cv.whatsapp ? invFmtPhone(cv.whatsapp) : '—'], ['UF', (cv.whatsapp && invUfOf(cv.whatsapp)) || '—'], ['Data de nascimento', cv.birth_date ? new Date(cv.birth_date + 'T12:00:00').toLocaleDateString('pt-BR') : '—'], ['Como soube do app', cv.how_known || '—'], ['Autorização LGPD', 'aceita em ' + fmtDT(cv.created_at) + ' · texto ' + (cv.consent_v || 'anterior a 13/11/2026')], ['Situação', INV_ST[cv.status] || cv.status], ['Pedido em', fmtDT(cv.created_at)]] });
+                out.push({ t: 'Conta', rows: [['Nome no perfil', (cv && cv.name) || '—'], ['E-mail', u.email], ['Cadastro', fmtDT(u.created_at)], ['Último acesso', fmtDT(u.last_sign_in_at)], ['Administrador do app', rlAdm.has(em) ? 'Sim' : 'Não'], ['Conta excluída em', fmtDT(u.deleted_at)]] });
+                const dos = (doList || []).filter(x => String(x.email || '').toLowerCase() === em);
+                if (dos.length) out.push({ t: 'Contribuições voluntárias', head: ['Valor', 'Situação', 'Informada em', 'Confirmada em', 'Comprov.'], rows: dos.map(x => ['R$ ' + fmtMoneyBR(num(x.amount)), x.status === 'confirmada' ? 'Confirmada' : x.status === 'descartada' ? 'Não localizada' : 'Aguardando conferência', fmtDT(x.created_at), fmtDT(x.confirmed_at), x.receipt_no ? donNo(x) : '—']) });
+                const exs = (exList || []).filter(x => String(x.email || '').toLowerCase() === em);
+                if (exs.length) out.push({ t: 'Pedidos de exclusão', head: ['Motivo', 'Comentário', 'Situação', 'Pedido em', 'Desativado em'], rows: exs.map(x => [x.reason || '—', x.comment || '—', EXC_ST[x.status] || x.status, fmtDT(x.created_at), fmtDT(x.deactivated_at)]) });
+                const pws = (pwList || []).filter(x => String(x.email || '').toLowerCase() === em);
+                if (pws.length) out.push({ t: 'Pedidos de senha', head: ['Situação', 'Pedido em', 'Atendido em'], rows: pws.map(x => [PWD_ST[x.status] || x.status, fmtDT(x.created_at), fmtDT(x.handled_at)]) });
+                return out;
+            };
+            const USR_NOTE = 'Emitido em atendimento ao art. 18 da Lei Geral de Proteção de Dados (Lei nº 13.709/2018). Reúne os dados pessoais que o My Trade Dash guarda sobre esta pessoa na área administrativa. As operações, movimentações e notas do dia não constam aqui: ficam visíveis apenas para a própria pessoa, que as exporta pelo app em Opções > Exportar backup.';
+            const usrName = u => { const cv = usrConv(u.email); return (cv && cv.name) || u.email; };
+            const usrMsgText = (u, cv) => `Olá, ${(cv && cv.name) || u.email}!\nEsperamos que você esteja bem!\n\nRecebemos o seu pedido e estamos atendendo ao direito de acesso aos dados, previsto no art. 18 da Lei Geral de Proteção de Dados (Lei nº 13.709/2018).\n\nEm anexo vai o documento com os dados pessoais que guardamos sobre você na área administrativa do My Trade Dash: o pedido de convite, os dados da conta e, se houver, contribuições e pedidos que você tenha feito.\n\nAs suas operações, movimentações e notas do dia não ficam visíveis para nós: elas são só suas. Para ter uma cópia delas, entre no app e use ⚙ Opções > Exportar backup. Se não conseguir entrar, responda esta mensagem que enviamos uma senha temporária.${SIGN}`;
+            const openUsrData = u => {
+                const secs = usrSections(u), nome = usrName(u), cv = usrConv(u.email);
+                const o = document.createElement('div'); o.className = 'fixed inset-0 z-[120] flex items-center justify-center p-3 bg-black/70'; o.dataset.keepBell = '1';
+                o.innerHTML = `<div class="w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl">
+                    <h3 class="text-base font-bold">📄 Dados pessoais de ${esc(nome)}</h3>
+                    <p class="text-[11px] text-gray-400 mb-3">${esc(u.email)} · conferido em ${esc(fmtDT(new Date().toISOString()))}</p>
+                    ${secs.map(sc => `<p class="text-xs font-bold text-gray-100 uppercase tracking-wide mt-3 mb-1">${esc(sc.t)}</p>
+                        <div class="overflow-x-auto"><table class="w-full text-[11px]">${sc.head ? `<thead class="text-gray-400"><tr class="border-b border-gray-700 text-left">${sc.head.map(h => `<th class="py-1 pr-3 font-semibold">${esc(h)}</th>`).join('')}</tr></thead>` : ''}
+                        <tbody>${sc.rows.map(r => sc.head ? `<tr class="border-b border-gray-800/60">${r.map(c => `<td class="py-1 pr-3 text-gray-200">${esc(c)}</td>`).join('')}</tr>` : `<tr class="border-b border-gray-800/60"><td class="py-1 pr-3 text-gray-400 w-1/2">${esc(r[0])}</td><td class="py-1 text-gray-200">${esc(r[1])}</td></tr>`).join('')}</tbody></table></div>`).join('')}
+                    <p class="text-xs font-bold text-gray-100 uppercase tracking-wide mt-3 mb-1">Sobre este documento</p>
+                    <p class="text-[11px] text-gray-400">${esc(USR_NOTE)}</p>
+                    <div class="flex flex-wrap justify-end gap-2 mt-4"><button type="button" data-n class="px-3 py-2 rounded-lg border border-gray-600 text-xs font-semibold">Fechar</button>
+                    <a href="${esc(invMailLink(u.email, 'Seus dados pessoais no My Trade Dash', usrMsgText(u, cv)))}" target="_blank" rel="noopener" class="px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold">✉ Responder o pedido</a>
+                    <button type="button" data-pdf class="px-3 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold">📄 Baixar PDF</button></div></div>`;
+                document.body.appendChild(o);
+                o.querySelector('[data-n]').onclick = () => o.remove();
+                const bp = o.querySelector('[data-pdf]');
+                bp.onclick = async () => { bp.disabled = true; bp.textContent = 'Gerando…';
+                    try { await usrPdf(nome, u, secs, USR_NOTE); auditAdd({ kind: 'lgpd', outcome: 'Concluída', detail: `Dados pessoais exportados: ${u.email}` }); }
+                    catch (e) { showToast('Não foi possível gerar: ' + ((e && e.message) || e), 'err'); }
+                    bp.disabled = false; bp.textContent = '📄 Baixar PDF'; };
+            };
+            adUBody.addEventListener('click', e => { const b = e.target.closest('[data-ua]'); if (!b) return;
+                const em = b.closest('[data-um]').dataset.um, u = (uList[sec] || []).find(x => x.email === em); if (u) openUsrData(u); });
             loadUsers('ativos'); loadUsers('excl'); loadExc(); loadPwd(); loadDon();
             ov.querySelector('#ivClose').onclick = close;
             ov.addEventListener('click', ev => { if (ev.target === ov) close(); });
@@ -2727,6 +2774,7 @@ hmoDb = db;
                     <div class="shrink-0 flex flex-col items-end gap-1"><span class="text-[10px] px-2 py-0.5 rounded-full border ${r.status === 'novo' ? 'border-blue-500 text-blue-300' : 'border-gray-600 text-gray-400'}">${esc(INV_ST[r.status] || r.status)}</span>${r.archived ? '<span class="text-[10px] px-2 py-0.5 rounded-full border border-gray-600 text-gray-400">🗄 Arquivado</span>' : ''}</div></div>
                     <p class="text-xs text-gray-400 mt-1">Como soube: <span class="text-gray-200">${esc(r.how_known)}</span></p>
                     <p class="text-[11px] text-gray-500">${esc(invWhen(r.created_at))}</p>
+                    <p class="text-[11px] text-gray-400 mt-0.5">${invConsent(r)}</p>
                     ${bd ? `<p class="text-xs text-amber-300 mt-1">🎂 ${bd.when === 'hoje' ? 'Hoje' : 'Amanhã'} é aniversário (faz ${bd.age} anos)</p>` : ''}
                     ${r.deleted_at ? `<p class="text-xs text-amber-300 mt-1">🗑 Some de vez em ${invTrashLeft(r)} ${invTrashLeft(r) === 1 ? 'dia' : 'dias'}</p>
                     <div class="flex flex-wrap gap-2 mt-2"><button type="button" data-a="restore" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold">♻ Restaurar</button><button type="button" data-a="purge" class="px-3 py-1.5 rounded-lg bg-red-700 text-white text-xs font-semibold">${armed === r.id ? 'Confirmar: apagar sem volta' : 'Excluir de vez'}</button></div></div>` : `
@@ -2859,7 +2907,7 @@ hmoDb = db;
         }
         function pwdMsgText(r, pw, via) {
             const first = String((r.name || r.email) || '').trim().split(/[\s@]+/)[0] || '';
-            return `Olá, ${first}! Aqui está a sua senha provisória do My Trade Dash.\n\nLogin: ${r.email}\nSenha provisória: ${pw}\n\nAcesse ${INV_SITE} e entre com ela. Ao entrar, você vai criar a sua própria senha, e a provisória deixa de valer.\n\nUm abraço,\nMy Trade Dash`;
+            return `Olá, ${first}! Aqui está a sua senha provisória do My Trade Dash.\n\nLogin: ${r.email}\nSenha provisória: ${pw}\n\nAcesse ${INV_SITE} e entre com ela. Ao entrar, você vai criar a sua própria senha, e a provisória deixa de valer.${SIGN}`;
         }
         function pwdAlerts(list) {
             if (!invIsAdmin || !list) return [];
@@ -2952,7 +3000,7 @@ hmoDb = db;
             const { error } = await sb.rpc('mtd_desfazer_contribuicao', { p_id: r.id }); if (error) throw error;
         }
         function donMsg(r) {
-            return `Olá, ${r.name || r.email}!\nEsperamos que você esteja bem!\n\nRecebemos a sua contribuição voluntária e agradecemos muito pelo apoio e confiança no projeto My Trade Dash.\n\nRatificamos que o app continua gratuito para todo mundo, independente da possibilidade de contribuição voluntária ou não! A sua ajuda contribui para amenizar alguns custos para mantermos o App no ar, como domínio, servidores e as melhorias.\n\nAbraços,\nEquipe My Trade Dash`;
+            return `Olá, ${r.name || r.email}!\nEsperamos que você esteja bem!\n\nRecebemos a sua contribuição voluntária e agradecemos muito pelo apoio e confiança no projeto My Trade Dash.\n\nRatificamos que o app continua gratuito para todo mundo, independente da possibilidade de contribuição voluntária ou não! A sua ajuda contribui para amenizar alguns custos para mantermos o App no ar, como domínio, servidores e as melhorias.${SIGN}`;
         }
         // Recibo em PDF (A4 retrato), escrito à mão, sem bibliotecas — como o PDF dos Relatórios
         async function donPdf(r) {
@@ -3211,14 +3259,11 @@ hmoDb = db;
             if (MODE !== 'claude') { const { error } = await sb.rpc('mtd_excluir_dados', { p_user: r.user_id }); if (error) throw error; }
             await excAdminSet(r, { status: 'excluido' });
         }
-        function excMailLink(r) {
-            const first = String(r.name || r.email || '').trim().split(/[\s@]+/)[0] || '';
-            return invMailLink(r.email, 'Seu pedido de exclusão no My Trade Dash', `Olá, ${first}!\n\nRecebemos seu pedido de exclusão da conta no My Trade Dash. Seu acesso será desativado e seus dados ficam guardados por ${EXC_DAYS} dias, caso você queira voltar atrás. Depois disso, eles são apagados de vez.\n\nSe quiser desistir, responda esta mensagem.\n\nUm abraço,\nMy Trade Dash`);
+        function excMsgText(r) {
+            return `Olá, ${r.name || r.email}!\nEsperamos que você esteja bem!\n\nRecebemos o seu pedido de exclusão da conta no My Trade Dash, feito em ${excDay(r.created_at)}.\n\nAtendemos ao seu direito de eliminação dos dados, previsto no art. 18, inciso VI, da Lei Geral de Proteção de Dados (Lei nº 13.709/2018).\n\nComo funciona: seu acesso é desativado e seus dados ficam guardados por ${EXC_DAYS} dias, caso você mude de ideia. Passado esse prazo, são apagados de vez e não podem ser recuperados.\n\nSe quiser levar uma cópia dos seus lançamentos antes que sejam apagados, entre no app e use ⚙ Opções > Exportar backup. Se não conseguir entrar, responda esta mensagem que enviamos uma senha temporária.${SIGN}`;
         }
-        function excWaLink(r, wa) {
-            const first = String(r.name || '').trim().split(/\s+/)[0] || '';
-            return 'https://wa.me/' + wa + '?text=' + encodeURIComponent(`Olá, ${first}! Recebemos seu pedido de exclusão da conta no My Trade Dash. Seu acesso será desativado e seus dados ficam guardados por ${EXC_DAYS} dias, caso você queira voltar atrás. Depois disso, eles são apagados de vez. Se quiser desistir, é só responder por aqui.`);
-        }
+        function excMailLink(r) { return invMailLink(r.email, 'Seu pedido de exclusão no My Trade Dash', excMsgText(r)); }
+        function excWaLink(r, wa) { return 'https://wa.me/' + wa + '?text=' + encodeURIComponent(excMsgText(r)); }
         function excAlerts(list) {
             if (!invIsAdmin || !list) return [];
             const out = [], nw = list.filter(x => x.status === 'novo');
@@ -3236,7 +3281,7 @@ hmoDb = db;
             if (m && m.status === 'novo') {
                 bar.classList.remove('hidden');
                 bar.innerHTML = `<span class="min-w-0">🗑 Pedido de exclusão enviado em ${excDay(m.created_at)}. Seu acesso será desativado pela administração.</span><button type="button" id="excUndo" class="px-3 py-1 rounded-lg border border-amber-400 text-amber-100 font-semibold underline">Desistir do pedido</button>`;
-                $('excUndo').onclick = async () => { try { await excWithdraw(); showToast('Pedido de exclusão cancelado', 'ok'); excRefreshBar(); } catch (e) { showToast('Não foi possível cancelar: ' + ((e && e.message) || e), 'err'); } };
+                $('excUndo').onclick = async () => { try { await excWithdraw(); auditAdd({ kind: 'exc_user', outcome: 'Concluída', detail: 'Pedido de exclusão da conta cancelado pelo usuário' }); showToast('Pedido de exclusão cancelado', 'ok'); excRefreshBar(); } catch (e) { showToast('Não foi possível cancelar: ' + ((e && e.message) || e), 'err'); } };
             } else bar.classList.add('hidden');
             if (m && m.status === 'desativado') {
                 const ov = document.createElement('div'); ov.id = 'excBlock'; ov.className = 'fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/90';
@@ -3264,7 +3309,7 @@ hmoDb = db;
             ov.addEventListener('click', e => { if (e.target === ov) close(); });
             ov.querySelectorAll('[data-x]').forEach(b => b.onclick = close);
             const bk = ov.querySelector('[data-bk]'); if (bk) bk.onclick = () => exportData();
-            const un = ov.querySelector('[data-undo]'); if (un) un.onclick = async () => { try { await excWithdraw(); close(); showToast('Pedido de exclusão cancelado', 'ok'); excRefreshBar(); } catch (e) { showToast('Não foi possível cancelar', 'err'); } };
+            const un = ov.querySelector('[data-undo]'); if (un) un.onclick = async () => { try { await excWithdraw(); auditAdd({ kind: 'exc_user', outcome: 'Concluída', detail: 'Pedido de exclusão da conta cancelado pelo usuário' }); close(); showToast('Pedido de exclusão cancelado', 'ok'); excRefreshBar(); } catch (e) { showToast('Não foi possível cancelar', 'err'); } };
             const go = ov.querySelector('[data-go]');
             if (go) go.onclick = async () => {
                 const msg = ov.querySelector('#excMsg'), r = ov.querySelector('input[name="excR"]:checked');
@@ -3273,7 +3318,7 @@ hmoDb = db;
                 if (!ov.querySelector('#excOk').checked) return bad('Marque a confirmação para continuar.');
                 if (!await askBox('Confirmar exclusão da conta?', 'Seu acesso será desativado e, após ' + EXC_DAYS + ' dias, seus dados serão apagados de vez. Deseja continuar?', 'Confirmar', 'Voltar')) return;
                 go.disabled = true;
-                try { await excCreate(EXC_REASONS[+r.value], ov.querySelector('#excC').value.trim()); close(); showToast('Pedido de exclusão enviado', 'ok'); excRefreshBar(); if (invIsAdmin && bellInit) refreshBell(); }
+                try { const mot = EXC_REASONS[+r.value]; await excCreate(mot, ov.querySelector('#excC').value.trim()); auditAdd({ kind: 'exc_user', outcome: 'Concluída', detail: 'Pedido de exclusão da conta enviado. Motivo: ' + mot }); close(); showToast('Pedido de exclusão enviado', 'ok'); excRefreshBar(); if (invIsAdmin && bellInit) refreshBell(); }
                 catch (e) { go.disabled = false; bad('Não foi possível enviar: ' + ((e && e.message) || e)); }
             };
         }
@@ -3304,7 +3349,7 @@ hmoDb = db;
             link.addEventListener('click', () => view(true));
             $('invClose').addEventListener('click', () => view(false));
             $('invDoneBack').addEventListener('click', () => view(false));
-            const DUP = { email: 'Já recebemos um pedido com este e-mail. Em breve entraremos em contato pelo WhatsApp informado.', whatsapp: 'Já recebemos um pedido com este WhatsApp. Em breve entraremos em contato.', again: 'Seu pedido já foi enviado. Em breve entraremos em contato pelo WhatsApp informado.' };
+            const DUP = { email: 'Já recebemos um pedido com este e-mail. Em breve entraremos em contato pelo e-mail ou WhatsApp informado.', whatsapp: 'Já recebemos um pedido com este WhatsApp. Em breve entraremos em contato pelo e-mail ou WhatsApp informado.', again: 'Seu pedido já foi enviado. Em breve entraremos em contato pelo e-mail ou WhatsApp informado.' };
             form.addEventListener('submit', async e => {
                 e.preventDefault();
                 if ($('invWeb').value) { sub.textContent = ''; $('invFields').classList.add('hidden'); $('invDone').classList.remove('hidden'); return; }
@@ -4302,6 +4347,61 @@ hmoDb = db;
         const X = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
 
 
+
+        /* ===== PDF de dados pessoais de um usuário (LGPD art. 18) — V151 ===== */
+        function usrPdf(nome, u, secs, nota) {
+            const PW = 595, PH = 842, MG = 42;
+            const L = t => String(t == null ? '' : t).replace(/[—–]/g, '-').replace(/−/g, '-').replace(/…/g, '...').replace(/[^\x20-\xFF]/g, '?').trim();
+            const esc1 = t => L(t).replace(/[\\()]/g, '\\$&');
+            const tw = (t, sz) => L(t).length * sz * 0.5;
+            const txt = (t, x, y, sz, bold, al) => { const xx = al === 'r' ? x - tw(t, sz) : x; return `BT /${bold ? 'F2' : 'F1'} ${sz} Tf ${xx.toFixed(1)} ${y.toFixed(1)} Td (${esc1(t)}) Tj ET\n`; };
+            const wrap = (t, n) => { const out = []; let r = L(t); if (!r) return ['']; while (r.length > n) { let k = r.lastIndexOf(' ', n); if (k < 10) k = n; out.push(r.slice(0, k)); r = r.slice(k).trim(); } out.push(r); return out; };
+            const pages = []; let cur, y;
+            const newPage = first => { cur = { c: '' }; pages.push(cur); y = PH - MG;
+                cur.c += txt('My Trade Dash - Dados pessoais de ' + nome, MG, y - 8, 14, true); y -= 24;
+                if (first) { cur.c += txt('Titular: ' + nome + ' · ' + (u.email || ''), MG, y, 8.5); y -= 11;
+                    cur.c += txt('Gerado em ' + fmtDT(new Date().toISOString()) + (MODE === 'claude' ? ' · Ambiente HMO' : ''), MG, y, 8.5); y -= 16; } };
+            newPage(true);
+            const avail = PW - 2 * MG;
+            secs.forEach((sec, si) => {
+                if (y - 50 < MG + 20) newPage(false);
+                y -= 4; cur.c += txt(`${si + 1}. ${sec.t}`, MG, y, 11, true); y -= 16;
+                if (sec.head) {
+                    const nc = sec.head.length, w = avail / nc, xs = sec.head.map((_, i) => MG + i * w), maxc = Math.max(8, Math.floor(w / 4.3));
+                    const head = () => { cur.c += '0.87 0.9 0.96 rg ' + `${MG} ${y - 4} ${avail} 14 re f 0 g\n`; sec.head.forEach((h, i) => cur.c += txt(h, xs[i], y, 7.5, true)); y -= 15; };
+                    head();
+                    sec.rows.forEach(row => { const cells = row.map(c => wrap(c, maxc)), h = 10 * Math.max(...cells.map(c => c.length)) + 2;
+                        if (y - h < MG + 16) { newPage(false); head(); }
+                        cells.forEach((lines, i) => lines.forEach((l, k) => cur.c += txt(l, xs[i], y - 10 * k, 7.5)));
+                        y -= h; cur.c += `0.85 g ${MG} ${y + 7} ${avail} 0.4 re f 0 g\n`; });
+                } else {
+                    sec.rows.forEach(([k, v]) => { const lines = wrap(v, 62), h = 12 * lines.length;
+                        if (y - h < MG + 16) newPage(false);
+                        cur.c += txt(k, MG, y, 8.5);
+                        lines.forEach((l, i) => cur.c += txt(l, MG + 190, y - 12 * i, 8.5, true));
+                        y -= h + 3; cur.c += `0.88 g ${MG} ${y + 8} ${avail} 0.4 re f 0 g\n`; });
+                }
+                y -= 8;
+            });
+            if (y - 44 < MG + 16) newPage(false);
+            y -= 4; cur.c += txt(`${secs.length + 1}. Sobre este documento`, MG, y, 11, true); y -= 15;
+            wrap(nota, 112).forEach(l => { cur.c += txt(l, MG, y, 7.5); y -= 11; });
+            pages.forEach((pg, i) => pg.c += txt('My Trade Dash · mytradedash.com.br', MG, 24, 7) + txt(`Página ${i + 1} de ${pages.length}`, PW - MG, 24, 7, false, 'r'));
+            const objs = ['<< /Type /Catalog /Pages 2 0 R >>', null, '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>', '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>'];
+            const kids = [];
+            pages.forEach(pg => { const pn = objs.length + 1; kids.push(pn + ' 0 R');
+                objs.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW} ${PH}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${pn + 1} 0 R >>`);
+                objs.push(`<< /Length ${pg.c.length} >>\nstream\n${pg.c}endstream`); });
+            objs[1] = `<< /Type /Pages /Kids [${kids.join(' ')}] /Count ${pages.length} >>`;
+            let out = '%PDF-1.4\n'; const offs = [];
+            objs.forEach((o, i) => { offs.push(out.length); out += `${i + 1} 0 obj\n${o}\nendobj\n`; });
+            const xr = out.length;
+            out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n` + offs.map(o => String(o).padStart(10, '0') + ' 00000 n \n').join('') + `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xr}\n%%EOF`;
+            const b = new Uint8Array(out.length); for (let i = 0; i < out.length; i++) b[i] = out.charCodeAt(i) & 255;
+            const d = new Date(), slug = String(nome).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '').split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('_');
+            return saveBin(`${pad2(d.getDate())}${pad2(d.getMonth() + 1)}${String(d.getFullYear()).slice(2)}_${pad2(d.getHours())}${pad2(d.getMinutes())}_MyTradeDash_Dados_Pessoais_${slug}.pdf`, b, 'application/pdf');
+        }
+
         /* ===== Relatório do painel administrativo: PDF, Word e Excel (V148) ===== */
         const REL_TITLE = 'My Trade Dash - Relatório do painel administrativo';
         async function relExport(kind, M, file, lgpd) {
@@ -4582,7 +4682,8 @@ hmoDb = db;
     /* ===== Termos de uso, Política de privacidade e Primeiro acesso guiado (V112) ===== */
     (function () {
         const $ = id => document.getElementById(id);
-        const TERMS_VER = '2026-11-13', TERMS_DATE = '13/11/2026', TERMS_DOC = 'termos_privacidade';
+        const TERMS_VER = '2026-11-14', TERMS_DATE = '14/11/2026', TERMS_DOC = 'termos_privacidade';
+        window.TERMS_VER = TERMS_VER;
         const LEGAL_EMAIL = 'mytradedash@gmail.com';
         const TERMS_HTML = `<h4 class="font-bold text-sm mb-1">Termos de uso do My Trade Dash</h4><p class="text-gray-400 mb-3">Versão de ${TERMS_DATE}</p>
 <p class="mb-2"><b>1. O que é o My Trade Dash.</b> Um diário para quem opera day trade (mini-índice e mini-dólar): registra operações, movimentações financeiras e notas do dia, e mostra indicadores, gráficos, relatórios e alertas de DARF. Ele nasceu de uma necessidade do próprio criador, que controlava essas mesmas informações à mão, espalhadas por mais de uma planilha. Ao perceber que outros operadores provavelmente passavam pela mesma dificuldade, decidiu transformar esse controle em um aplicativo e compartilhá-lo.</p>
@@ -4597,10 +4698,10 @@ hmoDb = db;
 <p class="mb-2"><b>10. Mudanças.</b> Estes termos podem ser atualizados. Quando isso acontecer, o app pedirá um novo aceite.</p>
 <p class="mb-2"><b>11. Lei aplicável.</b> Legislação brasileira. Contato: ${LEGAL_EMAIL}.</p>`;
         const PRIV_HTML = `<h4 class="font-bold text-sm mb-1">Política de privacidade do My Trade Dash</h4><p class="text-gray-400 mb-3">Versão de ${TERMS_DATE} · em conformidade com a LGPD (Lei nº 13.709/2018)</p>
-<p class="mb-2"><b>1. Controlador.</b> My Trade Dash. Contato para assuntos de dados pessoais: ${LEGAL_EMAIL}.</p>
+<p class="mb-2"><b>1. Controlador.</b> Diogo Gomes, pessoa física, responsável pelo My Trade Dash. Ele também é o encarregado pelo tratamento de dados pessoais (LGPD, art. 41). Contato para assuntos de dados pessoais: ${LEGAL_EMAIL}.</p>
 <p class="mb-1"><b>2. Dados tratados.</b></p>
 <ul class="list-disc pl-5 mb-2 space-y-0.5"><li>Pedido de convite: nome, e-mail, WhatsApp (com DDD), data de nascimento e como soube do app.</li><li>Conta: e-mail e senha (a senha fica protegida pelo provedor de login e não é vista por ninguém).</li><li>Uso do app: operações (data, horários, ativo, setup, contratos, pontos, resultado bruto e custos), movimentações financeiras (depósitos, saques e bancos informados), notas do dia (valor líquido, IRRF e custos), setups, DARF marcados como pagos e o histórico de auditoria.</li><li>Contribuição voluntária: valor, data do aviso, forma, situação (aguardando conferência, confirmada ou não localizada) e número do comprovante. Não recebemos nem guardamos dados de pagamento.</li><li>No aparelho: tema escolhido e posição do botão Atalhos (ficam só no seu aparelho).</li></ul>
-<p class="mb-2"><b>3. Para que usamos.</b> Prestar o serviço (calcular resultados, indicadores, relatórios e a estimativa de DARF), liberar o acesso, falar com você por e-mail ou WhatsApp sobre o acesso e enviar felicitações de aniversário (com a sua autorização), registrar e dar comprovante das contribuições voluntárias, e manter a segurança. Não vendemos dados nem os usamos para publicidade.</p>
+<p class="mb-2"><b>3. Para que usamos.</b> Prestar o serviço (calcular resultados, indicadores, relatórios e a estimativa de DARF), liberar o acesso, confirmar que você tem 18 anos ou mais (é para isso que pedimos a data de nascimento), falar com você por e-mail ou WhatsApp sobre o seu acesso e, eventualmente, uma felicitação de aniversário, registrar e dar comprovante das contribuições voluntárias, e manter a segurança. Não vendemos dados nem os usamos para publicidade.</p>
 <p class="mb-2"><b>4. Bases legais.</b> Execução do serviço que você contratou (art. 7º, V), consentimento para contato por e-mail e WhatsApp e para o registro da contribuição voluntária, que parte de você (art. 7º, I), e legítimo interesse para segurança e prevenção de fraudes (art. 7º, IX).</p>
 <p class="mb-2"><b>5. Onde ficam e com quem são compartilhados.</b> Os dados ficam no Supabase (banco de dados e login, servidores em São Paulo). O site é publicado pelo GitHub Pages. Esses fornecedores só armazenam e processam os dados para o app funcionar. Não há outro compartilhamento, salvo obrigação legal.</p>
 <p class="mb-2"><b>6. Segurança.</b> Conexão criptografada (HTTPS) e regras no banco que fazem cada usuário ver e alterar somente os próprios dados dentro de sua respectiva área logada.</p>
@@ -4688,7 +4789,7 @@ hmoDb = db;
             const panel = t => `<p class="mt-3 rounded-lg border border-gray-700 bg-gray-800/40 px-3 py-2 text-[11px] text-gray-300"><b class="text-gray-100">No painel:</b> ${t}</p>`;
             const lead = t => `<p class="text-xs text-gray-400">${t}</p>`;
             const STEPS = {
-                1: { t: 'Bem-vindo ao My Trade Dash', h: () => lead('O My Trade Dash é o seu diário de day trade. Você lança operações, movimentações e notas do dia, e o app calcula resultado, indicadores, gráficos, relatórios e DARF.') + `<p class="mt-2 text-xs text-gray-200"><b>Regra de ouro:</b> os indicadores vêm do que você lança. Sem lançamentos, a Visão Geral fica zerada.</p><p class="mt-2 text-xs text-gray-400">Este guia mostra cada tela e leva você ao formulário certo. Dá para voltar, pular e reabrir quando quiser em ⚙ Opções &gt; 🧭 Guia do My Trade Dash.</p>`, b: B('data-next', 'Começar', P) },
+                1: { t: 'Bem-vindo ao My Trade Dash™', h: () => lead('O My Trade Dash é o seu diário de day trade. Você lança operações, movimentações e notas do dia, e o app calcula resultado, indicadores, gráficos, relatórios e DARF.') + `<p class="mt-2 text-xs text-gray-200"><b>Regra de ouro:</b> os indicadores vêm do que você lança. Sem lançamentos, a Visão Geral fica zerada.</p><p class="mt-2 text-xs text-gray-400">Este guia mostra cada tela e leva você ao formulário certo. Dá para voltar, pular e reabrir quando quiser em ⚙ Opções &gt; 🧭 Guia do My Trade Dash.</p>`, b: B('data-next', 'Começar', P) },
                 2: { t: 'Seus setups', h: () => { const act = (typeof setups !== 'undefined' ? setups : []).filter(s => s.active && !s.deleted).map(s => s.name);
                     return lead('Setup é a estratégia de cada operação (por exemplo, pullback ou rompimento). Cada operação é ligada a um setup (a escolha é obrigatória; sem estratégia, use "Operação fora de Setup"), e os relatórios mostram qual rende mais. A lista é sua: você cria, renomeia e exclui os setups. ' + (act.length ? `Há ${act.length} setup(s) ativo(s). Você pode inativar, renomear ou criar outros em 🧩 Gerenciar setups.` : 'Ainda não há setups ativos.'))
                         + `<label class="block text-xs text-gray-400 mt-3 mb-1" for="gdSetup">Novo setup (opcional)</label><div class="flex flex-wrap gap-2"><input id="gdSetup" maxlength="60" autocomplete="off" placeholder="Nome do setup" class="${IN} flex-1 min-w-[10rem]"><select id="gdKind" class="${IN} w-auto"><option value="dentro">Dentro do plano</option><option value="fora">Fora do plano</option></select><button type="button" data-addset class="px-3 py-1.5 rounded-lg ${P} text-xs font-semibold">Adicionar</button></div>`
@@ -4826,6 +4927,7 @@ hmoDb = db;
         lk.innerHTML = '<button type="button" data-l="t" class="underline hover:text-gray-200">Termos de uso</button> · <button type="button" data-l="p" class="underline hover:text-gray-200">Política de privacidade</button>';
         $('invOpen').parentElement.insertAdjacentElement('afterend', lk);
         lk.querySelectorAll('[data-l]').forEach(b => b.onclick = () => openTermsModal(b.dataset.l));
+        document.querySelectorAll('[data-il]').forEach(b => b.onclick = e => { e.preventDefault(); e.stopPropagation(); openTermsModal(b.dataset.il); });
     })();
     </script>
     <script>
