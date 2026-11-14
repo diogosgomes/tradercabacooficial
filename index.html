@@ -656,7 +656,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V153';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V154';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -1408,7 +1408,7 @@
             ov.addEventListener('click', ev => { if (ev.target === ov) ov.remove(); });
             const body = ov.querySelector('#auBody');
             const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-            const AU = { delete: '🗑 Exclusão', password: '🔑 Troca de senha', setup_rename: '✏ Setup renomeado', setup_active: '☑ Setup ativado', setup_inactive: '☐ Setup inativado', setup_create: '➕ Setup criado', setup_delete: '🗑 Setup excluído', setup_kind: '🔁 Classificação alterada', darf_paid: '💳 DARF pago', darf_unpaid: '💳 DARF desmarcado', terms_accept: '📄 Aceite dos termos', terms_decline: '📄 Termos não aceitos' };
+            const AU = { delete: '🗑 Exclusão', password: '🔑 Troca de senha', setup_rename: '✏ Setup renomeado', setup_active: '☑ Setup ativado', setup_inactive: '☐ Setup inativado', setup_create: '➕ Setup criado', setup_delete: '🗑 Setup excluído', setup_kind: '🔁 Classificação alterada', darf_paid: '💳 DARF pago', darf_unpaid: '💳 DARF desmarcado', terms_accept: '📄 Aceite dos termos', terms_decline: '📄 Termos não aceitos', exc_user: '🗑 Exclusão da conta', don: '💚 Contribuição informada', don_ok: '💚 Contribuição confirmada', don_undo: '↩ Confirmação desfeita', don_desc: '✕ Contribuição descartada', cfg: '⚙ Ajustes do app', rel_admin: '📑 Relatório do painel', lgpd: '📄 Dados pessoais exportados' };
             const card = x => {
                 if (x.kind !== 'import' && x.kind !== 'export') return `<div class="border border-gray-700 rounded-lg p-3 mb-2 bg-gray-800/40">
                     <div class="flex flex-wrap justify-between gap-1"><span class="font-bold">H${x.seq ?? '?'} · ${AU[x.kind] || esc(x.kind)}</span><span class="text-gray-400">${fmtDateTimeBR(x.ts)}</span></div>
