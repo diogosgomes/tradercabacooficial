@@ -1,7 +1,7 @@
 // My Trade Dash: service worker
 // Busca sempre a versão nova primeiro; só usa o cache quando estiver sem internet.
 // Chamadas ao banco de dados (supabase.co) NÃO passam por aqui e nunca são guardadas em cache.
-const CACHE = 'mytradedash-v4';
+const CACHE = 'mytradedash-v5';
 const PRECACHE = ['/', '/index.html', '/manifest.json'];
 const CDN_HOSTS = ['cdn.tailwindcss.com', 'cdn.jsdelivr.net'];
 

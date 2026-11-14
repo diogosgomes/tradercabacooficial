@@ -266,6 +266,7 @@
                     <button type="button" role="menuitem" onclick="optsAction(() => openTermsModal())" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📄 Termos e privacidade</button>
                     <button id="btnPwd" type="button" role="menuitem" onclick="optsAction(openPwdModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🔑 Trocar senha</button>
                     <div id="sepLogout" class="border-t border-gray-700 my-1"></div>
+                    <button id="btnRec" type="button" role="menuitem" onclick="optsAction(openRecModal)" class="hidden w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">✉️ Falar com o My Trade Dash <span id="recCount" class="hidden ml-1 px-1.5 rounded-full bg-blue-500 text-white font-extrabold text-[10px]"></span></button>
                     <button id="btnExcl" type="button" role="menuitem" onclick="optsAction(openExclModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-red-300">🗑 Excluir minha conta</button>
                     <button id="btnLogout" type="button" role="menuitem" onclick="optsAction(lockNow)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-100 font-semibold">🚪 Sair</button>
                 </div>
@@ -656,7 +657,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V154';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V159';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -947,8 +948,8 @@
         }
         // Ordem: alertas do administrador (Supabase, convites, aniversários), depois críticos, depois os demais
         function alertsBuild(c) {
-            const admin = fridayAlerts(c.ar).concat(invAlerts(c.ar), pwdAlerts(pwdAdminList), excAlerts(excAdminList), donAlerts(donAdminList), donAskAlert(c));
-            const rest = darfAlerts().concat(backupAlerts(c));
+            const admin = fridayAlerts(c.ar).concat(recAdminAlerts(c.ar), invAlerts(c.ar), pwdAlerts(pwdAdminList), excAlerts(excAdminList), donAlerts(donAdminList), donAskAlert(c));
+            const rest = recAlerts().concat(darfAlerts(), backupAlerts(c));
             return admin.concat(rest.filter(a => a.level === 'crit'), rest.filter(a => a.level !== 'crit'));
         }
         async function bellLoad() {
@@ -1012,6 +1013,8 @@
                 else if (a.action === 'pwd') { bellClose(); openAdminModal('pwd'); }
                 else if (a.action === 'apo') { bellClose(); openAdminModal('apo'); }
                 else if (a.action === 'don') { bellClose(); openDonModal(); }
+                else if (a.action === 'rec') { bellClose(); openRecModal(); }
+                else if (a.action === 'recadm') { bellClose(); openAdminModal('rec'); }
                 else if (a.action === 'export') doExport(a);
                 else bellClose();
             };
@@ -2214,12 +2217,13 @@ hmoDb = db;
             $('lockScreen').classList.add('hidden');
             $('menuUserName').textContent = (hmoCred && hmoCred.user) || 'Teste'; $('menuUserEmail').textContent = 'Ambiente HMO · dados de teste';
             resetIdle();
+            cfgGet('manutencao', MNT_DEF).then(c => { mntCfg = c; });
             invAdminInit();
         }
         async function lockNow() {
             if (MODE === 'claude') {
                 try { sessionStorage.removeItem('hmo_ok'); } catch (e) {}
-                invSetAdmin(false); closeOptsMenu(); showLock(); return;
+                invSetAdmin(false); closeOptsMenu(); mntHide(); showLock(); return;
             }
             try { await sb.auth.signOut(); } catch (e) {}
             afterLogout();
@@ -2244,6 +2248,9 @@ hmoDb = db;
             $('userBadge').textContent = '';
             $('menuUserName').textContent = name;
             $('menuUserEmail').textContent = session.user.email || '';
+            // a placa é a primeira leitura: se chegar depois, o app já estaria usável
+            try { const { data: ad0 } = await sb.from('tb_admins').select('user_id').eq('user_id', currentUserId).maybeSingle(); invIsAdmin = !!ad0; } catch (e) {}
+            if (await mntGate()) { setStatus('Em manutenção'); return; }
             await reloadAll();
             invAdminInit();
         }
@@ -2363,6 +2370,7 @@ hmoDb = db;
                 try { excAdminList = await excList(); } catch (e) {}
                 try { pwdAdminList = await pwdList(); } catch (e) {}
                 try { donAdminList = await donList(); } catch (e) {}
+                await recAdminLoad();
                 const n = invCache.filter(x => x.status === 'novo' && !x.archived).length;
                 ['invBadge', 'fabInvBadge'].forEach(i => { const c = $(i); if (c) { c.textContent = n; c.classList.toggle('hidden', n === 0); } });
                 if (toast && n > 0) showToast(n === 1 ? '1 pedido de convite novo' : n + ' pedidos de convite novos', 'ok');
@@ -2371,6 +2379,9 @@ hmoDb = db;
         }
         async function invAdminInit() {
             excRefreshBar(); donCfgLoad();
+            chCfg = await cfgGet('canais', CH_DEF);
+            amColab = await colabAmI();
+            recRefreshUnread();
             if (MODE === 'claude') { invSetAdmin(true); invRefreshBadge(true); return; }
             try {
                 const { data } = await sb.from('tb_admins').select('user_id').eq('user_id', currentUserId).maybeSingle();
@@ -2398,6 +2409,7 @@ hmoDb = db;
             return 'https://wa.me/' + r.whatsapp + '?text=' + encodeURIComponent(msg);
         }
         const APP_OWNER = 'Diogo Gomes', SIGN = `\n\nAtenciosamente,\n${'Diogo Gomes'}\nEquipe My Trade Dash`;
+        const recWaLink = (whats, nome) => 'https://wa.me/' + whats + '?text=' + encodeURIComponent('Olá, ' + (String(nome || '').trim().split(/\s+/)[0] || '') + '! Aqui é o ' + APP_OWNER + ', do My Trade Dash.');
         const INV_FROM = 'mytradedash@gmail.com', INV_MASTER = 'diogogomes2110@gmail.com', SB_DASH = 'https://supabase.com/dashboard/project/belhcqqpaxvoklxuhpjs';
         const invIsMaster = () => MODE === 'claude' || ($('menuUserEmail').textContent || '').trim().toLowerCase() === INV_MASTER;
         function invMailLink(to, subject, body) {
@@ -2445,16 +2457,23 @@ hmoDb = db;
                     <div id="rlBody" class="space-y-2"></div></div></div>
                 <div id="adApo" class="hidden flex flex-col min-h-0 flex-1"><p class="px-4 pt-3 text-[11px] text-gray-400">Contribuição é voluntária: ninguém fica sem o app por não contribuir, e o app nunca cobra. Confira o Pix no seu banco antes de confirmar; confirmar gera o número do recibo. O WhatsApp e o e-mail abrem com o texto pronto; para mandar o recibo em PDF, baixe e anexe.</p><div id="doCards" class="grid grid-cols-1 sm:grid-cols-3 gap-2 px-4 pt-3"></div><div class="flex flex-wrap gap-2 px-4 pt-3" id="doTabs"></div><div id="doBody" class="p-4 space-y-3 overflow-y-auto"></div></div>
                 <div id="adPwd" class="hidden flex flex-col min-h-0 flex-1"><div class="flex flex-wrap gap-2 px-4 pt-3" id="pwTabs"></div><div id="pwBody" class="p-4 space-y-3 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">"Gerar senha temporária" grava a senha no Supabase na hora e obriga a pessoa a criar a própria ao entrar. A senha aparece só nesta tela: envie por e-mail ou WhatsApp em seguida.</p></div>
-                <div id="adExc" class="hidden flex flex-col min-h-0 flex-1"><div class="flex flex-wrap gap-2 px-4 pt-3" id="exTabs"></div><div id="exBody" class="p-4 space-y-3 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">Desativar bloqueia o acesso no banco, mas mantém o login e os dados por ${EXC_DAYS} dias. Depois disso, use Excluir dados de vez e apague o login no Supabase.</p></div></div>`;
+                <div id="adExc" class="hidden flex flex-col min-h-0 flex-1"><div class="flex flex-wrap gap-2 px-4 pt-3" id="exTabs"></div><div id="exBody" class="p-4 space-y-3 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">Desativar bloqueia o acesso no banco, mas mantém o login e os dados por ${EXC_DAYS} dias. Depois disso, use Excluir dados de vez e apague o login no Supabase.</p></div>
+                <div id="adRec" class="hidden flex flex-col min-h-0 flex-1"><div class="flex flex-wrap gap-2 px-4 pt-3" id="rcTabs"></div><div id="rcAdBody" class="p-4 space-y-3 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">Uma conversa por pessoa, não mensagens soltas. As não respondidas ficam em cima. Recado é dado pessoal: entra no 📄 Dados desta pessoa e é apagado junto com a conta.</p></div>
+                <div id="adColab" class="hidden flex flex-col min-h-0 flex-1"><div id="clBody" class="p-4 space-y-3 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">Os admins entram automático e não têm Remover: tirar do canal seria deixar de ser admin, e isso se faz em 🛡 Admins. Só colaboradores cadastrados aqui podem ser removidos.</p></div></div>`;
             document.body.appendChild(ov);
             const close = () => { ov.remove(); invRefreshBadge(false); };
-            let sec = 'inv', uList = { ativos: null, excl: null }, uq = '', exList = null, exF = 'novo', exArm = null, pwList = null, pwF = 'novo', doList = null, doF = 'nova';
+            let sec = 'inv', uList = { ativos: null, excl: null }, uq = '', exList = null, exF = 'novo', exArm = null, pwList = null, pwF = 'novo', doList = null, doF = 'nova', rcF = 'abertas', rcOpenEmail = null, clList = null, clArm = null;
             const adTabs = ov.querySelector('#adTabs'), adInv = ov.querySelector('#adInv'), adUsers = ov.querySelector('#adUsers'), adUBody = ov.querySelector('#adUBody'), adSearch = ov.querySelector('#adSearch');
             const fmtDT = v => { if (!v) return '—'; const d = new Date(v); return isNaN(d) ? '—' : d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); };
             const drawSecTabs = () => {
                 const nNew = invCache.filter(x => x.status === 'novo' && !x.archived).length;
                 const tabs = [['apo', '🤝 Apoiadores' + (doList ? ' (' + doList.filter(x => x.status === 'nova').length + ')' : '')], ['inv', '📨 Pedidos de convite' + (nNew ? ' (' + nNew + ')' : '')], ['exc', '🗑 Pedidos de exclusão' + (exList ? ' (' + exList.filter(x => x.status === 'novo').length + ')' : '')], ['pwd', '🔑 Pedidos de senha' + (pwList ? ' (' + pwList.filter(x => x.status === 'novo').length + ')' : '')], ['ativos', '👥 Usuários ativos' + (uList.ativos ? ' (' + uList.ativos.length + ')' : '')], ['excl', '🚫 Usuários excluídos' + (uList.excl ? ' (' + uList.excl.length + ')' : '')]];
-                if (invIsMaster()) tabs.push(['rel', '📑 Relatórios']);
+                if (invIsMaster()) {
+                    const nAb = recAdminList ? recThreads().filter(t => t.aberta).length : 0;
+                    tabs.push(['rec', '💬 Recados' + (nAb ? ' (' + nAb + ')' : '')]);
+                    tabs.push(['colab', '👥 Colaboradores']);
+                    tabs.push(['rel', '📑 Relatórios']);
+                }
                 adTabs.innerHTML = tabs
                     .map(([k, t]) => `<button type="button" data-sec="${k}" class="px-3 py-1 rounded-lg text-xs font-semibold border ${sec === k ? 'border-amber-500 bg-gray-800 text-amber-200' : 'border-gray-700 text-gray-300'}">${t}</button>`).join('');
             };
@@ -2708,28 +2727,144 @@ hmoDb = db;
                     catch (ex) { showToast('Não foi possível gerar: ' + ((ex && ex.message) || ex), 'err'); }
                 }
             });
+            /* ---------- 💬 Recados ---------- */
+            const rcAdBody = ov.querySelector('#rcAdBody'), rcTabs = ov.querySelector('#rcTabs'), clBody = ov.querySelector('#clBody');
+            const rcCanalLab = c => c === 'colaborador' ? 'colaborador' : 'usuário';
+            const drawRcTabs = () => {
+                const th = recThreads(), nAb = th.filter(t => t.aberta).length;
+                rcTabs.innerHTML = [['abertas', 'Não respondidos' + (nAb ? ' (' + nAb + ')' : '')], ['todas', 'Todos (' + th.length + ')']]
+                    .map(([k, t]) => `<button type="button" data-rcf="${k}" class="px-3 py-1 rounded-lg text-xs font-semibold border ${rcF === k ? 'border-amber-500 bg-gray-800 text-amber-200' : 'border-gray-700 text-gray-300'}">${t}</button>`).join('');
+            };
+            const drawRec = () => {
+                drawRcTabs();
+                if (!recAdminList) { rcAdBody.innerHTML = '<p class="text-xs text-gray-400 text-center py-6">Carregando…</p>'; return; }
+                const th = recThreads(), items = rcF === 'abertas' ? th.filter(t => t.aberta) : th;
+                if (rcOpenEmail) {
+                    const t = th.find(x => x.email === rcOpenEmail);
+                    if (!t) { rcOpenEmail = null; drawRec(); return; }
+                    const cv = usrConv(t.email), nome = (cv && cv.name) || t.email;
+                    rcAdBody.innerHTML = `<div class="flex flex-wrap items-center justify-between gap-2">
+                            <div><p class="text-sm font-bold text-gray-100 break-words">${esc(nome)}</p>
+                            <p class="text-[11px] text-gray-400 break-all">${esc(t.email)} · canal do ${esc(rcCanalLab(t.canal))}${cv && cv.whatsapp ? ' · 💬 ' + esc(invFmtPhone(cv.whatsapp)) : ''}</p></div>
+                            <div class="flex gap-2">${cv && cv.whatsapp ? `<a href="${esc(recWaLink(cv.whatsapp, nome))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold">💬 WhatsApp</a>` : ''}<button type="button" id="rcBack" class="px-3 py-1.5 rounded-lg border border-gray-600 text-xs font-semibold">← Voltar</button></div>
+                        </div>
+                        <div class="space-y-2 max-h-[46vh] overflow-y-auto rounded-lg border border-gray-700 p-3">${t.msgs.map(r => {
+                            const meu = r.autor === 'admin';
+                            const sel = meu ? (r.lido_em ? 'lido' : 'entregue') : '';
+                            return `<div class="flex ${meu ? 'justify-end' : 'justify-start'}"><div class="max-w-[85%] rounded-xl px-3 py-2 ${meu ? 'bg-blue-900/60 border border-blue-700' : 'bg-gray-800 border border-gray-700'}">
+                                <p class="text-xs whitespace-pre-line break-words">${esc(r.texto)}</p>
+                                ${r.ctx ? '<div class="mt-1 rounded border border-dashed border-blue-400 p-1 text-[10px] text-gray-300">' + Object.keys(REC_CTX_LAB).filter(k => r.ctx[k]).map(k => '<span class="text-gray-400">' + esc(REC_CTX_LAB[k]) + ':</span> ' + esc(r.ctx[k])).join('<br>') + '</div>' : ''}
+                                <p class="text-[10px] text-gray-400 mt-1">${esc(fmtDT(r.created_at))}${sel ? ' · ' + sel : ''}</p></div></div>`;
+                        }).join('')}</div>
+                        <textarea id="rcReply" rows="3" maxlength="2000" placeholder="Escreva a sua resposta…" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></textarea>
+                        <p id="rcAdMsg" class="text-xs text-red-400 min-h-[1rem]" role="alert"></p>
+                        <div class="flex justify-end"><button type="button" id="rcDo" class="px-3 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold">Responder</button></div>`;
+                    ov.querySelector('#rcBack').onclick = () => { rcOpenEmail = null; drawRec(); };
+                    ov.querySelector('#rcDo').onclick = async () => {
+                        const ta = ov.querySelector('#rcReply'), m = ov.querySelector('#rcAdMsg'), tx = ta.value.trim();
+                        m.textContent = '';
+                        if (!tx) { m.textContent = 'Escreva a resposta.'; ta.focus(); return; }
+                        try {
+                            await recSend(tx, null, { email: t.email, user_id: t.user_id, canal: t.canal });
+                            const naoLidas = t.msgs.filter(r => r.autor === 'user' && !r.lido_em);
+                            if (naoLidas.length) await recMarkRead(naoLidas);
+                            recAdminList = await recAll(); drawSecTabs(); drawRec(); showToast('Resposta enviada', 'ok');
+                        } catch (e) { m.textContent = 'Não foi possível enviar: ' + ((e && e.message) || e); }
+                    };
+                    const naoLidas = t.msgs.filter(r => r.autor === 'user' && !r.lido_em);
+                    if (naoLidas.length) recMarkRead(naoLidas).then(() => { naoLidas.forEach(r => r.lido_em = new Date().toISOString()); });
+                    return;
+                }
+                rcAdBody.innerHTML = items.length ? items.map(t => {
+                    const cv = usrConv(t.email), nome = (cv && cv.name) || t.email;
+                    const previa = String(t.last.texto || '').replace(/\s+/g, ' ').slice(0, 110);
+                    return `<div class="rounded-lg border ${t.aberta ? 'border-blue-600 bg-blue-950/30' : 'border-gray-700'} p-3 text-xs cursor-pointer" data-rcopen="${esc(t.email)}">
+                        <div class="flex items-start gap-2">
+                            ${t.aberta ? '<span class="mt-1 h-2 w-2 shrink-0 rounded-full bg-blue-400" aria-label="não respondido"></span>' : '<span class="mt-1 h-2 w-2 shrink-0"></span>'}
+                            <div class="min-w-0 flex-1">
+                                <p class="font-bold text-gray-100 break-words text-sm">${esc(nome)}</p>
+                                <p class="text-gray-400 break-all">${esc(t.email)} · canal do ${esc(rcCanalLab(t.canal))}</p>
+                                <p class="text-gray-300 mt-1 break-words"><b>${t.last.autor === 'admin' ? 'Você' : 'Ela(e)'}:</b> ${esc(previa)}${String(t.last.texto || '').length > 110 ? '…' : ''}</p>
+                                <p class="text-gray-500 mt-1">${esc(fmtDT(t.last.created_at))} · ${t.msgs.length} mensage${t.msgs.length === 1 ? 'm' : 'ns'}${t.msgs.some(r => r.ctx) ? ' · com reporte técnico' : ''}</p>
+                            </div></div></div>`;
+                }).join('') : `<p class="text-xs text-gray-400 text-center py-6">${rcF === 'abertas' ? 'Nenhum recado esperando resposta.' : 'Nenhum recado ainda.'}</p>`;
+            };
+            const loadRec = async () => { try { recAdminList = await recAll(); } catch (e) { recAdminList = []; } drawSecTabs(); drawRec(); };
+            rcTabs.addEventListener('click', e => { const b = e.target.closest('[data-rcf]'); if (b) { rcF = b.dataset.rcf; rcOpenEmail = null; drawRec(); } });
+            rcAdBody.addEventListener('click', e => { const b = e.target.closest('[data-rcopen]'); if (b) { rcOpenEmail = b.dataset.rcopen; drawRec(); } });
+
+            /* ---------- 👥 Colaboradores ---------- */
+            const COL_LAB = { master: 'admin master', admin: 'admin', colab: 'colaborador' };
+            const drawColab = () => {
+                if (!clList) { clBody.innerHTML = '<p class="text-xs text-gray-400 text-center py-6">Carregando…</p>'; return; }
+                clBody.innerHTML = `<p class="text-sm font-bold text-gray-100">👥 Colaboradores</p>
+                    <p class="text-[11px] text-gray-400">Quem está aqui fala com você pelo canal dos colaboradores, em ⚙ Opções &gt; ✉️ Falar com o My Trade Dash. O canal liga e desliga em ⚙ Ajustes.</p>
+                    <div class="space-y-2">${clList.map(c => `<div class="flex items-center justify-between gap-2 rounded-lg border border-gray-700 px-2 py-1.5" data-clid="${esc(String(c.id))}">
+                        <span class="text-xs break-all">${esc(c.email)} <span class="text-[10px] ${c.role === 'master' ? 'text-amber-300' : c.role === 'admin' ? 'text-blue-300' : 'text-gray-400'}">(${esc(COL_LAB[c.role])}${c.role === 'master' ? ', você' : ''})</span></span>
+                        ${c.fixed ? '' : '<button type="button" data-clrm class="shrink-0 px-2 py-1 rounded-lg border border-red-500 text-red-300 text-[11px] font-semibold">Remover</button>'}
+                    </div>`).join('')}</div>
+                    <p class="text-xs font-bold text-gray-100 mt-3">➕ Cadastrar colaborador</p>
+                    <p class="text-[11px] text-gray-400">Informe o e-mail de um usuário que já tenha conta ativa no app.</p>
+                    <input type="email" id="clMail" autocomplete="off" placeholder="e-mail do usuário" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200">
+                    <p id="clMsg" class="text-xs text-red-400 min-h-[1rem]" role="alert"></p>
+                    <div class="flex justify-end"><button type="button" id="clAdd" class="px-3 py-2 rounded-lg bg-amber-600 text-white text-xs font-semibold">Cadastrar</button></div>`;
+                ov.querySelector('#clAdd').onclick = async () => {
+                    const el = ov.querySelector('#clMail'), m = ov.querySelector('#clMsg'), em = el.value.trim().toLowerCase();
+                    m.textContent = '';
+                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { m.textContent = 'Informe um e-mail válido.'; el.focus(); return; }
+                    if (clList.some(c => String(c.email || '').toLowerCase() === em)) { m.textContent = 'Esse e-mail já está no canal.'; return; }
+                    try { await colabAdd(em); clList = await colabList(); drawColab(); showToast('Colaborador cadastrado', 'ok'); auditAdd({ kind: 'cfg', outcome: 'Concluída', detail: 'Colaborador cadastrado: ' + em }); }
+                    catch (e) { m.textContent = 'Não foi possível cadastrar: ' + ((e && e.message) || e); }
+                };
+            };
+            const loadColab = async () => { try { clList = await colabList(); } catch (e) { clList = []; } drawColab(); };
+            clBody.addEventListener('click', async e => {
+                const b = e.target.closest('[data-clrm]'); if (!b) return;
+                const id = b.closest('[data-clid]').dataset.clid, c = clList.find(x => String(x.id) === id); if (!c) return;
+                if (!await askBox('Confirmação', `Remover ${c.email} do canal dos colaboradores? Os recados já trocados continuam guardados.`, 'Remover', 'Cancelar')) return;
+                try { await colabRemove(c); clList = await colabList(); drawColab(); showToast('Colaborador removido', 'ok'); auditAdd({ kind: 'cfg', outcome: 'Concluída', detail: 'Colaborador removido: ' + c.email }); }
+                catch (ex) { showToast('Não foi possível remover: ' + ((ex && ex.message) || ex), 'err'); }
+            });
+
             const setSec = k => {
                 sec = k; adInv.classList.toggle('hidden', k !== 'inv'); adUsers.classList.toggle('hidden', k !== 'ativos' && k !== 'excl'); adExc.classList.toggle('hidden', k !== 'exc'); adPwd.classList.toggle('hidden', k !== 'pwd'); adApo.classList.toggle('hidden', k !== 'apo'); adRel.classList.toggle('hidden', k !== 'rel');
+                ov.querySelector('#adRec').classList.toggle('hidden', k !== 'rec'); ov.querySelector('#adColab').classList.toggle('hidden', k !== 'colab');
                 ov.querySelector('#ivMode').classList.toggle('hidden', k !== 'inv');
                 drawSecTabs();
-                if (k === 'rel') drawRel(); else if (k === 'exc') drawExc(); else if (k === 'apo') { drawDon(); if (!doList) loadDon(); } else if (k === 'pwd') { drawPwd(); if (!pwList) loadPwd(); } else if (k !== 'inv') { drawUsers(); if (!uList[k]) loadUsers(k); }
+                if (k === 'rel') drawRel(); else if (k === 'exc') drawExc(); else if (k === 'apo') { drawDon(); if (!doList) loadDon(); } else if (k === 'pwd') { drawPwd(); if (!pwList) loadPwd(); }
+                else if (k === 'rec') { rcOpenEmail = null; drawRec(); if (!recAdminList) loadRec(); }
+                else if (k === 'colab') { drawColab(); if (!clList) loadColab(); }
+                else if (k !== 'inv') { drawUsers(); if (!uList[k]) loadUsers(k); }
             };
             adTabs.addEventListener('click', e => { const b = e.target.closest('[data-sec]'); if (b) setSec(b.dataset.sec); });
             adSearch.addEventListener('input', () => { uq = adSearch.value; drawUsers(); });
+            const recThreads = () => {
+                const by = {};
+                (recAdminList || []).forEach(r => { const k = String(r.email || '').toLowerCase(); (by[k] = by[k] || []).push(r); });
+                return Object.keys(by).map(k => {
+                    const msgs = by[k].slice().sort(recByDate), last = msgs[msgs.length - 1];
+                    return { email: k, user_id: msgs[0].user_id, canal: last.canal, msgs, last, aberta: last.autor === 'user' };
+                }).sort((a, b) => (Number(b.aberta) - Number(a.aberta)) || (new Date(b.last.created_at) - new Date(a.last.created_at)));
+            };
             const usrConv = em => (invCache || []).concat(list || []).find(c => String(c.email || '').toLowerCase() === String(em || '').toLowerCase());
             const usrSections = u => {
                 const em = String(u.email || '').toLowerCase(), cv = usrConv(em), out = [];
                 if (cv) out.push({ t: 'Pedido de convite', rows: [['Nome', cv.name || '—'], ['E-mail', cv.email], ['WhatsApp', cv.whatsapp ? invFmtPhone(cv.whatsapp) : '—'], ['UF', (cv.whatsapp && invUfOf(cv.whatsapp)) || '—'], ['Data de nascimento', cv.birth_date ? new Date(cv.birth_date + 'T12:00:00').toLocaleDateString('pt-BR') : '—'], ['Como soube do app', cv.how_known || '—'], ['Autorização LGPD', 'aceita em ' + fmtDT(cv.created_at) + ' · texto ' + (cv.consent_v || 'anterior a 13/11/2026')], ['Situação', INV_ST[cv.status] || cv.status], ['Pedido em', fmtDT(cv.created_at)]] });
                 out.push({ t: 'Conta', rows: [['Nome no perfil', (cv && cv.name) || '—'], ['E-mail', u.email], ['Cadastro', fmtDT(u.created_at)], ['Último acesso', fmtDT(u.last_sign_in_at)], ['Administrador do app', rlAdm.has(em) ? 'Sim' : 'Não'], ['Conta excluída em', fmtDT(u.deleted_at)]] });
                 const dos = (doList || []).filter(x => String(x.email || '').toLowerCase() === em);
-                if (dos.length) out.push({ t: 'Contribuições voluntárias', head: ['Valor', 'Situação', 'Informada em', 'Confirmada em', 'Comprov.'], rows: dos.map(x => ['R$ ' + fmtMoneyBR(num(x.amount)), x.status === 'confirmada' ? 'Confirmada' : x.status === 'descartada' ? 'Não localizada' : 'Aguardando conferência', fmtDT(x.created_at), fmtDT(x.confirmed_at), x.receipt_no ? donNo(x) : '—']) });
+                if (dos.length) out.push({ t: 'Contribuições voluntárias', note: 'O Pix é feito pelo banco da própria pessoa: nenhum dado de pagamento é guardado pelo app.', head: ['Valor', 'Situação', 'Informada em', 'Confirmada em', 'Comprov.'], rows: dos.map(x => ['R$ ' + fmtMoneyBR(num(x.amount)), x.status === 'confirmada' ? 'Confirmada' : x.status === 'descartada' ? 'Não localizada' : 'Aguardando conferência', fmtDT(x.created_at), fmtDT(x.confirmed_at), x.receipt_no ? donNo(x) : '—']) });
+                const recs = (recAdminList || []).filter(x => String(x.email || '').toLowerCase() === em).slice().sort(recByDate);
+                if (recs.length) out.push({ t: 'Recados pelo app', head: ['Quando', 'Quem', 'Mensagem'],
+                    rows: recs.map(x => [fmtDT(x.created_at), x.autor === 'admin' ? APP_OWNER : 'A própria pessoa',
+                        x.texto + (x.ctx ? ' [com informações técnicas do app]' : '')]),
+                    note: 'Conversa no canal de recados. Apagada junto com a conta.' });
                 const exs = (exList || []).filter(x => String(x.email || '').toLowerCase() === em);
                 if (exs.length) out.push({ t: 'Pedidos de exclusão', head: ['Motivo', 'Comentário', 'Situação', 'Pedido em', 'Desativado em'], rows: exs.map(x => [x.reason || '—', x.comment || '—', EXC_ST[x.status] || x.status, fmtDT(x.created_at), fmtDT(x.deactivated_at)]) });
                 const pws = (pwList || []).filter(x => String(x.email || '').toLowerCase() === em);
                 if (pws.length) out.push({ t: 'Pedidos de senha', head: ['Situação', 'Pedido em', 'Atendido em'], rows: pws.map(x => [PWD_ST[x.status] || x.status, fmtDT(x.created_at), fmtDT(x.handled_at)]) });
                 return out;
             };
-            const USR_NOTE = 'Emitido em atendimento ao art. 18 da Lei Geral de Proteção de Dados (Lei nº 13.709/2018). Reúne os dados pessoais que o My Trade Dash guarda sobre esta pessoa na área administrativa. As operações, movimentações e notas do dia não constam aqui: ficam visíveis apenas para a própria pessoa, que as exporta pelo app em Opções > Exportar backup.';
+            const USR_NOTE = 'Emitido em atendimento ao art. 18 da Lei Geral de Proteção de Dados (Lei nº 13.709/2018). Reúne os dados pessoais que o My Trade Dash guarda sobre esta pessoa na área administrativa, inclusive os recados trocados pelo app. As operações, movimentações e notas do dia não constam aqui: ficam visíveis apenas para a própria pessoa, que as exporta pelo app em Opções > Exportar backup.';
             const usrName = u => { const cv = usrConv(u.email); return (cv && cv.name) || u.email; };
             const usrMsgText = (u, cv) => `Olá, ${(cv && cv.name) || u.email}!\nEsperamos que você esteja bem!\n\nRecebemos o seu pedido e estamos atendendo ao direito de acesso aos dados, previsto no art. 18 da Lei Geral de Proteção de Dados (Lei nº 13.709/2018).\n\nEm anexo vai o documento com os dados pessoais que guardamos sobre você na área administrativa do My Trade Dash: o pedido de convite, os dados da conta e, se houver, contribuições e pedidos que você tenha feito.\n\nAs suas operações, movimentações e notas do dia não ficam visíveis para nós: elas são só suas. Para ter uma cópia delas, entre no app e use ⚙ Opções > Exportar backup. Se não conseguir entrar, responda esta mensagem que enviamos uma senha temporária.${SIGN}`;
             const openUsrData = u => {
@@ -2740,7 +2875,7 @@ hmoDb = db;
                     <p class="text-[11px] text-gray-400 mb-3">${esc(u.email)} · conferido em ${esc(fmtDT(new Date().toISOString()))}</p>
                     ${secs.map(sc => `<p class="text-xs font-bold text-gray-100 uppercase tracking-wide mt-3 mb-1">${esc(sc.t)}</p>
                         <div class="overflow-x-auto"><table class="w-full text-[11px]">${sc.head ? `<thead class="text-gray-400"><tr class="border-b border-gray-700 text-left">${sc.head.map(h => `<th class="py-1 pr-3 font-semibold">${esc(h)}</th>`).join('')}</tr></thead>` : ''}
-                        <tbody>${sc.rows.map(r => sc.head ? `<tr class="border-b border-gray-800/60">${r.map(c => `<td class="py-1 pr-3 text-gray-200">${esc(c)}</td>`).join('')}</tr>` : `<tr class="border-b border-gray-800/60"><td class="py-1 pr-3 text-gray-400 w-1/2">${esc(r[0])}</td><td class="py-1 text-gray-200">${esc(r[1])}</td></tr>`).join('')}</tbody></table></div>`).join('')}
+                        <tbody>${sc.rows.map(r => sc.head ? `<tr class="border-b border-gray-800/60">${r.map(c => `<td class="py-1 pr-3 text-gray-200">${esc(c)}</td>`).join('')}</tr>` : `<tr class="border-b border-gray-800/60"><td class="py-1 pr-3 text-gray-400 w-1/2">${esc(r[0])}</td><td class="py-1 text-gray-200">${esc(r[1])}</td></tr>`).join('')}</tbody></table></div>${sc.note ? `<p class="text-[10px] text-gray-400 mt-1">${esc(sc.note)}</p>` : ''}`).join('')}
                     <p class="text-xs font-bold text-gray-100 uppercase tracking-wide mt-3 mb-1">Sobre este documento</p>
                     <p class="text-[11px] text-gray-400">${esc(USR_NOTE)}</p>
                     <div class="flex flex-wrap justify-end gap-2 mt-4"><button type="button" data-n class="px-3 py-2 rounded-lg border border-gray-600 text-xs font-semibold">Fechar</button>
@@ -2754,9 +2889,12 @@ hmoDb = db;
                     catch (e) { showToast('Não foi possível gerar: ' + ((e && e.message) || e), 'err'); }
                     bp.disabled = false; bp.textContent = '📄 Baixar PDF'; };
             };
-            adUBody.addEventListener('click', e => { const b = e.target.closest('[data-ua]'); if (!b) return;
-                const em = b.closest('[data-um]').dataset.um, u = (uList[sec] || []).find(x => x.email === em); if (u) openUsrData(u); });
+            adUBody.addEventListener('click', async e => { const b = e.target.closest('[data-ua]'); if (!b) return;
+                const em = b.closest('[data-um]').dataset.um, u = (uList[sec] || []).find(x => x.email === em); if (!u) return;
+                if (invIsMaster() && !recAdminList) { try { recAdminList = await recAll(); } catch (ex) { recAdminList = []; } }
+                openUsrData(u); });
             loadUsers('ativos'); loadUsers('excl'); loadExc(); loadPwd(); loadDon();
+            if (invIsMaster()) loadRec();
             ov.querySelector('#ivClose').onclick = close;
             ov.addEventListener('click', ev => { if (ev.target === ov) close(); });
             const body = ov.querySelector('#ivBody'), tabs = ov.querySelector('#ivTabs'), search = ov.querySelector('#ivSearch'), calBox = ov.querySelector('#ivCalBox'), listBox = ov.querySelector('#ivListBox'), modeBtn = ov.querySelector('#ivMode');
@@ -2938,6 +3076,316 @@ hmoDb = db;
 
         /* ===== 💚 Ajude a manter o My Trade Dash (V143) ===== */
         const fmtDT = v => { if (!v) return '—'; const d = new Date(v); return isNaN(d) ? '—' : d.toLocaleDateString('pt-BR') + ' - ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); };
+        /* Aviso de perda do que foi digitado. Mesmo texto e mesma ordem de botões do resto do app;
+           usa o id backPrompt para que a regra do gesto de voltar continue reconhecendo a janela. */
+        function askLoss(onDiscard) {
+            if ($('backPrompt')) return;
+            const o = document.createElement('div'); o.id = 'backPrompt'; o.dataset.backCancel = '1'; o.dataset.keepBell = '1';
+            o.className = 'fixed inset-0 z-[130] flex items-center justify-center p-3 bg-black/70';
+            o.innerHTML = '<div class="w-full max-w-sm rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl"><p class="font-bold mb-4 break-words">Você vai perder o que digitou.</p><div class="flex justify-end gap-2"><button type="button" data-a class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold">Continuar editando</button><button type="button" data-b class="px-3 py-1.5 rounded-lg bg-gray-700 text-white text-xs font-semibold">Voltar sem salvar</button></div></div>';
+            document.body.appendChild(o);
+            o.querySelector('[data-a]').onclick = () => o.remove();
+            o.querySelector('[data-b]').onclick = () => { o.remove(); onDiscard(); };
+        }
+
+        /* ---- contexto técnico do Reportar problema: nada pessoal, nada de lançamento ---- */
+        let recLastErr = '';
+        window.addEventListener('error', e => { try { recLastErr = String((e && e.message) || '').slice(0, 200); } catch (x) {} });
+        window.addEventListener('unhandledrejection', e => { try { recLastErr = String((e && e.reason && e.reason.message) || (e && e.reason) || '').slice(0, 200); } catch (x) {} });
+        function recTabName() {
+            const t = document.querySelector('#tabOps.border-blue-500') ? 'Diário de operações'
+                : document.querySelector('#tabFlow.border-blue-500') ? 'Gestão financeira'
+                : document.querySelector('#tabReport.border-blue-500') ? 'Relatórios' : 'Visão Geral';
+            return t;
+        }
+        function recCtx() {
+            return {
+                versao: MODE === 'claude' ? ('HMO ' + HMO_VERSION) : 'produção',
+                tela: recTabName(),
+                navegador: String(navigator.userAgent || '').slice(0, 160),
+                tamanho: window.innerWidth + '×' + window.innerHeight,
+                erro: recLastErr || '(nenhum erro registrado)'
+            };
+        }
+        const REC_CTX_LAB = { versao: 'Versão do app', tela: 'Tela em que estava', navegador: 'Navegador', tamanho: 'Tamanho da tela', erro: 'Último erro registrado' };
+
+        /* ---- placa de manutenção: lida antes de qualquer outra coisa ---- */
+        function mntShow(preview) {
+            if ($('mntScreen')) return;
+            ['stickyTop', 'fabWrap', 'fabInv'].forEach(i => { const e = $(i); if (e) e.classList.add('hidden'); });
+            const mn = document.querySelector('main'); if (mn) mn.classList.add('hidden');
+            document.documentElement.style.overflow = 'hidden'; document.body.style.overflow = 'hidden';
+            const o = document.createElement('div'); o.id = 'mntScreen';
+            o.className = 'fixed inset-0 z-[125] bg-darkBg flex items-center justify-center p-4 overflow-y-auto';
+            o.innerHTML = `<div class="w-full max-w-md rounded-2xl border border-amber-500 bg-cardBg p-6 text-center shadow-2xl">
+                <p class="text-4xl mb-2" aria-hidden="true">🚧</p>
+                <svg viewBox="0 0 269.7 80" role="img" aria-label="My Trade Dash" class="mx-auto h-9 w-auto mb-3"><use href="#logoMTD"/></svg>
+                <h2 class="text-base font-bold text-amber-200 mb-2">Em manutenção</h2>
+                <p class="text-sm text-gray-200 whitespace-pre-line break-words">${esc(mntCfg.msg || 'Estamos atualizando o My Trade Dash. Já voltamos.')}</p>
+                <p class="text-[11px] text-gray-400 mt-4">Seus dados estão guardados e nada se perde. Tente novamente mais tarde.</p>
+                ${preview ? '<button type="button" id="mntPvOut" class="mt-4 px-3 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold">Fechar a pré-visualização</button>'
+                          : '<button type="button" id="mntOut" class="mt-4 px-3 py-2 rounded-lg bg-gray-700 text-white text-xs font-semibold">Sair</button>'}
+            </div>`;
+            document.body.appendChild(o);
+            const out = $('mntOut'); if (out) out.onclick = () => lockNow();
+            const pv = $('mntPvOut'); if (pv) pv.onclick = () => mntHide();
+        }
+        function mntHide() {
+            const o = $('mntScreen'); if (o) o.remove();
+            ['stickyTop'].forEach(i => { const e = $(i); if (e) e.classList.remove('hidden'); });
+            const mn = document.querySelector('main'); if (mn) mn.classList.remove('hidden');
+            document.documentElement.style.overflow = ''; document.body.style.overflow = '';
+            const fw = $('fabWrap'); if (fw) fw.classList.remove('hidden');
+            if (invIsAdmin) { const fi = $('fabInv'); if (fi) fi.classList.remove('hidden'); }
+        }
+        /* true = bloqueado. O admin master nunca é bloqueado, e isso não depende de configuração. */
+        async function mntGate() {
+            mntCfg = await cfgGet('manutencao', MNT_DEF);
+            if (!mntCfg.on) return false;
+            if (invIsMaster()) return false;
+            if (mntCfg.colab && await colabAmI()) return false;
+            mntShow(false);
+            return true;
+        }
+
+        /* ================= Canais de conversa, manutenção, colaboradores e recados (V157) ================= */
+        const CH_DEF = { user: false, colab: true };                 // desligar esconde, não apaga
+        const MNT_DEF = { on: false, msg: '', colab: true };         // placa de manutenção
+        const REC_SLA = 'Respondemos em até 2 dias úteis.';
+        let chCfg = { ...CH_DEF }, mntCfg = { ...MNT_DEF }, amColab = false, recUnread = 0, recMineCache = null, recAdminList = null;
+
+        async function cfgGet(key, def) {
+            try {
+                if (MODE === 'claude') { const d = await hmoDb.collection('ajustes').doc(key).get(); return (d && d.exists) ? { ...def, ...d.data() } : { ...def }; }
+                const { data } = await sb.from('tb_ajustes').select('value').eq('key', key).maybeSingle();
+                return (data && data.value) ? { ...def, ...data.value } : { ...def };
+            } catch (e) { return { ...def }; }
+        }
+        async function cfgSet(key, val) {
+            if (MODE === 'claude') { await hmoDb.collection('ajustes').doc(key).set(val); return; }
+            const { error } = await sb.from('tb_ajustes').upsert({ key, value: val, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+            if (error) throw error;
+        }
+
+        /* ---- colaboradores: admins entram automático; só os cadastrados à mão saem ---- */
+        async function colabRaw() {
+            if (MODE === 'claude') return (await hmoDb.collection('colaboradores').get()).docs.map(d => ({ id: d.id, ...d.data() }));
+            const { data, error } = await sb.from('tb_colaboradores').select('user_id, email, created_at');
+            if (error) throw error;
+            return (data || []).map(x => ({ id: x.user_id, email: x.email, created_at: x.created_at }));
+        }
+        async function colabList() {
+            const ad = await adminsList();
+            const out = ad.map(a => ({ id: a.id, email: a.email, created_at: a.created_at, fixed: true,
+                role: String(a.email || '').toLowerCase() === INV_MASTER ? 'master' : 'admin' }));
+            const have = new Set(out.map(x => String(x.email || '').toLowerCase()));
+            (await colabRaw()).forEach(c => { if (!have.has(String(c.email || '').toLowerCase())) out.push({ ...c, role: 'colab', fixed: false }); });
+            const ord = { master: 0, admin: 1, colab: 2 };
+            return out.sort((a, b) => (ord[a.role] - ord[b.role]) || String(a.email).localeCompare(String(b.email)));
+        }
+        async function colabAdd(email) {
+            const em = String(email || '').trim().toLowerCase();
+            if (MODE === 'claude') { await hmoDb.collection('colaboradores').add({ email: em, created_at: Date.now() }); return; }
+            const { data: u } = await sb.from('tb_usuarios').select('user_id').ilike('email', em).maybeSingle();
+            if (!u) throw new Error('Não encontrei uma conta ativa com esse e-mail.');
+            const { error } = await sb.from('tb_colaboradores').insert({ user_id: u.user_id, email: em });
+            if (error) throw error;
+        }
+        async function colabRemove(r) {
+            if (MODE === 'claude') { await hmoDb.collection('colaboradores').doc(r.id).delete(); return; }
+            const { error } = await sb.from('tb_colaboradores').delete().eq('user_id', r.id); if (error) throw error;
+        }
+        async function colabAmI() {
+            if (MODE === 'claude') return true;
+            if (invIsAdmin) return true;
+            try { const { data } = await sb.from('tb_colaboradores').select('user_id').eq('user_id', currentUserId).maybeSingle(); return !!data; }
+            catch (e) { return false; }
+        }
+        /* o canal de quem está logado: colaborador fala pelo canal dele, o resto pelo de usuários */
+        const recMyCanal = () => amColab ? 'colaborador' : 'usuario';
+        const recCanOpen = () => amColab ? !!chCfg.colab : !!chCfg.user;
+
+        /* ---- recados: uma conversa por pessoa, com as mensagens em ordem ---- */
+        function recRow(r) {
+            return { id: r.id, user_id: r.user_id, email: r.email, canal: r.canal, autor: r.autor,
+                texto: r.texto, ctx: r.ctx || null, created_at: r.created_at, lido_em: r.lido_em || null };
+        }
+        async function recAll() {
+            if (MODE === 'claude') return (await hmoDb.collection('recados').get()).docs.map(d => recRow({ id: d.id, ...d.data() }));
+            const { data, error } = await sb.from('tb_recados').select('*').order('created_at', { ascending: true });
+            if (error) throw error;
+            return (data || []).map(recRow);
+        }
+        async function recMine() {
+            if (MODE === 'claude') {
+                const all = await recAll();
+                return all.filter(r => String(r.email || '').toLowerCase() === recMyEmail()).sort(recByDate);
+            }
+            const { data, error } = await sb.from('tb_recados').select('*').eq('user_id', currentUserId).order('created_at', { ascending: true });
+            if (error) throw error;
+            return (data || []).map(recRow);
+        }
+        const recByDate = (a, b) => new Date(a.created_at) - new Date(b.created_at);
+        const HMO_SELF_EMAIL = 'diogo@exemplo.com';   // o "você" dos dados de teste do HMO
+        const recMyEmail = () => {
+            if (MODE === 'claude') return HMO_SELF_EMAIL;
+            const t = String(($('menuUserEmail') && $('menuUserEmail').textContent) || '').trim().toLowerCase();
+            return /@/.test(t) ? t : '';
+        };
+        async function recSend(texto, ctx, para) {
+            const adm = !!para;                                     // admin respondendo
+            const row = { canal: adm ? para.canal : recMyCanal(), autor: adm ? 'admin' : 'user',
+                texto: String(texto || '').trim(), ctx: ctx || null, created_at: new Date().toISOString(), lido_em: null,
+                email: adm ? para.email : recMyEmail(), user_id: adm ? para.user_id : currentUserId };
+            if (MODE === 'claude') { await hmoDb.collection('recados').add({ ...row, created_at: Date.now() }); return; }
+            const { error } = await sb.from('tb_recados').insert({ canal: row.canal, autor: row.autor, texto: row.texto, ctx: row.ctx, email: row.email, user_id: row.user_id });
+            if (error) throw error;
+        }
+        /* marca como lido o que a outra ponta escreveu */
+        async function recMarkRead(rows) {
+            const ids = (rows || []).map(r => r.id);
+            if (!ids.length) return;
+            if (MODE === 'claude') { const c = hmoDb.collection('recados'); for (const id of ids) { try { await c.doc(id).update({ lido_em: Date.now() }); } catch (e) {} } return; }
+            try { await sb.from('tb_recados').update({ lido_em: new Date().toISOString() }).in('id', ids); } catch (e) {}
+        }
+        async function recRefreshUnread() {
+            if (!recCanOpen()) { recUnread = 0; recMenuPaint(); return; }
+            try {
+                recMineCache = await recMine();
+                recUnread = recMineCache.filter(r => r.autor === 'admin' && !r.lido_em).length;
+            } catch (e) { recUnread = 0; }
+            recMenuPaint();
+        }
+        function recMenuPaint() {
+            const b = $('btnRec'); if (!b) return;
+            b.classList.toggle('hidden', !recCanOpen());
+            const c = $('recCount'); if (!c) return;
+            c.textContent = recUnread; c.classList.toggle('hidden', recUnread === 0);
+        }
+
+        /* ================= ✉️ Falar com o My Trade Dash ================= */
+        async function openRecModal() {
+            if (!recCanOpen()) { showToast('O canal de conversa está desligado no momento.', 'err'); return; }
+            const o = document.createElement('div'); o.dataset.keepBell = '1';
+            o.className = 'fixed inset-0 z-[115] flex items-end sm:items-center justify-center p-0 sm:p-3 bg-black/70';
+            o.innerHTML = `<div class="w-full max-w-md h-full sm:h-auto sm:max-h-[92vh] flex flex-col rounded-none sm:rounded-xl border border-gray-600 bg-gray-900 text-sm text-gray-200 shadow-2xl">
+                <div class="px-4 pt-4 pb-2 border-b border-gray-700">
+                    <div class="flex items-start justify-between gap-2">
+                        <h3 class="text-base font-bold">✉️ Falar com o My Trade Dash</h3>
+                        <button type="button" id="rcClose" class="px-3 py-1 rounded-lg bg-gray-700 text-white text-xs font-semibold">Fechar</button>
+                    </div>
+                    <p class="text-[11px] text-gray-400 mt-1">${esc(REC_SLA)}${amColab ? ' · você está no canal dos colaboradores' : ''}</p>
+                </div>
+                <div class="px-4 pt-2">
+                    <p class="rounded-lg border border-amber-500 bg-amber-950/30 px-3 py-2 text-[11px] leading-snug text-amber-200">🔒 Não escreva CPF, senha nem dados bancários aqui. Se precisar de algo assim, vamos combinar outro caminho.</p>
+                </div>
+                <div id="rcBody" class="flex-1 min-h-[8rem] overflow-y-auto px-4 py-3 space-y-2"><p class="text-xs text-gray-400">Carregando…</p></div>
+                <div class="px-4 pt-2 pb-4 border-t border-gray-700">
+                    <div id="rcCtxBox" class="hidden mb-2 rounded-lg border border-dashed border-blue-400 bg-blue-950/30 p-2">
+                        <p class="text-[11px] font-bold text-blue-200 mb-1">Vai junto com a sua mensagem</p>
+                        <div id="rcCtxList" class="space-y-0.5 text-[10px] text-gray-300"></div>
+                        <label class="flex items-start gap-2 text-[11px] text-gray-300 mt-2"><input type="checkbox" id="rcCtxOff" class="mt-0.5"> Não enviar estes dados</label>
+                        <p class="text-[10px] text-gray-400 mt-1">É só o estado do app. Nada de localização e nada do conteúdo dos seus lançamentos.</p>
+                    </div>
+                    <textarea id="rcTxt" rows="3" maxlength="2000" placeholder="Escreva aqui a sua dúvida, sugestão ou o que aconteceu…" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></textarea>
+                    <p id="rcMsg" class="text-xs text-red-400 min-h-[1rem]" role="alert"></p>
+                    <div class="flex flex-wrap gap-2 justify-between">
+                        <button type="button" id="rcRep" class="px-3 py-2 rounded-lg border border-blue-400 text-blue-200 text-xs font-semibold">⚠ Reportar problema</button>
+                        <button type="button" id="rcSend" class="px-3 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold">Enviar</button>
+                    </div>
+                </div></div>`;
+            document.body.appendChild(o);
+            const fabW = $('fabWrap'); const fabWas = fabW && !fabW.classList.contains('hidden');
+            if (fabW) fabW.classList.add('hidden');
+            const closeRec = () => { o.remove(); if (fabW && fabWas) fabW.classList.remove('hidden'); };
+            const body = o.querySelector('#rcBody'), txt = o.querySelector('#rcTxt'), msg = o.querySelector('#rcMsg');
+            const ctxBox = o.querySelector('#rcCtxBox'), ctxList = o.querySelector('#rcCtxList'), ctxOff = o.querySelector('#rcCtxOff');
+            let rep = false, rows = [];
+            const fmtW = v => { const d = new Date(v); return isNaN(d) ? '' : d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); };
+            const draw = () => {
+                if (!rows.length) { body.innerHTML = '<p class="text-xs text-gray-400 text-center py-6">Nenhuma mensagem ainda. Escreva a primeira abaixo.</p>'; return; }
+                body.innerHTML = rows.map(r => {
+                    const meu = r.autor === 'user';
+                    const sel = meu ? (r.lido_em ? 'lido' : 'entregue') : '';
+                    return `<div class="flex ${meu ? 'justify-end' : 'justify-start'}">
+                        <div class="max-w-[85%] rounded-xl px-3 py-2 ${meu ? 'bg-blue-900/60 border border-blue-700' : 'bg-gray-800 border border-gray-700'}">
+                            ${meu ? '' : '<p class="text-[10px] font-bold text-amber-200 mb-0.5">' + esc(APP_OWNER) + '</p>'}
+                            <p class="text-xs whitespace-pre-line break-words">${esc(r.texto)}</p>
+                            ${r.ctx ? '<div class="mt-1 rounded border border-dashed border-gray-500 p-1 text-[10px] text-gray-400">' + Object.keys(REC_CTX_LAB).filter(k => r.ctx[k]).map(k => esc(REC_CTX_LAB[k]) + ': ' + esc(r.ctx[k])).join('<br>') + '</div>' : ''}
+                            <p class="text-[10px] text-gray-400 mt-1">${esc(fmtW(r.created_at))}${sel ? ' · ' + sel : ''}</p>
+                        </div></div>`;
+                }).join('');
+                body.scrollTop = body.scrollHeight;
+            };
+            const load = async () => {
+                try {
+                    rows = await recMine(); draw();
+                    const naoLidas = rows.filter(r => r.autor === 'admin' && !r.lido_em);
+                    if (naoLidas.length) { await recMarkRead(naoLidas); naoLidas.forEach(r => r.lido_em = new Date().toISOString()); recUnread = 0; recMenuPaint(); draw(); }
+                } catch (e) { body.innerHTML = '<p class="text-xs text-red-400">Não foi possível carregar a conversa: ' + esc((e && e.message) || e) + '</p>'; }
+            };
+            const paintCtx = () => {
+                const c = recCtx();
+                ctxList.innerHTML = Object.keys(REC_CTX_LAB).map(k => `<p><span class="text-gray-400">${esc(REC_CTX_LAB[k])}:</span> <span class="text-gray-200 break-all">${esc(c[k])}</span></p>`).join('');
+            };
+            o.querySelector('#rcRep').onclick = () => {
+                rep = !rep;
+                ctxBox.classList.toggle('hidden', !rep);
+                o.querySelector('#rcRep').classList.toggle('bg-blue-600', rep);
+                o.querySelector('#rcRep').classList.toggle('text-white', rep);
+                if (rep) { paintCtx(); txt.placeholder = 'Conte o que aconteceu. O contexto técnico vai junto, e você vê acima o que será enviado.'; txt.focus(); }
+                else txt.placeholder = 'Escreva aqui a sua dúvida, sugestão ou o que aconteceu…';
+            };
+            o.querySelector('#rcSend').onclick = async () => {
+                const t = txt.value.trim(); msg.textContent = '';
+                if (!t) { msg.textContent = 'Escreva a sua mensagem.'; txt.focus(); return; }
+                const ctx = (rep && !ctxOff.checked) ? recCtx() : null;
+                try {
+                    await recSend(t, ctx);
+                    txt.value = ''; rep = false; ctxBox.classList.add('hidden'); ctxOff.checked = false;
+                    o.querySelector('#rcRep').classList.remove('bg-blue-600', 'text-white');
+                    await load(); showToast('Mensagem enviada', 'ok');
+                } catch (e) { msg.textContent = 'Não foi possível enviar: ' + ((e && e.message) || e); }
+            };
+            /* fechar clicando fora: o risco aqui é grande, a pessoa escreve um relato longo */
+            const tryClose = () => { if (!txt.value.trim()) closeRec(); else askLoss(closeRec); };
+            o.querySelector('#rcClose').onclick = tryClose;
+            o.addEventListener('click', ev => { if (ev.target === o) tryClose(); });
+            load();
+        }
+        /* aviso no sino do admin quando alguém manda recado */
+        let recAdminPend = [];
+        async function recAdminLoad() {
+            if (!invIsMaster()) { recAdminPend = []; return; }
+            try {
+                const all = await recAll(), by = {};
+                all.forEach(r => { const k = String(r.email || '').toLowerCase(); (by[k] = by[k] || []).push(r); });
+                recAdminPend = Object.keys(by).map(k => {
+                    const m = by[k].slice().sort(recByDate), last = m[m.length - 1];
+                    return { email: k, canal: last.canal, last, n: m.filter(r => r.autor === 'user' && !r.lido_em).length };
+                }).filter(t => t.last.autor === 'user' && !t.last.lido_em);
+            } catch (e) { recAdminPend = []; }
+        }
+        function recAdminAlerts(ar) {
+            if (!invIsMaster() || !recAdminPend.length) return [];
+            return recAdminPend.map(t => {
+                const cv = (invCache || []).find(c => String(c.email || '').toLowerCase() === t.email);
+                const quem = (cv && cv.name) || 'Pessoa sem nome cadastrado';
+                const previa = String(t.last.texto || '').replace(/\s+/g, ' ').slice(0, 90);
+                return { id: 'recadm:' + t.email + ':' + t.last.id, level: 'a', action: 'recadm',
+                    title: quem + (t.n > 1 ? ' mandou ' + t.n + ' recados' : ' mandou um recado'),
+                    note: 'Em 🛡 Admin › 💬 Recados · canal do ' + (t.canal === 'colaborador' ? 'colaborador' : 'usuário') + '. "' + previa + (String(t.last.texto || '').length > 90 ? '…' : '') + '"' };
+            });
+        }
+
+        /* aviso no sino quando o responsável responde */
+        function recAlerts() {
+            if (!recCanOpen() || !recUnread) return [];
+            return [{ id: 'rec:' + recUnread, level: 'a', action: 'rec',
+                title: recUnread === 1 ? APP_OWNER + ' respondeu o seu recado' : APP_OWNER + ' respondeu os seus recados (' + recUnread + ')',
+                note: 'Abra ✉️ Falar com o My Trade Dash para ler e responder.' }];
+        }
+
         const DON_DEF = { on: true, bell: true, pix: 'mytradedash@gmail.com', vals: [10, 25, 50], def: 1 };
         const DON_ASK_DAYS = 30, DON_SNOOZE_DAYS = 180;
         let donCfg = { ...DON_DEF }, donAdminList = null, donMineHas = false, donSeeded = false;
@@ -2988,7 +3436,9 @@ hmoDb = db;
             const up = undo ? { status: 'nova', descartado_em: null } : { status: 'descartada', descartado_em: new Date().toISOString() };
             if (MODE === 'claude') { await hmoDb.collection('contribuicoes').doc(r.id).update(up); return up; }
             const { error } = await sb.rpc('mtd_descartar_contribuicao', { p_id: r.id, p_desfazer: !!undo }); if (error) throw error;
-            return up;
+            const { data: chk } = await sb.from('tb_contribuicoes').select('status, descartado_em').eq('id', r.id).maybeSingle();   // confere se o banco gravou mesmo
+            if (chk && chk.status !== up.status) throw new Error('o banco não gravou a mudança. Rode o SQL de estrutura das contribuições no Supabase.');
+            return chk ? { status: chk.status, descartado_em: chk.descartado_em } : up;
         }
         async function donMineList() {
             if (MODE === 'claude') return (await hmoDb.collection('contribuicoes').get()).docs.map(d => ({ id: d.id, ...d.data() })).filter(x => x.mine);
@@ -3131,22 +3581,68 @@ hmoDb = db;
                 <div class="grid grid-cols-3 gap-2 mb-3">${vs.map((v, i) => `<input type="text" inputmode="decimal" data-av="${i}" value="${fmtMoneyBR(v)}" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200">`).join('')}</div>
                 <label class="block text-xs font-medium text-gray-400 mb-1" for="ajDef">Qual deles vem marcado</label>
                 <select id="ajDef" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200 mb-3">${vs.map((v, i) => `<option value="${i}" ${i === num(donCfg.def) ? 'selected' : ''}>R$ ${fmtMoneyBR(v)}</option>`).join('')}</select>
+                <div class="border-t border-gray-700 my-3"></div>
+                <p class="font-bold text-xs text-gray-100 mb-1">💬 CANAIS DE CONVERSA</p>
+                <p class="text-[11px] text-gray-400 mb-2">Desligar esconde o canal, não apaga nada: os recados já trocados continuam guardados.</p>
+                <label class="flex items-start gap-2 text-xs mb-2"><input type="checkbox" id="ajChColab" class="mt-0.5" ${chCfg.colab ? 'checked' : ''}> Canal dos <b class="text-gray-100">colaboradores</b> (admins e colaboradores cadastrados)</label>
+                <label class="flex items-start gap-2 text-xs mb-3"><input type="checkbox" id="ajChUser" class="mt-0.5" ${chCfg.user ? 'checked' : ''}> Canal dos <b class="text-gray-100">usuários</b> comuns</label>
+                <div class="border-t border-gray-700 my-3"></div>
+                <p class="font-bold text-xs text-gray-100 mb-1">🚧 MANUTENÇÃO</p>
+                <p class="text-[11px] text-gray-400 mb-2">Com a placa ligada, quem entrar vê o recado e não acessa o app. Você, como admin principal, nunca é bloqueado.</p>
+                <label class="flex items-start gap-2 text-xs mb-2"><input type="checkbox" id="ajMnOn" class="mt-0.5" ${mntCfg.on ? 'checked' : ''}> <b class="text-gray-100">Colocar o app em manutenção</b></label>
+                <label class="block text-xs font-medium text-gray-400 mb-1" for="ajMnMsg">Recado na tela <span id="ajMnReq" class="text-red-400 font-bold hidden">· obrigatório</span></label>
+                <textarea id="ajMnMsg" rows="3" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200 mb-2">${esc(mntCfg.msg || '')}</textarea>
+                <label class="flex items-start gap-2 text-xs mb-2"><input type="checkbox" id="ajMnColab" class="mt-0.5" ${mntCfg.colab ? 'checked' : ''}> Os <b class="text-gray-100">colaboradores continuam entrando</b> durante a manutenção</label>
+                <button type="button" id="ajMnPv" class="w-full px-3 py-2 rounded-lg border border-gray-600 text-xs font-semibold mb-3">👁 Pré-visualizar a placa</button>
                 <p id="ajMsg" class="text-xs text-red-400 mb-2 hidden"></p>
                 <div class="flex justify-end gap-2"><button type="button" data-n class="px-3 py-2 rounded-lg border border-gray-600 text-xs font-semibold">Cancelar</button><button type="button" data-y class="px-3 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold">Salvar</button></div></div>`;
             document.body.appendChild(o);
             o.querySelectorAll('[data-av]').forEach(el => { el.addEventListener('input', ev => maskMoney(el, ev)); el.addEventListener('blur', () => { el.value = fmtMoneyBR(parseMoney(el.value)); upd(); }); });
             const upd = () => { const sel = o.querySelector('#ajDef'), cur = sel.value; sel.innerHTML = [...o.querySelectorAll('[data-av]')].map((el, i) => `<option value="${i}" ${String(i) === cur ? 'selected' : ''}>R$ ${fmtMoneyBR(parseMoney(el.value))}</option>`).join(''); };
-            o.querySelector('[data-n]').onclick = () => o.remove();
+            /* · obrigatório só com a placa ligada */
+            const mnOn = o.querySelector('#ajMnOn'), mnMsg = o.querySelector('#ajMnMsg'), mnReq = o.querySelector('#ajMnReq');
+            const reqPaint = () => mnReq.classList.toggle('hidden', !mnOn.checked);
+            mnOn.addEventListener('change', reqPaint); reqPaint();
+            /* pré-visualização: é o único jeito de ver a placa no HMO, onde o usuário é sempre o admin principal */
+            o.querySelector('#ajMnPv').onclick = () => {
+                const txt = mnMsg.value.trim();
+                if (!txt) { const m = o.querySelector('#ajMsg'); m.textContent = 'Escreva o recado para pré-visualizar.'; m.classList.remove('hidden'); mnMsg.focus(); return; }
+                const keep = mntCfg; mntCfg = { ...mntCfg, msg: txt };
+                o.classList.add('hidden'); mntShow(true);
+                const back = () => { mntCfg = keep; o.classList.remove('hidden'); };
+                const b = $('mntPvOut'); if (b) b.onclick = () => { mntHide(); back(); };
+                const pv = $('mntScreen');
+                if (pv) pv.addEventListener('click', ev => { if (ev.target === pv) { mntHide(); back(); } });
+            };
+            /* fechar clicando fora segue a regra que já existe no app */
+            const snapAj = () => JSON.stringify([o.querySelector('#ajOn').checked, o.querySelector('#ajBell').checked, o.querySelector('#ajPix').value,
+                [...o.querySelectorAll('[data-av]')].map(el => el.value), o.querySelector('#ajDef').value,
+                o.querySelector('#ajChColab').checked, o.querySelector('#ajChUser').checked, mnOn.checked, mnMsg.value, o.querySelector('#ajMnColab').checked]);
+            const startAj = snapAj();
+            const tryCloseAj = () => { if (snapAj() === startAj) o.remove(); else askLoss(() => o.remove()); };
+            o.addEventListener('click', ev => { if (ev.target === o) tryCloseAj(); });
+            o.querySelector('[data-n]').onclick = tryCloseAj;
             o.querySelector('[data-y]').onclick = async () => {
                 const msg = o.querySelector('#ajMsg'), vals = [...o.querySelectorAll('[data-av]')].map(el => parseMoney(el.value));
                 msg.classList.add('hidden');
                 const pix = o.querySelector('#ajPix').value.trim();
                 if (!pix) { msg.textContent = 'Informe a chave Pix.'; msg.classList.remove('hidden'); return; }
                 if (vals.some(v => !(v > 0))) { msg.textContent = 'Os três valores sugeridos precisam ser maiores que zero.'; msg.classList.remove('hidden'); return; }
+                const mnText = mnMsg.value.trim();
+                if (mnOn.checked && !mnText) { msg.textContent = 'Com a manutenção ligada, o recado na tela é obrigatório.'; msg.classList.remove('hidden'); mnMsg.focus(); return; }
                 try {
                     await donCfgSave({ on: o.querySelector('#ajOn').checked, bell: o.querySelector('#ajBell').checked, pix, vals, def: num(o.querySelector('#ajDef').value) });
+                    const ch = { colab: o.querySelector('#ajChColab').checked, user: o.querySelector('#ajChUser').checked };
+                    const mn = { on: mnOn.checked, msg: mnText, colab: o.querySelector('#ajMnColab').checked };
+                    const chMudou = JSON.stringify(ch) !== JSON.stringify({ colab: !!chCfg.colab, user: !!chCfg.user });
+                    const mnMudou = JSON.stringify(mn) !== JSON.stringify({ on: !!mntCfg.on, msg: mntCfg.msg || '', colab: !!mntCfg.colab });
+                    await cfgSet('canais', ch); chCfg = { ...CH_DEF, ...ch };
+                    await cfgSet('manutencao', mn); mntCfg = { ...MNT_DEF, ...mn };
+                    recMenuPaint(); if (recCanOpen()) recRefreshUnread();
                     o.remove(); showToast('Ajustes salvos', 'ok');
                     auditAdd({ kind: 'cfg', outcome: 'Concluída', detail: 'Ajustes do app atualizados' });
+                    if (chMudou) auditAdd({ kind: 'cfg', outcome: 'Concluída', detail: 'Canais de conversa: usuários ' + (ch.user ? 'ligado' : 'desligado') + ', colaboradores ' + (ch.colab ? 'ligado' : 'desligado') });
+                    if (mnMudou) auditAdd({ kind: 'cfg', outcome: 'Concluída', detail: 'Manutenção ' + (mn.on ? 'ligada' : 'desligada') + (mn.on ? ' · colaboradores ' + (mn.colab ? 'entram' : 'bloqueados') + ' · recado: ' + mn.msg : '') });
                     if (bellInit) refreshBell();
                 } catch (e) { msg.textContent = 'Não foi possível salvar: ' + ((e && e.message) || e); msg.classList.remove('hidden'); }
             };
@@ -4374,6 +4870,7 @@ hmoDb = db;
                         if (y - h < MG + 16) { newPage(false); head(); }
                         cells.forEach((lines, i) => lines.forEach((l, k) => cur.c += txt(l, xs[i], y - 10 * k, 7.5)));
                         y -= h; cur.c += `0.85 g ${MG} ${y + 7} ${avail} 0.4 re f 0 g\n`; });
+                    if (sec.note) { const ln = wrap(sec.note, 110); if (y - 11 * ln.length < MG + 16) newPage(false); y -= 4; ln.forEach((l, i) => cur.c += txt(l, MG, y - 10 * i, 7.5)); y -= 10 * ln.length + 4; }
                 } else {
                     sec.rows.forEach(([k, v]) => { const lines = wrap(v, 62), h = 12 * lines.length;
                         if (y - h < MG + 16) newPage(false);
@@ -4682,14 +5179,15 @@ hmoDb = db;
     /* ===== Termos de uso, Política de privacidade e Primeiro acesso guiado (V112) ===== */
     (function () {
         const $ = id => document.getElementById(id);
-        const TERMS_VER = '2026-11-14', TERMS_DATE = '14/11/2026', TERMS_DOC = 'termos_privacidade';
+        const TERMS_VER = '2026-11-14.3', TERMS_DATE = '14/11/2026 · revisão 3', TERMS_DOC = 'termos_privacidade';
         window.TERMS_VER = TERMS_VER;
         const LEGAL_EMAIL = 'mytradedash@gmail.com';
         const TERMS_HTML = `<h4 class="font-bold text-sm mb-1">Termos de uso do My Trade Dash</h4><p class="text-gray-400 mb-3">Versão de ${TERMS_DATE}</p>
 <p class="mb-2"><b>1. O que é o My Trade Dash.</b> Um diário para quem opera day trade (mini-índice e mini-dólar): registra operações, movimentações financeiras e notas do dia, e mostra indicadores, gráficos, relatórios e alertas de DARF. Ele nasceu de uma necessidade do próprio criador, que controlava essas mesmas informações à mão, espalhadas por mais de uma planilha. Ao perceber que outros operadores provavelmente passavam pela mesma dificuldade, decidiu transformar esse controle em um aplicativo e compartilhá-lo.</p>
+<p class="mb-2"><b>1.1. Onde o My Trade Dash se aplica.</b> O My Trade Dash é destinado ao uso no Brasil. Os cálculos, prazos e referências legais do aplicativo seguem a legislação brasileira — inclusive a apuração de day trade, o IRRF e o DARF — e os valores são em reais. Nada impede o acesso de fora do país, mas o aplicativo não foi feito para outras moedas, outros fusos horários nem a legislação de outros países.</p>
 <p class="mb-2"><b>2. Quem pode usar.</b> Somente maiores de 18 anos (Código Civil, art. 5º), com acesso liberado por convite. A conta é pessoal: login e senha não devem ser compartilhados.</p>
 <p class="mb-2"><b>3. Responsabilidade pelas informações.</b> Os valores mostrados vêm do que você lança. Os cálculos de resultado, DARF e indicadores são estimativas de apoio e não substituem a orientação de um profissional de Contabilidade nem os sistemas oficiais da Receita Federal (como o Sicalc). O My Trade Dash não é corretora, não executa ordens e não faz recomendação de investimento.</p>
-<p class="mb-2"><b>4. Contribuição voluntária.</b> O My Trade Dash é gratuito e vai continuar sendo. Em ⚙ Opções &gt; 💚 Ajude a manter o My Trade Dash você pode, se quiser, contribuir com o valor que achar justo, por Pix, para ajudar a amenizar custos como domínio, servidores e as melhorias do app. A contribuição é opcional e não dá nenhum direito, vantagem ou recurso extra: o seu acesso não está condicionado a ela. O app não processa pagamentos: o Pix é feito pelo seu banco e nenhum dado de pagamento passa pelo My Trade Dash. Você avisa pelo app que contribuiu, o responsável confere no extrato e confirma; se o pagamento não for localizado, o registro é descartado e passa a aparecer para você como "não localizada". O comprovante enviado após a confirmação é um arquivo simples, emitido por pessoa física, e não é documento fiscal.</p>
+<p class="mb-2"><b>4. Contribuição voluntária.</b> O My Trade Dash é gratuito e vai continuar sendo. Em ⚙ Opções &gt; 💚 Ajude a manter o My Trade Dash você pode, se quiser, contribuir com o valor que achar justo, por Pix, para ajudar a amenizar custos como domínio, servidores e as melhorias do app. A contribuição é opcional e não dá nenhum direito, vantagem ou recurso extra: o seu acesso não está condicionado a ela. O app não processa pagamentos — o Pix é feito pelo seu banco e nenhum dado de pagamento passa pelo My Trade Dash. Você avisa pelo app que contribuiu, o responsável confere no extrato e confirma; se o pagamento não for localizado, o registro é descartado e passa a aparecer para você como "não localizada". O comprovante enviado após a confirmação é um arquivo simples, emitido por pessoa física, e não é documento fiscal.</p>
 <p class="mb-2"><b>5. Disponibilidade.</b> Seus dados ficam guardados em um banco de dados na nuvem: não se perdem se você trocar de celular ou se o app ficar fora do ar por um tempo. O app pode ter pausas rápidas para manutenção. O backup (⚙ Opções &gt; Exportar backup) é uma cópia extra, útil para guardar um retrato dos seus dados ou recuperar algo excluído por engano.</p>
 <p class="mb-2"><b>6. Segurança dos dados.</b> O My Trade Dash adota medidas técnicas para proteger seus dados contra acessos não autorizados, como conexão criptografada e acesso restrito a cada conta, conforme a LGPD (Lei nº 13.709/2018, art. 46).</p>
 <p class="mb-2"><b>7. Propriedade.</b> A marca, o nome, a identidade visual e o código do My Trade Dash pertencem ao seu responsável. Os dados que você lança são seus.</p>
@@ -4700,10 +5198,10 @@ hmoDb = db;
         const PRIV_HTML = `<h4 class="font-bold text-sm mb-1">Política de privacidade do My Trade Dash</h4><p class="text-gray-400 mb-3">Versão de ${TERMS_DATE} · em conformidade com a LGPD (Lei nº 13.709/2018)</p>
 <p class="mb-2"><b>1. Controlador.</b> Diogo Gomes, pessoa física, responsável pelo My Trade Dash. Ele também é o encarregado pelo tratamento de dados pessoais (LGPD, art. 41). Contato para assuntos de dados pessoais: ${LEGAL_EMAIL}.</p>
 <p class="mb-1"><b>2. Dados tratados.</b></p>
-<ul class="list-disc pl-5 mb-2 space-y-0.5"><li>Pedido de convite: nome, e-mail, WhatsApp (com DDD), data de nascimento e como soube do app.</li><li>Conta: e-mail e senha (a senha fica protegida pelo provedor de login e não é vista por ninguém).</li><li>Uso do app: operações (data, horários, ativo, setup, contratos, pontos, resultado bruto e custos), movimentações financeiras (depósitos, saques e bancos informados), notas do dia (valor líquido, IRRF e custos), setups, DARF marcados como pagos e o histórico de auditoria.</li><li>Contribuição voluntária: valor, data do aviso, forma, situação (aguardando conferência, confirmada ou não localizada) e número do comprovante. Não recebemos nem guardamos dados de pagamento.</li><li>No aparelho: tema escolhido e posição do botão Atalhos (ficam só no seu aparelho).</li></ul>
-<p class="mb-2"><b>3. Para que usamos.</b> Prestar o serviço (calcular resultados, indicadores, relatórios e a estimativa de DARF), liberar o acesso, confirmar que você tem 18 anos ou mais (é para isso que pedimos a data de nascimento), falar com você por e-mail ou WhatsApp sobre o seu acesso e, eventualmente, uma felicitação de aniversário, registrar e dar comprovante das contribuições voluntárias, e manter a segurança. Não vendemos dados nem os usamos para publicidade.</p>
+<ul class="list-disc pl-5 mb-2 space-y-0.5"><li>Pedido de convite: nome, e-mail, WhatsApp (com DDD), data de nascimento e como soube do app.</li><li>Conta: e-mail e senha (a senha fica protegida pelo provedor de login e não é vista por ninguém).</li><li>Uso do app: operações (data, horários, ativo, setup, contratos, pontos, resultado bruto e custos), movimentações financeiras (depósitos, saques e bancos informados), notas do dia (valor líquido, IRRF e custos), setups, DARF marcados como pagos e o histórico de auditoria.</li><li>Contribuição voluntária: se esse recurso estiver disponível e você o usar, guardamos o valor, a data do aviso, a forma, a situação (aguardando conferência, confirmada ou não localizada) e o número do comprovante. Não recebemos nem guardamos dados de pagamento.</li><li>Recados pelo app: se o canal de recados estiver disponível para você e você o usar, guardamos o texto das mensagens trocadas com o responsável pelo My Trade Dash e a data de cada uma. Ao usar o botão de reportar problema, seguem junto informações técnicas que você vê antes de enviar: versão do app, tela em que estava, navegador, tamanho da tela e último erro registrado. Nenhum dado pessoal e nenhum conteúdo dos seus lançamentos entra nessa captura. O canal pode ser ligado ou desligado a qualquer momento; desligá-lo não apaga os recados já guardados.</li><li>No aparelho: tema escolhido e posição do botão Atalhos (ficam só no seu aparelho).</li></ul>
+<p class="mb-2"><b>3. Para que usamos.</b> Prestar o serviço (calcular resultados, indicadores, relatórios e a estimativa de DARF), liberar o acesso, confirmar que você tem 18 anos ou mais (é para isso que pedimos a data de nascimento), falar com você por e-mail ou WhatsApp sobre o seu acesso e, se esse recurso estiver ativo, uma felicitação de aniversário, registrar e dar comprovante das contribuições voluntárias quando você usar esse recurso, responder os seus recados pelo app, e manter a segurança. Não vendemos dados nem os usamos para publicidade.</p>
 <p class="mb-2"><b>4. Bases legais.</b> Execução do serviço que você contratou (art. 7º, V), consentimento para contato por e-mail e WhatsApp e para o registro da contribuição voluntária, que parte de você (art. 7º, I), e legítimo interesse para segurança e prevenção de fraudes (art. 7º, IX).</p>
-<p class="mb-2"><b>5. Onde ficam e com quem são compartilhados.</b> Os dados ficam no Supabase (banco de dados e login, servidores em São Paulo). O site é publicado pelo GitHub Pages. Esses fornecedores só armazenam e processam os dados para o app funcionar. Não há outro compartilhamento, salvo obrigação legal.</p>
+<p class="mb-2"><b>5. Onde ficam e com quem são compartilhados.</b> Os dados ficam no Supabase (banco de dados e login), em servidores localizados em São Paulo, Brasil. Como o armazenamento é em território brasileiro, não há transferência internacional dos seus dados (LGPD, art. 33). O site é publicado pelo GitHub Pages. Esses fornecedores só armazenam e processam os dados para o app funcionar. Não há outro compartilhamento, salvo obrigação legal.</p>
 <p class="mb-2"><b>6. Segurança.</b> Conexão criptografada (HTTPS) e regras no banco que fazem cada usuário ver e alterar somente os próprios dados dentro de sua respectiva área logada.</p>
 <p class="mb-2"><b>7. Por quanto tempo.</b> Enquanto a conta estiver ativa. Após o pedido de exclusão da conta, os dados são apagados, inclusive o registro das contribuições voluntárias, salvo o que a lei obrigar a guardar.</p>
 <p class="mb-2"><b>8. Como excluir sua conta.</b> Em ⚙ Opções &gt; Excluir minha conta, escolha o motivo e confirme. Até o acesso ser desativado, você pode desistir. Depois de desativada, a conta fica bloqueada e seus dados ficam guardados por 30 dias, para o caso de você mudar de ideia (é só escrever para ${LEGAL_EMAIL}). Passado esse prazo, todos os seus dados são apagados de vez. Guardamos apenas um registro mínimo do pedido (e-mail, motivo, comentário e datas), para comprovar que ele foi atendido. Antes de pedir, exporte um backup em ⚙ Opções &gt; Exportar backup.</p>
@@ -4815,7 +5313,7 @@ hmoDb = db;
                     b: B('data-act="rep"', '📊 Abrir Relatórios') + B('data-next', 'Continuar', P) },
                 9: { t: 'Mês atual × mês anterior', h: () => lead('Abaixo da Visão Geral, o bloco compara o mês atual (até hoje) com o mês anterior fechado: <b class="text-gray-200">Gain</b>, <b class="text-gray-200">Loss</b> e a <b class="text-gray-200">DARF</b> estimada. Use ◀ ▶ para ver outros meses e Hoje para voltar. Em Loss e DARF, a seta para baixo é melhora.'),
                     b: B('data-act="mc"', '📆 Ver o bloco') + B('data-next', 'Continuar', P) },
-                10: { t: 'Para acompanhar', h: () => `<ul class="list-disc pl-5 text-xs text-gray-400 space-y-1"><li><b class="text-gray-200">🔔 Sino:</b> abas Alertas e Novidades. Alertas urgentes vêm primeiro, como o vencimento do DARF, e há um lembrete de backup depois de 30 dias.</li><li><b class="text-gray-200">⚡ Atalhos:</b> lançar e navegar rápido; arraste o botão para onde preferir.</li><li><b class="text-gray-200">⚙ Opções:</b> trocar senha (se esquecer, use <b class="text-gray-200">Esqueci minha senha</b> na tela de entrada; a senha provisória deve ser trocada no primeiro acesso), exportar e importar backup, histórico de auditoria, tema e termos. Se o app te ajuda, em <b class="text-gray-200">💚 Ajude a manter o My Trade Dash</b> você pode contribuir com o que achar justo, por Pix: é opcional, e o seu acesso não depende disso. Lá mesmo você acompanha as suas contribuições e a situação de cada uma. Também é lá que fica <b class="text-gray-200">🗑 Excluir minha conta</b>, se um dia quiser encerrar (exporte o backup antes).</li><li><b class="text-gray-200">Celular:</b> o gesto de voltar fecha janelas e volta as abas.</li></ul><p class="mt-2 text-xs text-gray-400">Para reabrir este guia: ⚙ Opções &gt; 🧭 Guia do My Trade Dash.</p>`,
+                10: { t: 'Para acompanhar', h: () => `<ul class="list-disc pl-5 text-xs text-gray-400 space-y-1"><li><b class="text-gray-200">🔔 Sino:</b> abas Alertas e Novidades. Alertas urgentes vêm primeiro, como o vencimento do DARF, e há um lembrete de backup depois de 30 dias.</li><li><b class="text-gray-200">⚡ Atalhos:</b> lançar e navegar rápido; arraste o botão para onde preferir.</li><li><b class="text-gray-200">⚙ Opções:</b> trocar senha (se esquecer, use <b class="text-gray-200">Esqueci minha senha</b> na tela de entrada; a senha provisória deve ser trocada no primeiro acesso), exportar e importar backup, histórico de auditoria, tema e termos. Se o app te ajuda, em <b class="text-gray-200">💚 Ajude a manter o My Trade Dash</b> você pode contribuir com o que achar justo, por Pix: é opcional, e o seu acesso não depende disso. Lá mesmo você acompanha as suas contribuições e a situação de cada uma. Também é lá que fica <b class="text-gray-200">🗑 Excluir minha conta</b>, se um dia quiser encerrar (exporte o backup antes).</li><li><b class="text-gray-200">✉️ Falar com o My Trade Dash:</b> quando estiver disponível para você, abre uma conversa direta com quem cuida do app, em ⚙ Opções. Serve para dúvida, sugestão ou para contar o que aconteceu, e a resposta chega ali mesmo, com aviso no 🔔 sino. Se for um problema, o botão <b class="text-gray-200">⚠ Reportar problema</b> manda junto o estado do app (versão, tela, navegador e último erro) — você vê antes o que vai e pode recusar. Não escreva CPF, senha nem dados bancários por ali.</li><li><b class="text-gray-200">Celular:</b> o gesto de voltar fecha janelas e volta as abas.</li></ul><p class="mt-2 text-xs text-gray-400">Para reabrir este guia: ⚙ Opções &gt; 🧭 Guia do My Trade Dash.</p>`,
                     b: B('data-flow', '➕ Registrar movimentação') + B('data-skipall', 'Concluir', P) }
             };
             const frame = (inner, btns) => `<div role="dialog" aria-modal="true" class="w-full max-w-md max-h-[92vh] overflow-y-auto rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl">
