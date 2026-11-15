@@ -657,7 +657,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V163';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V165';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -2476,7 +2476,7 @@ hmoDb = db;
                 <div id="adExc" class="hidden flex flex-col min-h-0 flex-1"><div class="flex flex-wrap gap-2 px-4 pt-3" id="exTabs"></div><div id="exBody" class="p-4 space-y-3 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">Desativar bloqueia o acesso no banco, mas mantém o login e os dados por ${EXC_DAYS} dias. Depois disso, use Excluir dados de vez e apague o login no Supabase.</p></div>
                 <div id="adRec" class="hidden flex flex-col min-h-0 flex-1"><div class="flex flex-wrap gap-2 px-4 pt-3" id="rcTabs"></div><div id="rcAdBody" class="p-4 space-y-3 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">Uma conversa por pessoa, não mensagens soltas. As não respondidas ficam em cima. Recado é dado pessoal: entra no 📄 Dados desta pessoa e é apagado junto com a conta.</p></div>
                 <div id="adColab" class="hidden flex flex-col min-h-0 flex-1"><div id="clBody" class="p-4 space-y-3 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">Os admins entram automático e não têm Remover: tirar do canal seria deixar de ser admin, e isso se faz em 🛡 Admins. Só colaboradores cadastrados aqui podem ser removidos.</p></div>
-                <div id="adDesp" class="hidden flex flex-col min-h-0 flex-1"><p class="px-4 pt-3 text-[11px] text-gray-400">Cadastre os custos de manter o My Trade Dash no ar. O app compara com as contribuições confirmadas do mês — isto não aparece para os usuários, só para os admins.</p><div id="dpNav" class="flex items-center gap-2 px-4 pt-2 text-xs"></div><div id="dpCards" class="grid grid-cols-1 sm:grid-cols-2 gap-2 px-4 pt-3"></div><div id="dpForm" class="px-4 pt-3 flex flex-wrap items-end gap-2 text-xs"></div><div id="dpBody" class="p-4 space-y-2 overflow-y-auto"></div></div></div>`;
+                <div id="adDesp" class="hidden flex flex-col min-h-0 flex-1 overflow-y-auto"><p class="px-4 pt-3 text-[11px] text-gray-400">Cadastre os custos de manter o My Trade Dash no ar. O app compara com as contribuições confirmadas do mês — isto não aparece para os usuários, só para os admins.</p><div id="dpNav" class="flex items-center gap-2 px-4 pt-2 text-xs"></div><div id="dpCards" class="grid grid-cols-1 sm:grid-cols-2 gap-2 px-4 pt-3"></div><div id="dpForm" class="px-4 pt-3 flex flex-wrap items-end gap-2 text-xs"></div><div id="dpBody" class="p-4 space-y-2"></div></div></div>`;
             document.body.appendChild(ov);
             const close = () => { ov.remove(); invRefreshBadge(false); };
             let sec = 'inv', uList = { ativos: null, excl: null }, uq = '', exList = null, exF = 'novo', exArm = null, pwList = null, pwF = 'novo', doList = null, doF = 'nova', apoMonth = null, rcF = 'abertas', rcOpenEmail = null, clList = null, clArm = null, dpList = null, dpMonth = null;
@@ -2490,8 +2490,11 @@ hmoDb = db;
                     tabs.push(['rec', '💬 Recados' + (nAb ? ' (' + nAb + ')' : '')]);
                     tabs.push(['colab', '👥 Colaboradores']);
                     tabs.push(['desp', '💰 Despesas']);
-                    tabs.push(['rel', '📑 Relatórios']);
                 }
+                // ordem alfabética pelo nome da aba (sem contar o emoji), exceto Relatórios, que fica sempre fixo por último
+                const ABC_ORDER = ['apo', 'colab', 'desp', 'inv', 'exc', 'pwd', 'rec', 'ativos', 'excl'];
+                tabs.sort((a, b) => ABC_ORDER.indexOf(a[0]) - ABC_ORDER.indexOf(b[0]));
+                if (invIsMaster()) tabs.push(['rel', '📑 Relatórios']);
                 adTabs.innerHTML = tabs
                     .map(([k, t]) => `<button type="button" data-sec="${k}" class="px-3 py-1 rounded-lg text-xs font-semibold border ${sec === k ? 'border-amber-500 bg-gray-800 text-amber-200' : 'border-gray-700 text-gray-300'}">${t}</button>`).join('');
             };
@@ -2870,10 +2873,11 @@ hmoDb = db;
                 dpCards.innerHTML = card('Custo mensal de manter o app', 'R$ ' + fmtMoneyBR(custoMes), dpList.filter(d => d.ativo).length + ' despesa(s) ativa(s)')
                     + card('Benefício × custo', 'R$ ' + fmtMoneyBR(contrib), 'contribuições confirmadas em ' + MESES[dm - 1] + '/' + dy);
                 dpCards.innerHTML += `<div class="sm:col-span-2 rounded-lg border ${ok ? 'border-gray-700' : 'border-amber-500/60 bg-amber-950/20'} p-3 text-xs ${ok ? 'text-gray-300' : 'text-amber-200'}">${ok ? '✅ As contribuições confirmadas no mês cobrem o custo estimado.' : '⚠ As contribuições confirmadas no mês não cobrem o custo estimado (faltam R$ ' + fmtMoneyBR(custoMes - contrib) + ').'}</div>`;
-                dpForm.innerHTML = `<input type="text" id="dpNome" placeholder="Nome (ex.: domínio)" class="flex-1 min-w-[8rem] bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200">
-                    <select id="dpTipo" class="bg-darkBg border border-gray-700 rounded-lg px-2 py-2 text-xs text-gray-200"><option value="mensal">Mensal</option><option value="anual-rateado">Anual (rateado)</option><option value="pontual">Pontual</option></select>
-                    <input type="text" inputmode="decimal" id="dpValor" placeholder="Valor (R$)" class="w-28 bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200">
-                    <input type="date" id="dpData" class="bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200">
+                dpForm.innerHTML = `<p class="w-full text-xs font-bold text-amber-300 tracking-wide mb-1">➕ NOVA DESPESA</p>
+                    <div class="flex-1 min-w-[8rem]"><label for="dpNome" class="block text-[11px] font-medium text-gray-400 mb-1">Nome</label><input type="text" id="dpNome" placeholder="Ex.: domínio rodaliq.com.br" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div>
+                    <div><label for="dpTipo" class="block text-[11px] font-medium text-gray-400 mb-1">Tipo</label><select id="dpTipo" class="bg-darkBg border border-gray-700 rounded-lg px-2 py-2 text-xs text-gray-200"><option value="mensal">Mensal</option><option value="anual-rateado">Anual (rateado)</option><option value="pontual">Pontual</option></select></div>
+                    <div><label for="dpValor" class="block text-[11px] font-medium text-gray-400 mb-1">Valor (R$)</label><input type="text" inputmode="decimal" id="dpValor" placeholder="0,00" class="w-28 bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div>
+                    <div><label for="dpData" class="block text-[11px] font-medium text-gray-400 mb-1">Renova em</label><input type="date" id="dpData" class="bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div>
                     <button type="button" id="dpAdd" class="px-3 py-2 rounded-lg bg-amber-600 text-white text-xs font-semibold">Adicionar</button>`;
                 dpBody.innerHTML = dpList.length ? dpList.map(d => `<div class="flex items-center justify-between gap-2 rounded-lg border border-gray-700 px-3 py-2 text-xs" data-dpid="${esc(String(d.id))}">
                         <label class="flex items-center gap-2 flex-1 min-w-0"><input type="checkbox" data-dpat ${d.ativo ? 'checked' : ''}><span class="truncate ${d.ativo ? 'text-gray-200' : 'text-gray-500 line-through'}">${esc(d.nome)} · ${DP_TIPO[d.tipo] || d.tipo} · R$ ${fmtMoneyBR(num(d.valor))}${d.data_renovacao ? ' · renova ' + fmtBR(String(d.data_renovacao).slice(0, 10)) : ''}</span></label>
