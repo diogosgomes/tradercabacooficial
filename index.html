@@ -657,7 +657,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V159';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V160';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -949,8 +949,21 @@
         // Ordem: alertas do administrador (Supabase, convites, aniversários), depois críticos, depois os demais
         function alertsBuild(c) {
             const admin = fridayAlerts(c.ar).concat(recAdminAlerts(c.ar), invAlerts(c.ar), pwdAlerts(pwdAdminList), excAlerts(excAdminList), donAlerts(donAdminList), donAskAlert(c));
+            admToast(admin);
             const rest = recAlerts().concat(darfAlerts(), backupAlerts(c));
             return admin.concat(rest.filter(a => a.level === 'crit'), rest.filter(a => a.level !== 'crit'));
+        }
+        /* Avisa na tela quando aparece um alerta de administração que não existia na última leitura.
+           Só para o admin master. O primeiro carregamento apenas registra o que já havia (senão a
+           lista inteira seria "nova"), e o mesmo alerta nunca dispara duas vezes. */
+        let admSeen = null;
+        function admToast(admin) {
+            if (!invIsMaster()) { admSeen = null; return; }
+            const ids = (admin || []).map(a => a.id).filter(Boolean);
+            if (admSeen === null) { admSeen = new Set(ids); return; }
+            const novos = ids.filter(id => !admSeen.has(id));
+            ids.forEach(id => admSeen.add(id));
+            if (novos.length) showToast('🔔 Novo alerta recebido', 'ok');
         }
         async function bellLoad() {
             const [notes, st, as] = await Promise.all([newsLoad(), newsReadState(), alertState()]);
@@ -2192,7 +2205,9 @@ hmoDb = db;
             setTimeout(() => $('lockUser').focus(), 50);
         }
         function afterLogout() {
+            if (typeof mntHide === 'function') mntHide();   // a placa cobre a tela de login: sem isso o Sair parece travado
             currentUserId = null; rows = []; flows = []; invSetAdmin(false);
+            amColab = false; recUnread = 0; recMineCache = null; recAdminList = null; recAdminPend = []; admSeen = null;
             bellInit = false; setBellCount(0);
             $('userBadge').textContent = '';
             $('menuUserName').textContent = ''; $('menuUserEmail').textContent = '';
@@ -3127,7 +3142,7 @@ hmoDb = db;
                           : '<button type="button" id="mntOut" class="mt-4 px-3 py-2 rounded-lg bg-gray-700 text-white text-xs font-semibold">Sair</button>'}
             </div>`;
             document.body.appendChild(o);
-            const out = $('mntOut'); if (out) out.onclick = () => lockNow();
+            const out = $('mntOut'); if (out) out.onclick = () => { out.disabled = true; out.textContent = 'Saindo…'; lockNow(); };
             const pv = $('mntPvOut'); if (pv) pv.onclick = () => mntHide();
         }
         function mntHide() {
@@ -5307,7 +5322,14 @@ hmoDb = db;
                     b: B('data-act="op"', '📈 Lançar minha primeira operação') + B('data-next', 'Continuar', P) },
                 6: { t: 'Notas do dia', h: () => lead('A <b class="text-gray-200">nota do dia</b> traz o valor líquido, o IRRF e os custos do dia, como na nota de corretagem. Com ela o DARF fica exato; sem ela, o app estima a partir das operações. Fica em <b class="text-gray-200">Mais lançamentos &gt; 🧾 Nota do dia</b>.') + panel('o card DARF do bloco do mês e os alertas de vencimento.'),
                     b: B('data-act="note"', '🧾 Lançar nota do dia') + B('data-next', 'Continuar', P) },
-                7: { t: 'DARF e impostos', h: () => lead('Em <b class="text-gray-200">Relatórios &gt; 2. Custos e imposto (DARF)</b> o app apura o IR de 20% do day trade mês a mês, compensa prejuízos e abate o IRRF. O DARF (código 6015) vence no último dia útil do mês seguinte. Quando faltam 7 dias úteis, o sino 🔔 avisa. Marque como pago quando pagar. Os valores são <b class=\"text-gray-200\">estimativas</b> feitas com as regras da Receita Federal e não substituem a apuração oficial: consulte um profissional de contabilidade e use as 📚 Referências oficiais (com o Sicalc) para gerar a guia.') + panel('card DARF e alerta importante no sino.'),
+                7: { t: 'DARF e impostos', h: () => lead('Em <b class="text-gray-200">Relatórios &gt; 2. Custos e imposto (DARF)</b> o app apura o IR de 20% do day trade mês a mês, compensa prejuízos e abate o IRRF. O DARF (código 6015) vence no último dia útil do mês seguinte. Quando faltam 7 dias úteis, o sino 🔔 avisa. Marque como pago quando pagar. Os valores são <b class=\"text-gray-200\">estimativas</b> feitas com as regras da Receita Federal e não substituem a apuração oficial: consulte um profissional de contabilidade e use as referências abaixo para gerar a guia:')
+                    + `<div class="mt-3 rounded-lg border border-gray-700 bg-gray-800/40 px-3 py-2.5 text-[11px] leading-relaxed text-gray-300"><p class="font-bold text-gray-100 mb-1">📚 Referências oficiais (com o Sicalc)</p><ul class="list-disc pl-4 space-y-0.5">
+                        <li><a class="underline text-blue-300 hover:text-blue-200" href="https://www.gov.br/receitafederal/pt-br/assuntos/meu-imposto-de-renda/pagamento/renda-variavel/bolsa-de-valores-1" target="_blank" rel="noopener">Receita Federal: renda variável na Bolsa (como apurar e pagar)</a></li>
+                        <li><a class="underline text-blue-300 hover:text-blue-200" href="https://normas.receita.fazenda.gov.br/sijut2consulta/link.action?idAto=67494&visao=original" target="_blank" rel="noopener">IN RFB nº 1.585/2015 (regras de apuração em bolsa)</a></li>
+                        <li><a class="underline text-blue-300 hover:text-blue-200" href="https://www.gov.br/receitafederal/pt-br/servicos/sicalc" target="_blank" rel="noopener">Sicalc: emitir o DARF oficial (código 6015), com multa e juros</a></li>
+                        <li><a class="underline text-blue-300 hover:text-blue-200" href="https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2004/lei/l11033.htm" target="_blank" rel="noopener">Lei nº 11.033/2004 (IRRF sobre operações em bolsa)</a></li></ul>
+                        <p class="mt-1.5 text-[10px] text-gray-400">Links oficiais do governo. O My Trade Dash não emite guia nem substitui esses sistemas.</p></div>`
+                    + panel('card DARF e alerta importante no sino.'),
                     b: B('data-act="darf"', '📄 Abrir Custos e imposto') + B('data-next', 'Continuar', P) },
                 8: { t: 'Relatórios', h: () => lead('Em <b class="text-gray-200">Relatórios</b> você filtra por período, setup e ativo e vê: custos e imposto, desempenho por setup, métricas de risco, dentro × fora do setup, resumo mensal e semanal, por horário, por dia da semana, fluxo financeiro e calendário de resultados. Dá para exportar em PDF, Word, Excel ou CSV.'),
                     b: B('data-act="rep"', '📊 Abrir Relatórios') + B('data-next', 'Continuar', P) },
