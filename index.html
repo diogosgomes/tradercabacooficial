@@ -657,7 +657,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V165';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V166';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -1243,7 +1243,7 @@
             return new Promise(res => {
                 const o = document.createElement('div');
                 o.className = 'fixed inset-0 z-[110] flex items-center justify-center p-3 bg-black/70'; o.dataset.keepBell = '1';
-                o.innerHTML = `<div class="w-full max-w-sm rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl"><p class="font-bold mb-1 break-words">${esc(title)}</p><p class="text-xs text-gray-400 mb-4">${esc(msg)}</p><div class="flex justify-end gap-2"><button type="button" data-n class="px-3 py-1.5 rounded-lg bg-gray-700 text-white text-xs font-semibold">${esc(cancelLabel || 'Cancelar')}</button><button type="button" data-y class="px-3 py-1.5 rounded-lg ${okLabel && /esvaziar|excluir/i.test(okLabel) ? 'bg-amber-600' : 'bg-blue-600'} text-white text-xs font-semibold">${esc(okLabel || 'Confirmar')}</button></div></div>`;
+                o.innerHTML = `<div class="w-full max-w-sm rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl"><p class="font-bold mb-1 break-words">${esc(title)}</p><p class="text-xs text-gray-400 mb-4 whitespace-pre-line">${esc(msg)}</p><div class="flex justify-end gap-2"><button type="button" data-n class="px-3 py-1.5 rounded-lg bg-gray-700 text-white text-xs font-semibold">${esc(cancelLabel || 'Cancelar')}</button><button type="button" data-y class="px-3 py-1.5 rounded-lg ${okLabel && /excluir usu/i.test(okLabel) ? 'bg-red-600' : okLabel && /esvaziar|excluir/i.test(okLabel) ? 'bg-amber-600' : 'bg-blue-600'} text-white text-xs font-semibold">${esc(okLabel || 'Confirmar')}</button></div></div>`;
                 document.body.appendChild(o);
                 const end = v => { o.remove(); res(v); };
                 o.querySelector('[data-n]').onclick = () => end(false); o.querySelector('[data-y]').onclick = () => end(true);
@@ -2460,7 +2460,7 @@ hmoDb = db;
                 </div>
                 <div id="ivCalBox" class="hidden p-4 overflow-y-auto"></div>
                 <p class="px-4 pb-3 text-[11px] text-gray-400">Arquivar tira da lista sem apagar. Excluir manda para a 🗑 Lixeira, onde o pedido fica 15 dias antes de sumir de vez. Nada desta tela vai para o histórico de auditoria.</p></div>
-                <div id="adUsers" class="hidden flex flex-col min-h-0 flex-1"><div class="px-4 pt-3"><input type="search" id="adSearch" placeholder="Pesquisar por e-mail" autocomplete="off" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div><div id="adUBody" class="p-4 space-y-2 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">Somente consulta. Para apagar o login de um usuário, use o painel do Supabase (Authentication &gt; Users). Nada desta tela vai para o histórico de auditoria.</p></div>
+                <div id="adUsers" class="hidden flex flex-col min-h-0 flex-1"><div class="px-4 pt-3"><input type="search" id="adSearch" placeholder="Pesquisar por e-mail" autocomplete="off" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div><div id="adUBody" class="p-4 space-y-2 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">Para apagar uma pessoa, o admin master usa “🗑 Excluir usuário” (definitivo: apaga o login e os dados). Admins não têm o botão: remova de Admins antes. Nada desta tela vai para o histórico de auditoria.</p></div>
                 <div id="adRel" class="hidden flex flex-col min-h-0 flex-1 overflow-y-auto"><div class="p-4 space-y-3">
                     <p class="text-sm font-bold text-gray-100">📑 Relatórios</p>
                     <p class="text-[11px] text-gray-400">Exporta o que está nas outras abas. O arquivo leva dados pessoais de outras pessoas: guarde com cuidado e apague quando não precisar mais. Cada exportação entra no histórico de auditoria.</p>
@@ -2473,7 +2473,7 @@ hmoDb = db;
                     <div id="rlBody" class="space-y-2"></div></div></div>
                 <div id="adApo" class="hidden flex flex-col min-h-0 flex-1"><p class="px-4 pt-3 text-[11px] text-gray-400">Contribuição é voluntária: ninguém fica sem o app por não contribuir, e o app nunca cobra. Confira o Pix no seu banco antes de confirmar; confirmar gera o número do recibo. O WhatsApp e o e-mail abrem com o texto pronto; para mandar o recibo em PDF, baixe e anexe.</p><div id="doNav" class="flex items-center gap-2 px-4 pt-2 text-xs"></div><div id="doCards" class="grid grid-cols-1 sm:grid-cols-4 gap-2 px-4 pt-3"></div><div class="flex flex-wrap gap-2 px-4 pt-3" id="doTabs"></div><div id="doBody" class="p-4 space-y-3 overflow-y-auto"></div></div>
                 <div id="adPwd" class="hidden flex flex-col min-h-0 flex-1"><div class="flex flex-wrap gap-2 px-4 pt-3" id="pwTabs"></div><div id="pwBody" class="p-4 space-y-3 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">"Gerar senha temporária" grava a senha no Supabase na hora e obriga a pessoa a criar a própria ao entrar. A senha aparece só nesta tela: envie por e-mail ou WhatsApp em seguida.</p></div>
-                <div id="adExc" class="hidden flex flex-col min-h-0 flex-1"><div class="flex flex-wrap gap-2 px-4 pt-3" id="exTabs"></div><div id="exBody" class="p-4 space-y-3 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">Desativar bloqueia o acesso no banco, mas mantém o login e os dados por ${EXC_DAYS} dias. Depois disso, use Excluir dados de vez e apague o login no Supabase.</p></div>
+                <div id="adExc" class="hidden flex flex-col min-h-0 flex-1"><div class="flex flex-wrap gap-2 px-4 pt-3" id="exTabs"></div><div id="exBody" class="p-4 space-y-3 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">Desativar bloqueia o acesso no banco, mas mantém o login e os dados por ${EXC_DAYS} dias. Em qualquer momento, dentro ou fora da carência, o admin master pode usar 🗑 Excluir usuário (definitivo): apaga o login e os dados de uma vez.</p></div>
                 <div id="adRec" class="hidden flex flex-col min-h-0 flex-1"><div class="flex flex-wrap gap-2 px-4 pt-3" id="rcTabs"></div><div id="rcAdBody" class="p-4 space-y-3 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">Uma conversa por pessoa, não mensagens soltas. As não respondidas ficam em cima. Recado é dado pessoal: entra no 📄 Dados desta pessoa e é apagado junto com a conta.</p></div>
                 <div id="adColab" class="hidden flex flex-col min-h-0 flex-1"><div id="clBody" class="p-4 space-y-3 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">Os admins entram automático e não têm Remover: tirar do canal seria deixar de ser admin, e isso se faz em 🛡 Admins. Só colaboradores cadastrados aqui podem ser removidos.</p></div>
                 <div id="adDesp" class="hidden flex flex-col min-h-0 flex-1 overflow-y-auto"><p class="px-4 pt-3 text-[11px] text-gray-400">Cadastre os custos de manter o My Trade Dash no ar. O app compara com as contribuições confirmadas do mês — isto não aparece para os usuários, só para os admins.</p><div id="dpNav" class="flex items-center gap-2 px-4 pt-2 text-xs"></div><div id="dpCards" class="grid grid-cols-1 sm:grid-cols-2 gap-2 px-4 pt-3"></div><div id="dpForm" class="px-4 pt-3 flex flex-wrap items-end gap-2 text-xs"></div><div id="dpBody" class="p-4 space-y-2"></div></div></div>`;
@@ -2509,7 +2509,7 @@ hmoDb = db;
                     <p class="text-gray-400 mt-1">Cadastro: <span class="text-gray-200">${fmtDT(u.created_at)}</span>${sec === 'ativos' ? ` · Último acesso: <span class="text-gray-200">${fmtDT(u.last_sign_in_at)}</span>` : ` · Excluído em: <span class="text-amber-300">${fmtDT(u.deleted_at)}</span>`}</p>
                     <div class="flex flex-wrap gap-2 mt-2"><button type="button" data-ua="ver" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold">📄 Dados desta pessoa</button>
                     <a href="${esc(invMailLink(u.email, 'Seus dados pessoais no My Trade Dash', usrMsgText(u, cv)))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">✉ Responder o pedido</a>
-                    ${wa ? `<a href="https://wa.me/${esc(wa)}?text=${encodeURIComponent(usrMsgText(u, cv))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">💬 WhatsApp</a>` : ''}</div></div>`; }).join('') : '<p class="text-xs text-gray-400 text-center py-6">Nenhum usuário nesta lista.</p>';
+                    ${wa ? `<a href="https://wa.me/${esc(wa)}?text=${encodeURIComponent(usrMsgText(u, cv))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">💬 WhatsApp</a>` : ''}${sec === 'ativos' && MODE !== 'claude' && invIsMaster() && rlAdmOk && !rlAdm.has(String(u.email || '').toLowerCase()) ? `<button type="button" data-ua="del" class="px-3 py-1.5 rounded-lg bg-red-700 text-white font-semibold">🗑 Excluir usuário</button>` : ''}</div></div>`; }).join('') : '<p class="text-xs text-gray-400 text-center py-6">Nenhum usuário nesta lista.</p>';
             };
             const loadUsers = async k => {
                 try { uList[k] = await adminUsersList(k); } catch (e) { adUBody.innerHTML = '<p class="text-xs text-red-400">Não foi possível carregar: ' + esc((e && e.message) || e) + '. Rode o SQL de estrutura (tabelas de usuários) no Supabase.</p>'; return; }
@@ -2537,9 +2537,9 @@ hmoDb = db;
                             ${wa ? `<a href="${esc(excWaLink(rr, wa))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">💬 Responder pelo WhatsApp</a>` : ''}
                             ${r.status === 'novo' ? `<button type="button" data-ea="deact" class="px-3 py-1.5 rounded-lg bg-red-700 text-white font-semibold">${exArm === 'D:' + r.id ? 'Confirmar: desativar acesso' : '🔒 Desativar acesso'}</button>` : ''}
                             ${r.status === 'desativado' ? `<button type="button" data-ea="react" class="px-3 py-1.5 rounded-lg bg-gray-700 text-gray-100 font-semibold">Reativar</button>` : ''}
-                            ${d30 ? `<button type="button" data-ea="purge" class="px-3 py-1.5 rounded-lg bg-red-700 text-white font-semibold">${exArm === 'P:' + r.id ? 'Confirmar: apagar dados, sem volta' : 'Excluir dados de vez'}</button><a href="${SB_DASH}/auth/users" target="_blank" rel="noopener" data-sbcopy="${esc(r.email)}" class="px-3 py-1.5 rounded-lg border border-gray-600 text-gray-100 font-semibold">↗ Apagar login (Supabase Users)</a>` : ''}
+                            ${(r.status === 'novo' || r.status === 'desativado') && invIsMaster() ? `<button type="button" data-ea="del" class="px-3 py-1.5 rounded-lg bg-red-700 text-white font-semibold">🗑 Excluir usuário</button>` : ''}
                             <a href="${SB_DASH}/editor" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg border border-gray-600 text-gray-100 font-semibold">↗ Tabela tb_exclusoes no Supabase</a>
-                        </div>${r.status === 'desativado' && !d30 ? `<p class="text-[11px] text-gray-500 mt-2">Exclusão de vez liberada a partir do ${EXC_DAYS}º dia (faltam ${EXC_DAYS - excDaysDeact(r)}).</p>` : ''}`}</div>`; }).join('') : '<p class="text-xs text-gray-400 text-center py-6">Nenhum pedido nesta lista.</p>';
+                        </div>${r.status === 'desativado' || r.status === 'novo' ? `<p class="text-[11px] text-gray-500 mt-2">${esc(excCarencia(r))}</p>` : ''}`}</div>`; }).join('') : '<p class="text-xs text-gray-400 text-center py-6">Nenhum pedido nesta lista.</p>';
             };
             const loadExc = async () => { try { exList = await excList(); excAdminList = exList; } catch (e) { exBody.innerHTML = '<p class="text-xs text-red-400">Não foi possível carregar: ' + esc((e && e.message) || e) + '. Rode o SQL de estrutura (tb_exclusoes) no Supabase.</p>'; return; } drawSecTabs(); if (sec === 'rel') drawRel(); if (sec === 'exc') drawExc(); };
             exTabs.addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (b) { exF = b.dataset.f; drawExc(); } });
@@ -2550,7 +2550,7 @@ hmoDb = db;
                 try {
                     if (a === 'deact') { if (!arm('D:' + id)) return; const p = { status: 'desativado', deactivated_at: new Date().toISOString() }; await excAdminSet(r, p); Object.assign(r, p); showToast('Acesso desativado', 'ok'); }
                     else if (a === 'react') { const p = { status: 'desistiu', deactivated_at: null }; await excAdminSet(r, p); Object.assign(r, p); showToast('Acesso reativado', 'ok'); }
-                    else if (a === 'purge') { if (!arm('P:' + id)) return; await excPurge(r); r.status = 'excluido'; showToast('Dados excluídos. Agora apague o login no Supabase.', 'ok'); }
+                    else if (a === 'del') { if (!(await excExcluirUsuario(r.user_id, r.email, r))) return; r.status = 'excluido'; showToast('Usuário excluído', 'ok'); loadUsers('ativos'); loadUsers('excl'); loadExc(); }
                     drawSecTabs(); drawExc(); if (bellInit) refreshBell();
                 } catch (ex) { showToast('Não foi possível concluir: ' + ((ex && ex.message) || ex), 'err'); }
             });
@@ -2625,7 +2625,7 @@ hmoDb = db;
                 } catch (ex) { showToast('Não foi possível concluir: ' + ((ex && ex.message) || ex), 'err'); }
             });
             const adRel = ov.querySelector('#adRel');
-            let rlOn = {}, rlShow = false, rlOpen = null, rlAdm = new Set();
+            let rlOn = {}, rlShow = false, rlOpen = null, rlAdm = new Set(), rlAdmOk = false;
             const REL_SECS = [
                 { k: 'apo', t: '🤝 Apoiadores', pt: 'Apoiadores', dt: 'data do aviso da contribuição', head: ['Nome', 'E-mail', 'Valor', 'Situação', 'Informada', 'Confirmada', 'Comprov.'], num: [2] },
                 { k: 'inv', t: '📨 Pedidos de convite', pt: 'Pedidos de convite', dt: 'data do pedido', head: ['Nome', 'E-mail', 'WhatsApp', 'UF', 'Nascimento', 'Como soube', 'Situação', 'Pedido em'] },
@@ -2725,7 +2725,7 @@ hmoDb = db;
                 ov.querySelector('#rlFrom').value = a.getFullYear() + '-' + pad2(a.getMonth() + 1) + '-01';
                 ov.querySelector('#rlTo').value = d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); };
             relDefaults();
-            adminsList().then(a => { rlAdm = new Set(a.map(x => String(x.email || '').toLowerCase())); if (sec === 'rel') drawRel(); }).catch(() => {});
+            adminsList().then(a => { rlAdm = new Set(a.map(x => String(x.email || '').toLowerCase())); rlAdmOk = true; if (sec === 'rel') drawRel(); if (sec === 'ativos') drawUsers(); }).catch(() => {});
             const adPwd = ov.querySelector('#adPwd'), pwTabs = ov.querySelector('#pwTabs'), pwBody = ov.querySelector('#pwBody');
             const drawPwd = () => {
                 if (!pwList) { pwBody.innerHTML = '<p class="text-xs text-gray-400 text-center py-6">Carregando…</p>'; return; }
@@ -2977,6 +2977,11 @@ hmoDb = db;
             };
             adUBody.addEventListener('click', async e => { const b = e.target.closest('[data-ua]'); if (!b) return;
                 const em = b.closest('[data-um]').dataset.um, u = (uList[sec] || []).find(x => x.email === em); if (!u) return;
+                if (b.dataset.ua === 'del') {
+                    const rq = (exList || []).find(x => String(x.email || '').toLowerCase() === String(u.email || '').toLowerCase() && (x.status === 'novo' || x.status === 'desativado'));
+                    try { if (await excExcluirUsuario(u.user_id, u.email, rq)) { showToast('Usuário excluído', 'ok'); loadUsers('ativos'); loadUsers('excl'); loadExc(); } } catch (ex) { showToast('Não foi possível concluir: ' + ((ex && ex.message) || ex), 'err'); }
+                    return;
+                }
                 if (invIsMaster() && !recAdminList) { try { recAdminList = await recAll(); } catch (ex) { recAdminList = []; } }
                 openUsrData(u); });
             loadUsers('ativos'); loadUsers('excl'); loadExc(); loadPwd(); loadDon();
@@ -3918,6 +3923,22 @@ hmoDb = db;
             if (MODE === 'claude') { await hmoDb.collection('exclusoes').doc(r.id).update(patch); return; }
             const { error } = await sb.from('tb_exclusoes').update(patch).eq('id', r.id); if (error) throw error;
         }
+        function excCarencia(r) {
+            if (!r || r.status === 'desistiu' || r.status === 'excluido') return 'Esta pessoa não pediu exclusão, então não há carência.';
+            if (r.status === 'novo') return 'O pedido de exclusão ainda está novo e o acesso não foi desativado, então a carência de ' + EXC_DAYS + ' dias nem começou.';
+            const falta = EXC_DAYS - excDaysDeact(r);
+            if (falta <= 0) return 'A carência de ' + EXC_DAYS + ' dias já terminou.';
+            const fim = new Date(new Date(r.deactivated_at).getTime() + EXC_DAYS * 86400000).toLocaleDateString('pt-BR');
+            return 'Faltam ' + falta + (falta === 1 ? ' dia' : ' dias') + ' para completar os ' + EXC_DAYS + ' dias de carência (até ' + fim + ').';
+        }
+        async function excExcluirUsuario(userId, email, req) {
+            const ok = await askBox('Confirmação', 'Excluir definitivamente ' + email + '? ' + excCarencia(req) + '\n\nIsso apaga o login e todos os dados da pessoa (lançamentos, setups, anotações, DARF, ajustes) e não dá para desfazer nem reativar.', 'Excluir usuário');
+            if (!ok) return false;
+            if (MODE === 'claude') { showToast('Simulação: no HMO a exclusão de verdade só roda em produção', 'ok'); return false; }
+            if (!userId) throw new Error('usuário sem identificação');
+            const { error } = await sb.rpc('mtd_excluir_usuario', { p_user: userId }); if (error) throw error;
+            return true;
+        }
         async function excPurge(r) {
             if (MODE !== 'claude') { const { error } = await sb.rpc('mtd_excluir_dados', { p_user: r.user_id }); if (error) throw error; }
             await excAdminSet(r, { status: 'excluido' });
@@ -3932,7 +3953,7 @@ hmoDb = db;
             const out = [], nw = list.filter(x => x.status === 'novo');
             if (nw.length) out.push({ id: 'exc:new', level: 'crit', action: 'exc', title: nw.length === 1 ? '1 pedido de exclusão aguardando' : nw.length + ' pedidos de exclusão aguardando',
                 note: nw.slice(0, 5).map(x => x.name || x.email).join(', ') + '. Sugestão: responder em até 15 dias (prazo da LGPD para pedidos do titular).' });
-            list.filter(x => x.status === 'desativado' && excDaysDeact(x) >= EXC_DAYS).forEach(x => out.push({ id: 'exc:due:' + x.id, level: 'a', action: 'exc', title: `Excluir dados de ${x.name || x.email}: prazo de ${EXC_DAYS} dias concluído`, note: 'Abra Gestão Admin > Pedidos de exclusão para excluir os dados de vez e apagar o login no Supabase.' }));
+            list.filter(x => x.status === 'desativado' && excDaysDeact(x) >= EXC_DAYS).forEach(x => out.push({ id: 'exc:due:' + x.id, level: 'a', action: 'exc', title: `Excluir ${x.name || x.email}: prazo de ${EXC_DAYS} dias concluído`, note: 'Abra Gestão Admin > Pedidos de exclusão e use 🗑 Excluir usuário.' }));
             return out;
         }
         let excAdminList = null;
