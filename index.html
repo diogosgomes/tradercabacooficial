@@ -163,6 +163,13 @@
         @media (min-width:640px){.don-lbl{white-space:nowrap}}
         .don-hint{display:none}
         .don-wrap:hover .don-hint,.don-wrap:focus-within .don-hint{display:block}
+        body:has(#admPage) #fabWrap{z-index:97!important}
+        body:has(#admPage) #fabInv{display:none!important}
+        .fixed.inset-0 .overflow-y-auto{overscroll-behavior:contain}
+        .usAv{display:inline-flex;align-items:center;justify-content:center;flex:none;width:34px;height:34px;border-radius:50%;background:rgba(30,58,138,.35);border:1px solid rgba(96,165,250,.35);color:#93c5fd;font-size:11px;font-weight:700}
+        :root[data-theme="light"] .usAv{background:#dbeafe;border-color:#93c5fd;color:#1e3a8a}
+        .ajSec>summary{list-style:none;cursor:pointer}.ajSec>summary::-webkit-details-marker{display:none}
+        .ajSec>summary .ajChev{transition:transform .15s}.ajSec[open]>summary .ajChev{transform:rotate(90deg)}
         .don-wave{animation:donWave 3.2s linear infinite}
         @keyframes donWave{from{transform:translateX(0)}to{transform:translateX(-24px)}}
         @media (prefers-reduced-motion: reduce){.don-wave{animation:none}}
@@ -674,7 +681,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V167';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V168';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -2468,9 +2475,14 @@ hmoDb = db;
         const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
         const isLeapY = y => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
         function openInvitesModal() { return openAdminModal('inv'); }
+        /* paginação das listas do Admin: 10 por vez; muda a busca, o filtro ou a aba e volta para 10 */
+        const ADM_PAG = 10, pgS = {};
+        const pgItems = (key, sig, arr) => { if (!pgS[key] || pgS[key].sig !== sig) pgS[key] = { sig, n: ADM_PAG }; return arr.slice(0, pgS[key].n); };
+        const pgMore = (key, total) => { const n = pgS[key] ? pgS[key].n : ADM_PAG; return total > n ? `<button type="button" data-pgmore="${key}" class="w-full px-3 py-2 rounded-lg border border-gray-600 text-gray-100 text-xs font-semibold">Mostrar mais ${Math.min(ADM_PAG, total - n)} (restam ${total - n})</button>` : ''; };
+        const pgBind = (el, key, redraw) => el.addEventListener('click', e => { const b = e.target.closest('[data-pgmore="' + key + '"]'); if (!b) return; pgS[key].n += ADM_PAG; redraw(); });
         async function openAdminModal(startTab) {
             const ov = document.createElement('div');
-            ov.className = 'fixed inset-0 z-[95] bg-gray-900';
+            ov.className = 'fixed inset-0 z-[95] bg-gray-900'; ov.id = 'admPage';
             const now0 = new Date();
             let filter = 'novo', list = [], q = '', armed = null, armedT = null, mode = 'list', calY = now0.getFullYear(), calM = now0.getMonth(), calSel = null, accShown = {};
             ov.innerHTML = `<div class="w-full max-w-4xl mx-auto h-full flex flex-col bg-gray-900 text-sm text-gray-200">
@@ -2540,17 +2552,34 @@ hmoDb = db;
                 ov.querySelector('#adInatW').classList.toggle('hidden', sec !== 'ativos');
                 const arr = uList[sec];
                 if (!arr) { adUBody.innerHTML = '<p class="text-xs text-gray-400 text-center py-6">Carregando…</p>'; return; }
-                const items = arr.filter(u => { const cv0 = usrConv(u.email); return adMatch(uq, u.email, cv0 && cv0.name, cv0 && cv0.whatsapp) && (!uFil || sec !== 'ativos' || (inatDias(u) >= 75 && !(rlAdmOk && rlAdm.has(String(u.email || '').toLowerCase())))); });
-                adUBody.innerHTML = items.length ? items.map(u => { const cv = usrConv(u.email), wa = cv && cv.whatsapp;
-                    return `<div class="rounded-lg border border-gray-700 p-3 text-xs" data-um="${esc(u.email)}">
-                    <p class="font-bold text-gray-100 break-words text-sm">${esc((cv && cv.name) || u.email)}</p>
-                    <p class="text-gray-400 break-all">${esc(u.email)}${emCopy(u.email)}${cv ? '' : ' · sem pedido de convite com este e-mail'}</p>
+                const rolOf = u => usrRole[String(u.email || '').toLowerCase()] || (rlAdm.has(String(u.email || '').toLowerCase()) ? (String(u.email || '').toLowerCase() === INV_MASTER ? 'master' : 'admin') : '');
+                const nomeOf = u => String(u.name || u.nome || (usrConv(u.email) || {}).name || u.email || '');
+                const letraOf = u => { const c = invNorm(nomeOf(u)).trim().charAt(0).toUpperCase(); return /[A-Z]/.test(c) ? c : '#'; };
+                const RORD = { master: 0, admin: 1, colab: 2 }, RLAB = { master: 'Admin master', admin: 'Admin', colab: 'Colaborador' };
+                const iniOf = u => { const n = nomeOf(u).trim(), w = n.includes('@') ? [n] : n.split(/\s+/).filter(Boolean); return ((w[0] || '?').charAt(0) + (w.length > 1 ? w[w.length - 1].charAt(0) : '')).toUpperCase(); };
+                const cmp = (a, b) => ((letraOf(a) === '#') - (letraOf(b) === '#')) || invNorm(nomeOf(a)).localeCompare(invNorm(nomeOf(b)), 'pt-BR') || String(a.email || '').localeCompare(String(b.email || ''), 'pt-BR');
+                const itemsAll = arr.filter(u => { const cv0 = usrConv(u.email); return adMatch(uq, u.email, cv0 && cv0.name, cv0 && cv0.whatsapp) && (!uFil || sec !== 'ativos' || (inatDias(u) >= 75 && !(rlAdmOk && rlAdm.has(String(u.email || '').toLowerCase())))); }).sort((a, b) => { const ra = rolOf(a), rb = rolOf(b); if (!!ra !== !!rb) return ra ? -1 : 1; if (ra && rb && ra !== rb) return RORD[ra] - RORD[rb]; return cmp(a, b); });
+                const items = pgItems('usr', sec + '|' + uq + '|' + uFil, itemsAll);
+                adUBody.innerHTML = items.length ? '<p class="text-[11px] text-gray-400">Ordem: admin master, admins, colaboradores e depois os demais, cada grupo de A a Z. Toque no nome para ver os detalhes.</p>' + items.map((u, ix) => { const cv = usrConv(u.email), wa = (cv && cv.whatsapp) || u.whatsapp || '', rl = rolOf(u), prev = ix ? items[ix - 1] : null, pr = prev ? rolOf(prev) : null;
+                    const op = usrOpen.has(String(u.email || '').toLowerCase()), sub = sec === 'ativos' ? (rl ? 'Último acesso: ' + fmtDT(u.last_sign_in_at) : 'Último lançamento: ' + (u.last_entry_at ? fmtDT(u.last_entry_at).split(' ')[0] : 'nenhum')) : 'Excluído em: ' + fmtDT(u.deleted_at);
+                    const hdr = (!prev || !!rl !== !!pr ? (rl ? '<p class="text-[11px] font-bold text-gray-300 mt-1">Equipe · admin master, admins e colaboradores</p>' : '<p class="text-[11px] font-bold text-gray-300 mt-3">Usuários</p>') : '') + (!rl && (!prev || !!pr || letraOf(prev) !== letraOf(u)) ? `<p class="text-xs font-bold text-gray-100 border-b border-gray-700 pb-1 mt-1" aria-label="Letra ${letraOf(u)}">${letraOf(u)}</p>` : '');
+                    return hdr + `<div class="rounded-xl border border-gray-700 text-xs" data-um="${esc(u.email)}">
+                    <button type="button" data-ut aria-expanded="${op}" class="w-full flex items-center gap-3 p-3 text-left"><span class="usAv" aria-hidden="true">${esc(iniOf(u))}</span><span class="min-w-0 flex-1"><span class="block font-bold text-gray-100 break-words text-sm">${esc(nomeOf(u))}</span><span class="block text-[11px] text-gray-400">${esc(sub)}</span></span>${rl ? `<span class="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-gray-500 text-gray-200">${RLAB[rl]}</span>` : ''}<span class="usChev text-gray-400 shrink-0" aria-hidden="true">${op ? '▴' : '▾'}</span></button>
+                    <div class="px-3 pb-3 ${op ? '' : 'hidden'}" data-ub>
+                    <p class="text-gray-300 break-all">${esc(u.email)}${emCopy(u.email)}${wa ? ` · 💬 ${esc(invFmtPhone(wa))}${invUfOf(wa) ? ' · ' + esc(invUfOf(wa)) : ''}` : ' · sem WhatsApp cadastrado'}</p>${cv ? '' : '<p class="text-[11px] text-gray-500">Sem pedido de convite com este e-mail.</p>'}
                     ${sec === 'ativos' ? (() => { const d = inatDias(u); return `<p class="text-gray-400 mt-1">Último lançamento: <span class="text-gray-200">${u.last_entry_at ? fmtDT(u.last_entry_at).split(' ')[0] : 'nenhum lançamento'}</span> · <span class="text-gray-200">${d} dia${d === 1 ? '' : 's'}${u.last_entry_at ? '' : ' desde o cadastro'}</span>${d >= 90 ? ' · ⚠ 90+ dias' : d >= 75 ? ' · ⚠ 75+ dias' : ''}</p>`; })() : ''}
                     <p class="text-gray-400 mt-1">Cadastro: <span class="text-gray-200">${fmtDT(u.created_at)}</span>${sec === 'ativos' ? ` · Último acesso: <span class="text-gray-200">${fmtDT(u.last_sign_in_at)}</span>` : ` · Excluído em: <span class="text-amber-300">${fmtDT(u.deleted_at)}</span>`}</p>
                     <div class="flex flex-wrap gap-2 mt-2"><button type="button" data-ua="ver" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold">📄 Dados desta pessoa</button>
                     <a href="${esc(invMailLink(u.email, 'Seus dados pessoais no My Trade Dash', usrMsgText(u, cv)))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">✉ Responder o pedido</a>
-                    ${wa ? `<a href="https://wa.me/${esc(wa)}?text=${encodeURIComponent(usrMsgText(u, cv))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">💬 WhatsApp</a>` : ''}${inatBtns(u, cv, wa)}${sec === 'ativos' && MODE !== 'claude' && invIsMaster() && rlAdmOk && !rlAdm.has(String(u.email || '').toLowerCase()) ? `<button type="button" data-ua="del" class="px-3 py-1.5 rounded-lg bg-red-700 text-white font-semibold">🗑 Excluir usuário</button>` : ''}</div></div>`; }).join('') : '<p class="text-xs text-gray-400 text-center py-6">Nenhum usuário nesta lista.</p>';
+                    ${wa ? `<a href="https://wa.me/${esc(wa)}?text=${encodeURIComponent(usrMsgText(u, cv))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">💬 WhatsApp</a>` : ''}${inatBtns(u, cv, wa)}${sec === 'ativos' && MODE !== 'claude' && invIsMaster() && rlAdmOk && !rlAdm.has(String(u.email || '').toLowerCase()) ? `<button type="button" data-ua="del" class="px-3 py-1.5 rounded-lg bg-red-700 text-white font-semibold">🗑 Excluir usuário</button>` : ''}</div></div></div>`; }).join('') + pgMore('usr', itemsAll.length) : '<p class="text-xs text-gray-400 text-center py-6">Nenhum usuário nesta lista.</p>';
             };
+            pgBind(adUBody, 'usr', () => drawUsers());
+            adUBody.addEventListener('click', e => {
+                const t = e.target.closest('[data-ut]'); if (!t) return;
+                const card = t.closest('[data-um]'), em = String(card.dataset.um || '').toLowerCase(), b = card.querySelector('[data-ub]');
+                const abre = b.classList.contains('hidden'); b.classList.toggle('hidden', !abre); t.setAttribute('aria-expanded', String(abre)); t.querySelector('.usChev').textContent = abre ? '▴' : '▾';
+                if (abre) usrOpen.add(em); else usrOpen.delete(em);
+            });
             const loadUsers = async k => {
                 try { uList[k] = await adminUsersList(k); } catch (e) { adUBody.innerHTML = '<p class="text-xs text-red-400">Não foi possível carregar: ' + esc((e && e.message) || e) + '. Rode o SQL de estrutura (tabelas de usuários) no Supabase.</p>'; return; }
                 drawSecTabs(); if (sec === 'rel') drawRel(); if (sec === k) drawUsers(); if (sec === 'apo' && k === 'ativos') drawDon();
@@ -2562,7 +2591,8 @@ hmoDb = db;
             const drawExc = () => {
                 if (!exList) { exBody.innerHTML = '<p class="text-xs text-gray-400 text-center py-6">Carregando…</p>'; return; }
                 exTabs.innerHTML = [['novo', 'Novos'], ['desativado', 'Desativados'], ['excluido', 'Excluídos'], ['desistiu', 'Desistiram']].map(([k, t]) => `<button type="button" data-f="${k}" class="px-3 py-1 rounded-lg text-xs font-semibold border ${exF === k ? 'border-blue-500 bg-blue-950 text-blue-200' : 'border-gray-700 text-gray-300'}">${t} (${exList.filter(x => exInF(x, k)).length})</button>`).join('');
-                const items = exList.filter(x => exInF(x, exF) && adMatch(adQ.exc, x.name, x.email, (adConv(x.email) || {}).whatsapp));
+                const itemsAll = exList.filter(x => exInF(x, exF) && adMatch(adQ.exc, x.name, x.email, (adConv(x.email) || {}).whatsapp));
+                const items = pgItems('exc', exF + '|' + adQ.exc, itemsAll);
                 exBody.innerHTML = items.length ? items.map(r => {
                     const cv = invCache.find(c => String(c.email || '').toLowerCase() === String(r.email || '').toLowerCase()) || list.find(c => String(c.email || '').toLowerCase() === String(r.email || '').toLowerCase());
                     const nm = r.name || (cv && cv.name) || r.email, wa = cv && cv.whatsapp, uf = wa ? invUfOf(wa) : '', rr = { ...r, name: nm };
@@ -2579,8 +2609,9 @@ hmoDb = db;
                             ${r.status === 'desativado' ? `<button type="button" data-ea="react" class="px-3 py-1.5 rounded-lg bg-gray-700 text-gray-100 font-semibold">Reativar</button>` : ''}
                             ${(r.status === 'novo' || r.status === 'desativado') && invIsMaster() ? `<button type="button" data-ea="del" class="px-3 py-1.5 rounded-lg bg-red-700 text-white font-semibold">🗑 Excluir usuário</button>` : ''}
                             <a href="${SB_DASH}/editor" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg border border-gray-600 text-gray-100 font-semibold">↗ Tabela tb_exclusoes no Supabase</a>
-                        </div>${r.status === 'desativado' || r.status === 'novo' ? `<p class="text-[11px] text-gray-500 mt-2">${esc(excCarencia(r))}</p>` : ''}`}</div>`; }).join('') : '<p class="text-xs text-gray-400 text-center py-6">Nenhum pedido nesta lista.</p>';
+                        </div>${r.status === 'desativado' || r.status === 'novo' ? `<p class="text-[11px] text-gray-500 mt-2">${esc(excCarencia(r))}</p>` : ''}`}</div>`; }).join('') + pgMore('exc', itemsAll.length) : '<p class="text-xs text-gray-400 text-center py-6">Nenhum pedido nesta lista.</p>';
             };
+            pgBind(exBody, 'exc', () => drawExc());
             const loadExc = async () => { try { exList = await excList(); excAdminList = exList; } catch (e) { exBody.innerHTML = '<p class="text-xs text-red-400">Não foi possível carregar: ' + esc((e && e.message) || e) + '. Rode o SQL de estrutura (tb_exclusoes) no Supabase.</p>'; return; } drawSecTabs(); if (sec === 'rel') drawRel(); if (sec === 'exc') drawExc(); };
             exTabs.addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (b) { exF = b.dataset.f; drawExc(); } });
             exBody.addEventListener('click', async e => {
@@ -2611,7 +2642,8 @@ hmoDb = db;
                     + card('Para conferir', String(doList.filter(x => x.status === 'nova').length), 'aguardando a sua conferência')
                     + card('Apoiadores', String(new Set(doList.filter(x => x.status === 'confirmada').map(x => x.user_id || x.email)).size), 'pessoas que já contribuíram');
                 doTabs.innerHTML = [['nova', 'Para conferir'], ['confirmada', 'Confirmadas'], ['descartada', 'Descartadas'], ['todas', 'Todas']].map(([k, t]) => `<button type="button" data-df="${k}" class="px-3 py-1 rounded-lg text-xs font-semibold border ${doF === k ? 'border-blue-500 bg-blue-950 text-blue-200' : 'border-gray-700 text-gray-300'}">${t} (${k === 'todas' ? doList.length : doList.filter(x => x.status === k).length})</button>`).join('');
-                const items = doList.filter(x => (doF === 'todas' || x.status === doF) && adMatch(adQ.apo, x.name, x.email, (adConv(x.email) || {}).whatsapp));
+                const itemsAll = doList.filter(x => (doF === 'todas' || x.status === doF) && adMatch(adQ.apo, x.name, x.email, (adConv(x.email) || {}).whatsapp));
+                const items = pgItems('apo', doF + '|' + adQ.apo, itemsAll);
                 doBody.innerHTML = items.length ? items.map(r => {
                     const cv = invCache.find(c => String(c.email || '').toLowerCase() === String(r.email || '').toLowerCase());
                     const wa = cv && cv.whatsapp, ok = r.status === 'confirmada', des = r.status === 'descartada';
@@ -2627,8 +2659,9 @@ hmoDb = db;
                               : des ? `<button type="button" data-da="undis" class="px-3 py-1.5 rounded-lg border border-gray-600 text-gray-200 font-semibold">↩ Desfazer</button>`
                               : `<button type="button" data-da="ok" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold">✓ Confirmar e gerar recibo</button>
                                  <button type="button" data-da="dis" class="px-3 py-1.5 rounded-lg border border-gray-600 text-gray-200 font-semibold">✕ Descartar</button>`}
-                        </div></div>`; }).join('') : '<p class="text-xs text-gray-400 text-center py-6">Nenhuma contribuição nesta lista.</p>';
+                        </div></div>`; }).join('') + pgMore('apo', itemsAll.length) : '<p class="text-xs text-gray-400 text-center py-6">Nenhuma contribuição nesta lista.</p>';
             };
+            pgBind(doBody, 'apo', () => drawDon());
             const doCards2 = ov.querySelector('#doCards2'), doNonSum = ov.querySelector('#doNonSum'), doMsgTxt = ov.querySelector('#doMsgTxt'), doMsgInfo = ov.querySelector('#doMsgInfo'), doNonList = ov.querySelector('#doNonList');
             let doMsgInit = false;
             const donEmailLast = em => (doList || []).filter(x => x.status === 'confirmada' && x.confirmed_at && String(x.email || '').toLowerCase() === String(em || '').toLowerCase()).map(x => x.confirmed_at).sort().pop() || null;
@@ -2700,7 +2733,7 @@ hmoDb = db;
                 } catch (ex) { showToast('Não foi possível concluir: ' + ((ex && ex.message) || ex), 'err'); }
             });
             const adRel = ov.querySelector('#adRel');
-            let rlOn = {}, rlShow = false, rlOpen = null, rlAdm = new Set(), rlAdmOk = false;
+            let rlOn = {}, rlShow = false, rlOpen = null, rlAdm = new Set(), rlAdmOk = false, usrRole = {}, usrOpen = new Set();
             const REL_SECS = [
                 { k: 'apo', t: '🤝 Apoiadores', pt: 'Apoiadores', dt: 'data do aviso da contribuição', head: ['Nome', 'E-mail', 'Valor', 'Situação', 'Informada', 'Confirmada', 'Comprov.'], num: [2] },
                 { k: 'inv', t: '📨 Pedidos de convite', pt: 'Pedidos de convite', dt: 'data do pedido', head: ['Nome', 'E-mail', 'WhatsApp', 'UF', 'Nascimento', 'Como soube', 'Situação', 'Pedido em'] },
@@ -2800,12 +2833,13 @@ hmoDb = db;
                 ov.querySelector('#rlFrom').value = a.getFullYear() + '-' + pad2(a.getMonth() + 1) + '-01';
                 ov.querySelector('#rlTo').value = d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); };
             relDefaults();
-            adminsList().then(a => { rlAdm = new Set(a.map(x => String(x.email || '').toLowerCase())); rlAdmOk = true; if (sec === 'rel') drawRel(); if (sec === 'ativos') drawUsers(); }).catch(() => {});
+            colabList().then(a => { usrRole = {}; a.forEach(x => { usrRole[String(x.email || '').toLowerCase()] = x.role; }); }).catch(() => {}).then(() => adminsList()).then(a => { rlAdm = new Set(a.map(x => String(x.email || '').toLowerCase())); rlAdmOk = true; if (sec === 'rel') drawRel(); if (sec === 'ativos' || sec === 'excl') drawUsers(); }).catch(() => {});
             const adPwd = ov.querySelector('#adPwd'), pwTabs = ov.querySelector('#pwTabs'), pwBody = ov.querySelector('#pwBody');
             const drawPwd = () => {
                 if (!pwList) { pwBody.innerHTML = '<p class="text-xs text-gray-400 text-center py-6">Carregando…</p>'; return; }
                 pwTabs.innerHTML = [['novo', 'Novos'], ['atendido', 'Atendidos']].map(([k, t]) => `<button type="button" data-pf="${k}" class="px-3 py-1 rounded-lg text-xs font-semibold border ${pwF === k ? 'border-blue-500 bg-blue-950 text-blue-200' : 'border-gray-700 text-gray-300'}">${t} (${pwList.filter(x => x.status === k).length})</button>`).join('');
-                const items = pwList.filter(x => x.status === pwF && adMatch(adQ.pwd, x.name, x.email, (adConv(x.email) || {}).whatsapp));
+                const itemsAll = pwList.filter(x => x.status === pwF && adMatch(adQ.pwd, x.name, x.email, (adConv(x.email) || {}).whatsapp));
+                const items = pgItems('pwd', pwF + '|' + adQ.pwd, itemsAll);
                 pwBody.innerHTML = items.length ? items.map(r => {
                     const cv = invCache.find(c => String(c.email || '').toLowerCase() === String(r.email || '').toLowerCase()) || list.find(c => String(c.email || '').toLowerCase() === String(r.email || '').toLowerCase());
                     const nm = (cv && cv.name) || r.email, wa = cv && cv.whatsapp, pw = pwdShown[r.id], rr = { ...r, name: nm };
@@ -2818,8 +2852,9 @@ hmoDb = db;
                         <div class="flex flex-wrap gap-2 mt-2">
                             ${r.status === 'novo' ? `<button type="button" data-pa="gen" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold">🔑 Gerar senha temporária</button><a href="${SB_DASH}/sql/new" target="_blank" rel="noopener" data-sbcopy="${esc(cmd)}" class="px-3 py-1.5 rounded-lg border border-gray-600 text-gray-100 font-semibold">↗ Abrir SQL Editor (Supabase)</a>` : ''}
                             ${pw ? `<a href="${esc(invMailLink(r.email, 'Sua senha temporária do My Trade Dash', pwdMsgText(rr, pw)))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">✉ Enviar senha por e-mail</a><button type="button" data-pa="wa" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">💬 Enviar senha pelo WhatsApp</button>${MODE === 'claude' ? '<button type="button" data-pa="test" class="px-3 py-1.5 rounded-lg border border-gray-600 text-gray-300 font-semibold">Testar tela "Crie sua senha" (HMO)</button>' : ''}` : ''}
-                        </div></div>`; }).join('') : '<p class="text-xs text-gray-400 text-center py-6">Nenhum pedido nesta lista.</p>';
+                        </div></div>`; }).join('') + pgMore('pwd', itemsAll.length) : '<p class="text-xs text-gray-400 text-center py-6">Nenhum pedido nesta lista.</p>';
             };
+            pgBind(pwBody, 'pwd', () => drawPwd());
             const loadPwd = async () => { try { pwList = await pwdList(); pwdAdminList = pwList; } catch (e) { pwBody.innerHTML = '<p class="text-xs text-red-400">Não foi possível carregar: ' + esc((e && e.message) || e) + '. Rode o SQL de estrutura (tb_senha_pedidos) no Supabase.</p>'; return; } drawSecTabs(); if (sec === 'rel') drawRel(); if (sec === 'pwd') drawPwd(); };
             pwTabs.addEventListener('click', e => { const b = e.target.closest('[data-pf]'); if (b) { pwF = b.dataset.pf; drawPwd(); } });
             pwBody.addEventListener('click', async e => {
@@ -2840,7 +2875,8 @@ hmoDb = db;
             const drawCor = () => {
                 if (!coList) { coBody.innerHTML = '<p class="text-xs text-gray-400 text-center py-6">Carregando…</p>'; return; }
                 coTabs.innerHTML = [['novo', 'Novos'], ['atendido', 'Atendidos'], ['recusado', 'Recusados']].map(([k, t]) => `<button type="button" data-cf="${k}" class="px-3 py-1 rounded-lg text-xs font-semibold border ${coF === k ? 'border-blue-500 bg-blue-950 text-blue-200' : 'border-gray-700 text-gray-300'}">${t} (${coList.filter(x => x.status === k).length})</button>`).join('');
-                const items = coList.filter(x => x.status === coF && adMatch(adQ.cor, x.email, x.valor_atual, x.valor_novo, (adConv(x.email) || {}).name, (adConv(x.email) || {}).whatsapp));
+                const itemsAll = coList.filter(x => x.status === coF && adMatch(adQ.cor, x.email, x.valor_atual, x.valor_novo, (adConv(x.email) || {}).name, (adConv(x.email) || {}).whatsapp));
+                const items = pgItems('cor', coF + '|' + adQ.cor, itemsAll);
                 coBody.innerHTML = items.length ? items.map(r => {
                     const cv = adConv(r.email), nm = (cv && cv.name) || r.email, wa = cv && cv.whatsapp, rr = { ...r, name: nm };
                     const canApply = r.status === 'novo' && (r.campo !== 'email' || invIsMaster());
@@ -2855,8 +2891,9 @@ hmoDb = db;
                             ${r.status === 'novo' && r.campo === 'email' ? `<a href="${esc(invMailLink(r.valor_novo, 'Confirme o seu novo e-mail no My Trade Dash', corMsg(rr, 'conf')))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">✉ Pedir confirmação no novo e-mail</a>` : ''}
                             ${canApply ? `<button type="button" data-ca="apply" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold">✔ Aplicar correção</button>` : ''}
                             ${r.status === 'novo' ? `<button type="button" data-ca="refuse" class="px-3 py-1.5 rounded-lg bg-red-700 text-white font-semibold">✖ Recusar</button>` : ''}
-                        </div>${r.status === 'novo' && r.campo === 'email' && !invIsMaster() ? '<p class="text-[11px] text-gray-500 mt-2">A troca de e-mail é só do admin master.</p>' : ''}</div>`; }).join('') : '<p class="text-xs text-gray-400 text-center py-6">Nenhum pedido nesta lista.</p>';
+                        </div>${r.status === 'novo' && r.campo === 'email' && !invIsMaster() ? '<p class="text-[11px] text-gray-500 mt-2">A troca de e-mail é só do admin master.</p>' : ''}</div>`; }).join('') + pgMore('cor', itemsAll.length) : '<p class="text-xs text-gray-400 text-center py-6">Nenhum pedido nesta lista.</p>';
             };
+            pgBind(coBody, 'cor', () => drawCor());
             const loadCor = async () => { try { coList = await corList(); corAdminList = coList; } catch (e) { coBody.innerHTML = '<p class="text-xs text-red-400">Não foi possível carregar: ' + esc((e && e.message) || e) + '.</p>'; return; } drawSecTabs(); if (sec === 'cor') drawCor(); };
             coTabs.addEventListener('click', e => { const b = e.target.closest('[data-cf]'); if (b) { coF = b.dataset.cf; drawCor(); } });
             coBody.addEventListener('click', async e => {
@@ -3125,10 +3162,10 @@ hmoDb = db;
                 const searching = q.trim() !== '';
                 const cnt = k => list.filter(x => inTab(x, k)).length;
                 tabs.innerHTML = [['novo', 'Novos'], ['avisar', '📣 A avisar'], ['avisado', 'Avisados'], ['recusado', 'Recusados'], ['arquivado', 'Arquivados'], ['todos', 'Todos'], ['lixeira', '🗑 Lixeira']].map(([k, t]) => `<button type="button" data-t="${k}" class="px-3 py-1 rounded-lg text-xs font-semibold border ${!searching && filter === k ? 'border-blue-500 bg-blue-950 text-blue-200' : 'border-gray-700 text-gray-300'}">${t} (${cnt(k)})</button>`).join('');
-                const items = searching ? list.filter(x => invLive(x) && match(x)) : list.filter(x => inTab(x, filter));
+                const itemsAll = searching ? list.filter(x => invLive(x) && match(x)) : list.filter(x => inTab(x, filter)), items = pgItems('inv', searching ? 'q:' + q : 'f:' + filter, itemsAll);
                 const trashHead = (!searching && filter === 'lixeira') ? `<div class="rounded-lg border border-gray-700 p-3 text-xs text-gray-300"><p>Os pedidos excluídos ficam aqui por ${INV_TRASH_DAYS} dias e depois somem de vez. Daqui você pode restaurar.</p>${items.length ? `<button type="button" data-empty class="mt-2 px-3 py-1.5 rounded-lg bg-red-700 text-white text-xs font-semibold">${armed === 'EMPTY' ? 'Confirmar: apagar tudo, sem volta' : '🧹 Esvaziar lixeira (' + items.length + ')'}</button>` : ''}</div>` : '';
-                const bulkHead = (!searching && filter === 'novo' && items.length) ? `<div class="rounded-lg border border-blue-800 bg-blue-950/40 p-3 text-xs text-gray-100"><p>${items.length} pedido(s) aguardando. Criar a conta leva segundos; avisar cada pessoa, não. Por isso o app cria todas de uma vez e deixa a lista de quem falta avisar na aba 📣 A avisar.</p><button type="button" data-bulk="criar" class="mt-2 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold">✓ Criar as contas dos ${items.length} novos</button></div>` : '';
-                const head = searching ? `<p class="text-[11px] text-gray-400">Resultado da pesquisa em todos os pedidos, inclusive arquivados: ${items.length}.</p>` : '';
+                const bulkHead = (!searching && filter === 'novo' && itemsAll.length) ? `<div class="rounded-lg border border-blue-800 bg-blue-950/40 p-3 text-xs text-gray-100"><p>${itemsAll.length} pedido(s) aguardando. Criar a conta leva segundos; avisar cada pessoa, não. Por isso o app cria todas de uma vez e deixa a lista de quem falta avisar na aba 📣 A avisar.</p><button type="button" data-bulk="criar" class="mt-2 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold">✓ Criar as contas dos ${itemsAll.length} novos</button></div>` : '';
+                const head = searching ? `<p class="text-[11px] text-gray-400">Resultado da pesquisa em todos os pedidos, inclusive arquivados: ${itemsAll.length}.</p>` : '';
                 body.innerHTML = head + trashHead + bulkHead + (items.length ? items.map(r => { const uf = invUfOf(r.whatsapp), bd = invBdayNear(r); return `<div class="rounded-lg border border-gray-700 p-3" data-id="${esc(r.id)}">
                     <div class="flex items-start justify-between gap-2"><div class="min-w-0"><p class="font-bold text-gray-100 break-words">${esc(r.name)}</p><p class="text-xs text-gray-400 break-all">${esc(r.email)}${emCopy(r.email)}</p>${r.deleted_at ? '' : `<a href="${SB_DASH}/auth/users" target="_blank" rel="noopener" data-sbcopy="${esc(r.email)}" class="inline-block mt-1 px-2 py-0.5 rounded border border-gray-600 text-[11px] text-blue-300 underline">↗ Abrir Supabase (Users)</a>`}<p class="text-xs text-gray-300">💬 ${esc(invFmtPhone(r.whatsapp))}${uf ? ' · ' + esc(uf) : ''}</p>${r.birth_date ? `<p class="text-xs text-gray-300">🎂 ${esc(invBirthBR(r.birth_date))}</p>` : ''}</div>
                     <div class="shrink-0 flex flex-col items-end gap-1"><span class="text-[10px] px-2 py-0.5 rounded-full border ${r.status === 'novo' ? 'border-blue-500 text-blue-300' : 'border-gray-600 text-gray-400'}">${esc(r.status === 'convidado' ? (r.avisado ? 'Avisado' : 'A avisar') : (INV_ST[r.status] || r.status))}</span>${r.archived ? '<span class="text-[10px] px-2 py-0.5 rounded-full border border-gray-600 text-gray-400">🗄 Arquivado</span>' : ''}</div></div>
@@ -3151,8 +3188,9 @@ hmoDb = db;
                         ${r.status !== 'novo' ? '<button type="button" data-a="novo" class="px-3 py-1.5 rounded-lg bg-gray-700 text-gray-100 text-xs font-semibold">Reabrir</button>' : ''}
                         <button type="button" data-a="arq" class="px-3 py-1.5 rounded-lg bg-gray-700 text-gray-100 text-xs font-semibold">${r.archived ? '♻ Desarquivar' : '🗄 Arquivar'}</button>
                         <button type="button" data-a="del" class="px-3 py-1.5 rounded-lg bg-red-700 text-white text-xs font-semibold">${armed === 'T:' + r.id ? 'Confirmar: mover para a lixeira' : '🗑 Excluir'}</button>
-                    </div></div>`}`; }).join('') : '<p class="text-xs text-gray-400 text-center py-6">Nenhum pedido nesta lista.</p>');
+                    </div></div>`}`; }).join('') + pgMore('inv', itemsAll.length) : '<p class="text-xs text-gray-400 text-center py-6">Nenhum pedido nesta lista.</p>');
             };
+            pgBind(body, 'inv', () => draw());
             const drawCal = () => {
                 const today = new Date(), isCur = calY === today.getFullYear() && calM === today.getMonth();
                 const byDay = {};
@@ -3444,9 +3482,13 @@ hmoDb = db;
         const CH_DEF = { user: false, colab: true };                 // desligar esconde, não apaga
         const MNT_DEF = { on: false, msg: '', colab: true };         // placa de manutenção
         const REC_SLA = 'Respondemos em até 2 dias úteis.';
-        const FEAT_DEF = { relatorios: true, financeiro: true, nota: true };
+        const FEAT_DEF = { relatorios: 'todos', financeiro: 'todos', nota: 'todos' };
+        const FEAT_NIV = [['master', 'Só o admin master'], ['equipe', 'Admins e colaboradores'], ['todos', 'Todos os usuários']];
+        const FEAT_NOMES = { relatorios: 'Relatórios', financeiro: 'Gestão financeira', nota: 'Nota do dia' };
+        const featNorm = v => v === true ? 'todos' : v === false ? 'equipe' : (v === 'master' || v === 'equipe' || v === 'todos') ? v : 'todos';
+        const featLvl = k => featNorm(featCfg[k]);
         let featCfg = { ...FEAT_DEF };
-        const featOn = k => featCfg[k] !== false || invIsAdmin || amColab;
+        const featOn = k => { const l = featLvl(k); return l === 'todos' || invIsMaster() || (l === 'equipe' && (invIsAdmin || amColab)); };
         function featApply() {
             const show = (id, on) => { const e = $(id); if (e) e.classList.toggle('hidden', !on); };
             show('tabFlow', featOn('financeiro')); show('tabReport', featOn('relatorios')); show('btnNoteHdr', featOn('nota')); show('btnMore', featOn('financeiro'));
@@ -3458,6 +3500,23 @@ hmoDb = db;
         }
         let chCfg = { ...CH_DEF }, mntCfg = { ...MNT_DEF }, amColab = false, recUnread = 0, recMineCache = null, recAdminList = null;
 
+        /* com uma tela por cima (Ajustes, formulários etc.), o que está atrás não rola: a roda do mouse e o toque só movem a lista da própria tela */
+        (() => {
+            const pode = (t, dy) => {
+                const ov = t.closest && t.closest('.fixed.inset-0'); if (!ov) return true;
+                for (let el = t; el && el !== ov.parentElement; el = el.parentElement) {
+                    if (el.scrollHeight > el.clientHeight + 1) {
+                        const oy = getComputedStyle(el).overflowY;
+                        if ((oy === 'auto' || oy === 'scroll') && ((dy < 0 && el.scrollTop > 0) || (dy > 0 && el.scrollTop + el.clientHeight < el.scrollHeight - 1))) return true;
+                    }
+                }
+                return false;
+            };
+            document.addEventListener('wheel', e => { if (e.ctrlKey || !(e.target instanceof Element)) return; if (!pode(e.target, e.deltaY)) e.preventDefault(); }, { passive: false });
+            let ty = 0;
+            document.addEventListener('touchstart', e => { ty = e.touches[0] ? e.touches[0].clientY : 0; }, { passive: true });
+            document.addEventListener('touchmove', e => { if (!(e.target instanceof Element) || !e.touches[0]) return; if (!pode(e.target, ty - e.touches[0].clientY)) e.preventDefault(); }, { passive: false });
+        })();
         async function cfgGet(key, def) {
             try {
                 if (MODE === 'claude') { const d = await hmoDb.collection('ajustes').doc(key).get(); return (d && d.exists) ? { ...def, ...d.data() } : { ...def }; }
@@ -3711,7 +3770,7 @@ hmoDb = db;
                 note: 'Abra ✉️ Falar com o My Trade Dash para ler e responder.' }];
         }
 
-        const DON_DEF = { on: true, bell: true, pix: 'mytradedash@gmail.com', vals: [10, 25, 50], def: 1 };
+        const DON_DEF = { on: true, bell: true, pix: 'mytradedash@gmail.com', vals: [10, 25, 50], pre: -1 };
         const DON_ASK_DAYS = 30, DON_SNOOZE_DAYS = 180;
         const DON_MSG_DEF = 'O My Trade Dash é gratuito e vai continuar sendo. Se ele tem te ajudado nos seus registros, você pode contribuir com o que achar justo: a ajuda contribui para amenizar alguns custos como domínio, servidores e as melhorias. Seu acesso ao My Trade Dash não está condicionado à sua colaboração. Obrigado por usar o app!';
         let donCfg = { ...DON_DEF }, donAdminList = null, donMineHas = false, donSeeded = false;
@@ -3861,7 +3920,7 @@ hmoDb = db;
             o.innerHTML = `<div class="w-full max-w-md max-h-[92vh] overflow-y-auto rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl">
                 <h3 class="text-base font-bold mb-2">💚 Ajude a manter o My Trade Dash</h3>
                 <p class="text-xs text-gray-300 mb-3">O My Trade Dash é gratuito e vai continuar sendo. <b><i>Se ele te ajuda</i></b>, você pode contribuir com o que achar justo: a ajuda contribui para amenizar alguns custos como domínio, servidores e as melhorias. Seu acesso ao My Trade Dash não está condicionado a sua colaboração!</p>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">${vs.map((v, i) => `<button type="button" data-v="${i}" class="rounded-lg border px-2 py-2 text-xs font-semibold ${i === num(donCfg.def) ? 'border-blue-500 bg-blue-950 text-blue-200' : 'border-gray-700 text-gray-200'}">R$ ${fmtMoneyBR(v)}${i === num(donCfg.def) ? '<span class="block text-[10px] font-normal">sugerido</span>' : ''}</button>`).join('')}<button type="button" data-v="o" class="rounded-lg border border-gray-700 px-2 py-2 text-xs font-semibold text-gray-200">Outro valor</button></div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">${vs.map((v, i) => `<button type="button" data-v="${i}" class="rounded-lg border px-2 py-2 text-xs font-semibold ${i === num(donCfg.pre) ? 'border-blue-500 bg-blue-950 text-blue-200' : 'border-gray-700 text-gray-200'}">R$ ${fmtMoneyBR(v)}${i === num(donCfg.def) ? '<span class="block text-[10px] font-normal">sugerido</span>' : ''}</button>`).join('')}<button type="button" data-v="o" class="rounded-lg border border-gray-700 px-2 py-2 text-xs font-semibold text-gray-200">Outro valor</button></div>
                 <label class="block text-xs font-medium text-gray-400 mb-1" for="donVal">Quanto você quer contribuir?</label>
                 <input type="text" id="donVal" inputmode="decimal" autocomplete="off" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 mb-3">
                 <label class="block text-xs font-medium text-gray-400 mb-1" for="donPix">Chave Pix</label>
@@ -3873,7 +3932,7 @@ hmoDb = db;
             document.body.appendChild(o);
             const inp = o.querySelector('#donVal'), msg = o.querySelector('#donMsg');
             const setV = v => { inp.value = fmtMoneyBR(v); };
-            setV(vs[num(donCfg.def)] != null ? vs[num(donCfg.def)] : 25);
+            inp.placeholder = 'Quanto você contribuiu (R$)'; if (num(donCfg.pre) >= 0 && vs[num(donCfg.pre)] != null) setV(vs[num(donCfg.pre)]);
             inp.addEventListener('input', ev => maskMoney(inp, ev));
             inp.addEventListener('blur', () => { inp.value = fmtMoneyBR(parseMoney(inp.value)); });
             o.querySelectorAll('[data-v]').forEach(b => b.onclick = () => {
@@ -3923,42 +3982,43 @@ hmoDb = db;
             o.innerHTML = `<div class="w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl">
                 <p class="font-bold mb-1">⚙ Ajustes do app</p>
                 <p class="text-xs text-gray-400 mb-3">Valem para todo mundo, na hora. Não precisa subir versão nova.</p>
-                <label class="flex items-start gap-2 text-xs mb-2"><input type="checkbox" id="ajOn" class="mt-0.5" ${donCfg.on ? 'checked' : ''}> Mostrar o copo <b class="text-gray-100">💚 Ajude a manter o My Trade Dash</b> ao lado do logo</label>
-                <label class="flex items-start gap-2 text-xs mb-3"><input type="checkbox" id="ajBell" class="mt-0.5" ${donCfg.bell ? 'checked' : ''}> Permitir que a mensagem enviada em Apoiadores (📣 Enviar a MSG) apareça no 🔔 sino de quem usa o app há mais de <b class="text-gray-100">${DON_ASK_DAYS} dias</b> e não contribuiu nos últimos <b class="text-gray-100">60 dias</b></label>
+                <details class="ajSec rounded-lg border border-gray-700 mb-2" data-s="don"><summary class="flex items-center gap-2 px-3 py-2.5"><span class="text-base" aria-hidden="true">💚</span><span class="min-w-0 flex-1"><span class="block text-xs font-bold text-gray-100">Ajude a manter</span><span class="block text-[11px] text-gray-400" data-sum="don"></span></span><span class="ajChev text-gray-400" aria-hidden="true">▸</span></summary><div class="px-3 pb-3 pt-1"><label class="flex items-start gap-2 text-xs mb-2"><input type="checkbox" id="ajOn" class="mt-0.5" ${donCfg.on ? 'checked' : ''}><span> Mostrar o copo <b class="text-gray-100">💚 Ajude a manter o My Trade Dash</b> ao lado do logo</span></label>
+                <label class="flex items-start gap-2 text-xs mb-3"><input type="checkbox" id="ajBell" class="mt-0.5" ${donCfg.bell ? 'checked' : ''}><span> Permitir que a mensagem enviada em Apoiadores (📣 Enviar a MSG) apareça no 🔔 sino de quem usa o app há mais de <b class="text-gray-100">${DON_ASK_DAYS} dias</b> e não contribuiu nos últimos <b class="text-gray-100">60 dias</b></span></label>
                 <label class="block text-xs font-medium text-gray-400 mb-1" for="ajPix">Chave Pix</label>
                 <input type="text" id="ajPix" value="${esc(donCfg.pix)}" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200 mb-3">
                 <p class="block text-xs font-medium text-gray-400 mb-1">Valores sugeridos (R$)</p>
                 <div class="grid grid-cols-3 gap-2 mb-3">${vs.map((v, i) => `<input type="text" inputmode="decimal" data-av="${i}" value="${fmtMoneyBR(v)}" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200">`).join('')}</div>
-                <label class="block text-xs font-medium text-gray-400 mb-1" for="ajDef">Qual deles vem marcado</label>
-                <select id="ajDef" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200 mb-3">${vs.map((v, i) => `<option value="${i}" ${i === num(donCfg.def) ? 'selected' : ''}>R$ ${fmtMoneyBR(v)}</option>`).join('')}</select>
-                <div class="border-t border-gray-700 my-3"></div>
-                <p class="font-bold text-xs text-gray-100 mb-1">🎛 RECURSOS DO APP</p>
-                <p class="text-[11px] text-gray-400 mb-2">Desligar esconde a aba e os atalhos para os usuários comuns. Admins e colaboradores continuam vendo, e os dados de ninguém se perdem.</p>
-                <label class="flex items-start gap-2 text-xs mb-1"><input type="checkbox" id="ajFtRel" class="mt-0.5" ${featCfg.relatorios !== false ? 'checked' : ''}> <b class="text-gray-100">Relatórios</b> (inclui DARF e Notas do dia)</label>
-                <label class="flex items-start gap-2 text-xs mb-1"><input type="checkbox" id="ajFtFin" class="mt-0.5" ${featCfg.financeiro !== false ? 'checked' : ''}> <b class="text-gray-100">Gestão financeira</b> (Valor Investido, Capital Atual, depósitos e saques)</label>
-                <label class="flex items-start gap-2 text-xs mb-3"><input type="checkbox" id="ajFtNote" class="mt-0.5" ${featCfg.nota !== false ? 'checked' : ''}> <b class="text-gray-100">Nota do dia</b> (botão no cabeçalho e no ⚡ Atalhos)</label>
-                <div class="border-t border-gray-700 my-3"></div>
-                <p class="font-bold text-xs text-gray-100 mb-1">📄 TERMOS DE USO</p>
+                <label class="block text-xs font-medium text-gray-400 mb-1" for="ajDef">Valor já marcado na tela de contribuição <span class="font-normal">(opcional)</span></label>
+                <select id="ajDef" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200 mb-3"><option value="-1" ${num(donCfg.pre) < 0 ? 'selected' : ''}>Nenhum (a pessoa escolhe)</option>${vs.map((v, i) => `<option value="${i}" ${i === num(donCfg.pre) ? 'selected' : ''}>R$ ${fmtMoneyBR(v)}</option>`).join('')}</select>
+                </div></details>
+                <details class="ajSec rounded-lg border border-gray-700 mb-2" data-s="rec"><summary class="flex items-center gap-2 px-3 py-2.5"><span class="text-base" aria-hidden="true">🎛</span><span class="min-w-0 flex-1"><span class="block text-xs font-bold text-gray-100">Recursos do app</span><span class="block text-[11px] text-gray-400" data-sum="rec"></span></span><span class="ajChev text-gray-400" aria-hidden="true">▸</span></summary><div class="px-3 pb-3 pt-1">
+                <p class="text-[11px] text-gray-400 mb-2">Escolha quem vê cada recurso. Serve para testar um recurso novo só com você antes de abrir para todos. Os dados de ninguém se perdem.</p>
+                <label class="block text-xs font-medium text-gray-100 mb-1" for="ajFtRel">Relatórios <span class="font-normal text-gray-400">(inclui DARF e Notas do dia)</span></label><select id="ajFtRel" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200 mb-3">${FEAT_NIV.map(([v, t]) => `<option value="${v}" ${featLvl('relatorios') === v ? 'selected' : ''}>${t}</option>`).join('')}</select>
+                <label class="block text-xs font-medium text-gray-100 mb-1" for="ajFtFin">Gestão financeira <span class="font-normal text-gray-400">(Valor Investido, Capital Atual, depósitos e saques)</span></label><select id="ajFtFin" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200 mb-3">${FEAT_NIV.map(([v, t]) => `<option value="${v}" ${featLvl('financeiro') === v ? 'selected' : ''}>${t}</option>`).join('')}</select>
+                <label class="block text-xs font-medium text-gray-100 mb-1" for="ajFtNote">Nota do dia <span class="font-normal text-gray-400">(botão no cabeçalho e no ⚡ Atalhos)</span></label><select id="ajFtNote" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200 mb-3">${FEAT_NIV.map(([v, t]) => `<option value="${v}" ${featLvl('nota') === v ? 'selected' : ''}>${t}</option>`).join('')}</select>
+                </div></details>
+                <details class="ajSec rounded-lg border border-gray-700 mb-2" data-s="tn"><summary class="flex items-center gap-2 px-3 py-2.5"><span class="text-base" aria-hidden="true">📄</span><span class="min-w-0 flex-1"><span class="block text-xs font-bold text-gray-100">Termos de uso</span><span class="block text-[11px] text-gray-400" data-sum="tn"></span></span><span class="ajChev text-gray-400" aria-hidden="true">▸</span></summary><div class="px-3 pb-3 pt-1">
                 <p class="text-[11px] text-gray-400 mb-2">Quando os Termos mudam sem exigir novo aceite, cada pessoa vê um aviso uma única vez. Aqui você confere como ele aparece.</p>
                 <button type="button" id="ajTnPv" class="w-full px-3 py-2 rounded-lg border border-gray-600 text-xs font-semibold mb-3">👁 Ver o aviso de atualização dos Termos</button>
-                <div class="border-t border-gray-700 my-3"></div>
-                <p class="font-bold text-xs text-gray-100 mb-1">💬 CANAIS DE CONVERSA</p>
+                </div></details>
+                <details class="ajSec rounded-lg border border-gray-700 mb-2" data-s="ch"><summary class="flex items-center gap-2 px-3 py-2.5"><span class="text-base" aria-hidden="true">💬</span><span class="min-w-0 flex-1"><span class="block text-xs font-bold text-gray-100">Canais de conversa</span><span class="block text-[11px] text-gray-400" data-sum="ch"></span></span><span class="ajChev text-gray-400" aria-hidden="true">▸</span></summary><div class="px-3 pb-3 pt-1">
                 <p class="text-[11px] text-gray-400 mb-2">Desligar esconde o canal, não apaga nada: os recados já trocados continuam guardados.</p>
-                <label class="flex items-start gap-2 text-xs mb-2"><input type="checkbox" id="ajChColab" class="mt-0.5" ${chCfg.colab ? 'checked' : ''}> Canal dos <b class="text-gray-100">colaboradores</b> (admins e colaboradores cadastrados)</label>
-                <label class="flex items-start gap-2 text-xs mb-3"><input type="checkbox" id="ajChUser" class="mt-0.5" ${chCfg.user ? 'checked' : ''}> Canal dos <b class="text-gray-100">usuários</b> comuns</label>
-                <div class="border-t border-gray-700 my-3"></div>
-                <p class="font-bold text-xs text-gray-100 mb-1">🚧 MANUTENÇÃO</p>
+                <label class="flex items-start gap-2 text-xs mb-2"><input type="checkbox" id="ajChColab" class="mt-0.5" ${chCfg.colab ? 'checked' : ''}><span> Canal dos <b class="text-gray-100">colaboradores</b> (admins e colaboradores cadastrados)</span></label>
+                <label class="flex items-start gap-2 text-xs mb-3"><input type="checkbox" id="ajChUser" class="mt-0.5" ${chCfg.user ? 'checked' : ''}><span> Canal dos <b class="text-gray-100">usuários</b> comuns</span></label>
+                </div></details>
+                <details class="ajSec rounded-lg border border-gray-700 mb-2" data-s="mn"><summary class="flex items-center gap-2 px-3 py-2.5"><span class="text-base" aria-hidden="true">🚧</span><span class="min-w-0 flex-1"><span class="block text-xs font-bold text-gray-100">Manutenção</span><span class="block text-[11px] text-gray-400" data-sum="mn"></span></span><span class="ajChev text-gray-400" aria-hidden="true">▸</span></summary><div class="px-3 pb-3 pt-1">
                 <p class="text-[11px] text-gray-400 mb-2">Com a placa ligada, quem entrar vê o recado e não acessa o app. Você, como admin principal, nunca é bloqueado.</p>
-                <label class="flex items-start gap-2 text-xs mb-2"><input type="checkbox" id="ajMnOn" class="mt-0.5" ${mntCfg.on ? 'checked' : ''}> <b class="text-gray-100">Colocar o app em manutenção</b></label>
+                <label class="flex items-start gap-2 text-xs mb-2"><input type="checkbox" id="ajMnOn" class="mt-0.5" ${mntCfg.on ? 'checked' : ''}><span> <b class="text-gray-100">Colocar o app em manutenção</b></span></label>
                 <label class="block text-xs font-medium text-gray-400 mb-1" for="ajMnMsg">Recado na tela <span id="ajMnReq" class="text-red-400 font-bold hidden">· obrigatório</span></label>
                 <textarea id="ajMnMsg" rows="3" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200 mb-2">${esc(mntCfg.msg || '')}</textarea>
-                <label class="flex items-start gap-2 text-xs mb-2"><input type="checkbox" id="ajMnColab" class="mt-0.5" ${mntCfg.colab ? 'checked' : ''}> Os <b class="text-gray-100">colaboradores continuam entrando</b> durante a manutenção</label>
+                <label class="flex items-start gap-2 text-xs mb-2"><input type="checkbox" id="ajMnColab" class="mt-0.5" ${mntCfg.colab ? 'checked' : ''}><span> Os <b class="text-gray-100">colaboradores continuam entrando</b> durante a manutenção</span></label>
                 <button type="button" id="ajMnPv" class="w-full px-3 py-2 rounded-lg border border-gray-600 text-xs font-semibold mb-3">👁 Pré-visualizar a placa</button>
+                </div></details>
                 <p id="ajMsg" class="text-xs text-red-400 mb-2 hidden"></p>
                 <div class="flex justify-end gap-2"><button type="button" data-n class="px-3 py-2 rounded-lg border border-gray-600 text-xs font-semibold">Cancelar</button><button type="button" data-y class="px-3 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold">Salvar</button></div></div>`;
             document.body.appendChild(o);
             o.querySelectorAll('[data-av]').forEach(el => { el.addEventListener('input', ev => maskMoney(el, ev)); el.addEventListener('blur', () => { el.value = fmtMoneyBR(parseMoney(el.value)); upd(); }); });
-            const upd = () => { const sel = o.querySelector('#ajDef'), cur = sel.value; sel.innerHTML = [...o.querySelectorAll('[data-av]')].map((el, i) => `<option value="${i}" ${String(i) === cur ? 'selected' : ''}>R$ ${fmtMoneyBR(parseMoney(el.value))}</option>`).join(''); };
+            const upd = () => { const sel = o.querySelector('#ajDef'), cur = sel.value; sel.innerHTML = '<option value="-1" ' + (cur === '-1' || cur === '' ? 'selected' : '') + '>Nenhum (a pessoa escolhe)</option>' + [...o.querySelectorAll('[data-av]')].map((el, i) => `<option value="${i}" ${String(i) === cur ? 'selected' : ''}>R$ ${fmtMoneyBR(parseMoney(el.value))}</option>`).join(''); };
             /* · obrigatório só com a placa ligada */
             const mnOn = o.querySelector('#ajMnOn'), mnMsg = o.querySelector('#ajMnMsg'), mnReq = o.querySelector('#ajMnReq');
             const reqPaint = () => mnReq.classList.toggle('hidden', !mnOn.checked);
@@ -3974,11 +4034,21 @@ hmoDb = db;
                 const pv = $('mntScreen');
                 if (pv) pv.addEventListener('click', ev => { if (ev.target === pv) { mntHide(); back(); } });
             };
+            const ajSum = () => {
+                const q = x => o.querySelector(x), set = (k, t) => { const e = o.querySelector('[data-sum="' + k + '"]'); if (e) e.textContent = t; };
+                set('don', (q('#ajOn').checked ? 'Copo ligado' : 'Copo desligado') + ' · mensagem no sino ' + (q('#ajBell').checked ? 'permitida' : 'bloqueada'));
+                const fk = { relatorios: '#ajFtRel', financeiro: '#ajFtFin', nota: '#ajFtNote' }, fora = Object.keys(fk).filter(k => q(fk[k]).value !== 'todos');
+                set('rec', fora.length ? fora.map(k => FEAT_NOMES[k] + ': ' + (FEAT_NIV.find(n => n[0] === q(fk[k]).value) || [0, ''])[1].toLowerCase()).join(' · ') : 'Todos os recursos para todos os usuários');
+                set('tn', 'Aviso de atualização dos Termos');
+                set('ch', 'Colaboradores ' + (q('#ajChColab').checked ? 'ligado' : 'desligado') + ' · usuários ' + (q('#ajChUser').checked ? 'ligado' : 'desligado'));
+                set('mn', q('#ajMnOn').checked ? 'Ligada: o app está em manutenção' : 'Desligada');
+            };
+            o.addEventListener('change', ajSum); o.addEventListener('input', ajSum); ajSum();
             o.querySelector('#ajTnPv').onclick = () => { if (window.termsNoticeShow) window.termsNoticeShow(true); };
             /* fechar clicando fora segue a regra que já existe no app */
             const snapAj = () => JSON.stringify([o.querySelector('#ajOn').checked, o.querySelector('#ajBell').checked, o.querySelector('#ajPix').value,
                 [...o.querySelectorAll('[data-av]')].map(el => el.value), o.querySelector('#ajDef').value,
-                o.querySelector('#ajChColab').checked, o.querySelector('#ajChUser').checked, mnOn.checked, mnMsg.value, o.querySelector('#ajMnColab').checked, o.querySelector('#ajFtRel').checked, o.querySelector('#ajFtFin').checked, o.querySelector('#ajFtNote').checked]);
+                o.querySelector('#ajChColab').checked, o.querySelector('#ajChUser').checked, mnOn.checked, mnMsg.value, o.querySelector('#ajMnColab').checked, o.querySelector('#ajFtRel').value, o.querySelector('#ajFtFin').value, o.querySelector('#ajFtNote').value]);
             const startAj = snapAj();
             const tryCloseAj = () => { if (snapAj() === startAj) o.remove(); else askLoss(() => o.remove()); };
             o.addEventListener('click', ev => { if (ev.target === o) tryCloseAj(); });
@@ -3992,15 +4062,15 @@ hmoDb = db;
                 const mnText = mnMsg.value.trim();
                 if (mnOn.checked && !mnText) { msg.textContent = 'Com a manutenção ligada, o recado na tela é obrigatório.'; msg.classList.remove('hidden'); mnMsg.focus(); return; }
                 try {
-                    await donCfgSave({ on: o.querySelector('#ajOn').checked, bell: o.querySelector('#ajBell').checked, pix, vals, def: num(o.querySelector('#ajDef').value) });
+                    await donCfgSave({ on: o.querySelector('#ajOn').checked, bell: o.querySelector('#ajBell').checked, pix, vals, pre: num(o.querySelector('#ajDef').value) });
                     const ch = { colab: o.querySelector('#ajChColab').checked, user: o.querySelector('#ajChUser').checked };
                     const mn = { on: mnOn.checked, msg: mnText, colab: o.querySelector('#ajMnColab').checked };
                     const chMudou = JSON.stringify(ch) !== JSON.stringify({ colab: !!chCfg.colab, user: !!chCfg.user });
                     const mnMudou = JSON.stringify(mn) !== JSON.stringify({ on: !!mntCfg.on, msg: mntCfg.msg || '', colab: !!mntCfg.colab });
-                    const ft = { relatorios: o.querySelector('#ajFtRel').checked, financeiro: o.querySelector('#ajFtFin').checked, nota: o.querySelector('#ajFtNote').checked };
-                    const ftMudou = JSON.stringify(ft) !== JSON.stringify({ relatorios: featCfg.relatorios !== false, financeiro: featCfg.financeiro !== false, nota: featCfg.nota !== false });
+                    const ft = { relatorios: o.querySelector('#ajFtRel').value, financeiro: o.querySelector('#ajFtFin').value, nota: o.querySelector('#ajFtNote').value };
+                    const ftMudou = JSON.stringify(ft) !== JSON.stringify({ relatorios: featLvl('relatorios'), financeiro: featLvl('financeiro'), nota: featLvl('nota') });
                     await cfgSet('recursos', ft); featCfg = { ...FEAT_DEF, ...ft }; featApply();
-                    if (ftMudou) auditAdd({ kind: 'cfg', outcome: 'Concluída', detail: 'Recursos do app: Relatórios ' + (ft.relatorios ? 'ligado' : 'desligado') + ', Gestão financeira ' + (ft.financeiro ? 'ligado' : 'desligado') + ', Nota do dia ' + (ft.nota ? 'ligado' : 'desligado') });
+                    if (ftMudou) auditAdd({ kind: 'cfg', outcome: 'Concluída', detail: 'Recursos do app: ' + Object.keys(FEAT_NOMES).map(k => FEAT_NOMES[k] + ' · ' + (FEAT_NIV.find(n => n[0] === ft[k]) || [0, ''])[1]).join('; ') });
                     await cfgSet('canais', ch); chCfg = { ...CH_DEF, ...ch };
                     await cfgSet('manutencao', mn); mntCfg = { ...MNT_DEF, ...mn };
                     recMenuPaint(); if (recCanOpen()) recRefreshUnread();
