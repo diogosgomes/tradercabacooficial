@@ -3848,12 +3848,9 @@ hmoDb = db;
         }
         function donAskAlert(c) {
             if (!donEligible(c)) return [];
-            const out = [], now = new Date(), ym = donYM(now), t5 = donBizDay(now.getFullYear(), now.getMonth(), 5);
-            if (donCfg.bell && t5 && new Date(now.getFullYear(), now.getMonth(), now.getDate()) >= t5 && !c.ar.has('don:later:' + ym))
-                out.push({ id: 'don:ask:' + ym, level: 'a', action: 'don', title: '💚 Ajude a manter o My Trade Dash',
-                    note: 'O app é gratuito e vai continuar. Se ele te ajuda, você pode contribuir com o que achar justo. Nada no app depende disso.',
-                    btns: [{ k: 'go', t: '💚 Quero contribuir' }, { k: 'later', t: 'Agora não' }] });
-            if (donMsgCfg && donMsgCfg.id && donMsgCfg.text && !c.ar.has('don:msgdone:' + donMsgCfg.id))
+            const out = [];
+            // sem convite automático: só aparece no sino a mensagem enviada manualmente pelo admin (Apoiadores)
+            if (donCfg.bell && donMsgCfg && donMsgCfg.id && donMsgCfg.text && !c.ar.has('don:msgdone:' + donMsgCfg.id))
                 out.push({ id: 'don:msg:' + donMsgCfg.id, level: 'a', action: 'don', msgId: donMsgCfg.id, title: '💚 Mensagem do My Trade Dash', note: donMsgCfg.text,
                     btns: [{ k: 'go', t: '💚 Quero contribuir' }, { k: 'msgok', t: 'Entendi' }] });
             return out;
@@ -3927,7 +3924,7 @@ hmoDb = db;
                 <p class="font-bold mb-1">⚙ Ajustes do app</p>
                 <p class="text-xs text-gray-400 mb-3">Valem para todo mundo, na hora. Não precisa subir versão nova.</p>
                 <label class="flex items-start gap-2 text-xs mb-2"><input type="checkbox" id="ajOn" class="mt-0.5" ${donCfg.on ? 'checked' : ''}> Mostrar o copo <b class="text-gray-100">💚 Ajude a manter o My Trade Dash</b> ao lado do logo</label>
-                <label class="flex items-start gap-2 text-xs mb-3"><input type="checkbox" id="ajBell" class="mt-0.5" ${donCfg.bell ? 'checked' : ''}> Avisar no 🔔 sino, uma vez por mês (a partir do <b class="text-gray-100">5º dia útil</b>), quem usa o app há mais de <b class="text-gray-100">${DON_ASK_DAYS} dias</b> e não contribuiu nos últimos <b class="text-gray-100">60 dias</b></label>
+                <label class="flex items-start gap-2 text-xs mb-3"><input type="checkbox" id="ajBell" class="mt-0.5" ${donCfg.bell ? 'checked' : ''}> Permitir que a mensagem enviada em Apoiadores (📣 Enviar a MSG) apareça no 🔔 sino de quem usa o app há mais de <b class="text-gray-100">${DON_ASK_DAYS} dias</b> e não contribuiu nos últimos <b class="text-gray-100">60 dias</b></label>
                 <label class="block text-xs font-medium text-gray-400 mb-1" for="ajPix">Chave Pix</label>
                 <input type="text" id="ajPix" value="${esc(donCfg.pix)}" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200 mb-3">
                 <p class="block text-xs font-medium text-gray-400 mb-1">Valores sugeridos (R$)</p>
