@@ -160,6 +160,12 @@
         html[data-theme="light"] .al-btn{border-color:#9CA3AF;color:#1F2937}
         html[data-theme="light"] .al-crit .al-btn{border-color:#C2410C;color:#9A3412}
 
+        @media (min-width:640px){.don-lbl{white-space:nowrap}}
+        .don-hint{display:none}
+        .don-wrap:hover .don-hint,.don-wrap:focus-within .don-hint{display:block}
+        .don-wave{animation:donWave 3.2s linear infinite}
+        @keyframes donWave{from{transform:translateX(0)}to{transform:translateX(-24px)}}
+        @media (prefers-reduced-motion: reduce){.don-wave{animation:none}}
     </style>
 </head>
 <body class="bg-darkBg text-gray-100 font-sans min-h-screen flex flex-col w-full">
@@ -173,6 +179,7 @@
                 <h2 class="sr-only">My Trade Dash</h2>
                 <svg viewBox="0 0 269.7 80" role="img" aria-label="My Trade Dash, diário de operações" class="mx-auto h-10 w-auto mb-2"><use href="#logoMTD"/></svg>
                 <p id="lockSub" class="text-xs text-gray-400 mt-1">Acesso restrito. Entre com suas credenciais.</p>
+                <span id="hmoPill" class="hidden inline-block mt-2 text-xs font-bold px-3 py-1 rounded-full border border-amber-500/40 bg-amber-500/10 text-amber-400"></span>
             </div>
             <form id="lockForm" class="space-y-3" autocomplete="off">
                 <div>
@@ -193,18 +200,23 @@
                     <div class="rounded-lg border border-amber-500 bg-amber-950/30 px-3 py-2 text-[11px] leading-snug text-amber-200" role="note">🔞 <strong>Somente para maiores de 18 anos.</strong> A maioridade civil começa aos 18 anos completos (Código Civil, Lei nº 10.406/2002, art. 5º) e os dados de crianças e adolescentes têm regras próprias na LGPD (Lei nº 13.709/2018, art. 14). Por isso, este app não aceita pedidos de menores de 18 anos.</div>
                     <div><label for="invName" class="block text-xs font-medium text-gray-400 mb-1">Nome e sobrenome</label><input type="text" id="invName" maxlength="80" autocomplete="name" placeholder="Ex.: Maria Souza" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200"></div>
                     <div><label for="invEmail" class="block text-xs font-medium text-gray-400 mb-1">E-mail</label><input type="email" id="invEmail" maxlength="120" autocomplete="email" autocapitalize="none" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200"></div>
+                    <div><label for="invEmail2" class="block text-xs font-medium text-gray-400 mb-1">Confirmar e-mail</label><input type="email" id="invEmail2" maxlength="120" autocomplete="off" autocapitalize="none" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200"></div>
                     <div><label for="invBirth" class="block text-xs font-medium text-gray-400 mb-1">Data de nascimento</label><input type="date" id="invBirth" min="1900-01-01" autocomplete="bday" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200"></div>
                     <div id="invMinor" class="hidden rounded-lg border-2 border-red-500 bg-red-950 px-3 py-2 text-xs font-semibold leading-snug text-red-200" role="alert">⛔ Menores de 18 anos não podem pedir convite nem usar o app (Código Civil, art. 5º; LGPD, art. 14). Seu pedido não será enviado.</div>
                     <div><label for="invDdd" class="block text-xs font-medium text-gray-400 mb-1">💬 WhatsApp</label>
                         <div class="flex items-center gap-2"><span class="text-gray-400 text-sm">(</span><input type="tel" id="invDdd" inputmode="numeric" maxlength="2" placeholder="DDD" aria-label="DDD" autocomplete="tel-area-code" class="w-16 shrink-0 text-center bg-darkBg border border-gray-700 rounded-lg px-2 py-2 text-sm text-gray-200"><span class="text-gray-400 text-sm">)</span><input type="tel" id="invPhone" inputmode="numeric" maxlength="10" placeholder="9xxxx-xxxx" aria-label="Número com 9 dígitos" autocomplete="tel-local" class="flex-1 min-w-0 bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200"></div>
                         <p id="invUf" class="text-[11px] min-h-[1rem] text-emerald-400 mt-1" aria-live="polite"></p>
-                        <p class="text-[11px] text-gray-400">💬 O número precisa ter WhatsApp: é por ele que vamos te responder.</p></div>
+                        <p class="text-[11px] text-gray-400">💬 O número precisa ter WhatsApp: ele e o e-mail informado serão nossos canais de comunicação com você, quando necessário.</p></div>
                     <div><label for="invHow" class="block text-xs font-medium text-gray-400 mb-1">Como soube do app?</label><input type="text" id="invHow" maxlength="140" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200"></div>
+                    <fieldset><legend class="block text-xs font-medium text-gray-400 mb-1">Você opera day trade?</legend>
+                        <div class="flex gap-4 text-sm text-gray-200"><label class="flex items-center gap-1.5"><input type="radio" name="invDT" value="sim" id="invDTsim"> Sim</label><label class="flex items-center gap-1.5"><input type="radio" name="invDT" value="nao" id="invDTnao"> Não</label></div></fieldset>
                     <div style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden" aria-hidden="true"><label>Não preencha<input type="text" id="invWeb" tabindex="-1" autocomplete="off"></label></div>
                     <label class="flex items-start gap-2 text-[11px] text-gray-400"><input type="checkbox" id="invOk" class="mt-0.5"><span>Em conformidade com a Lei Geral de Proteção de Dados (LGPD, Lei nº 13.709/2018), autorizo o contato por e-mail e WhatsApp sobre o meu acesso e o uso dos meus dados somente para essa finalidade. Li os <button type="button" data-il="t" class="underline text-blue-400 hover:text-blue-300">Termos de uso</button> e a <button type="button" data-il="p" class="underline text-blue-400 hover:text-blue-300">Política de privacidade</button>.</span></label>
                     <p id="invMsg" class="text-xs min-h-[1rem] text-red-400" role="alert"></p>
-                    <button type="submit" id="invBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">Enviar pedido</button>
-                    <button type="button" id="invClose" class="hidden w-full bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Fechar</button>
+                    <div class="flex gap-2">
+                        <button type="button" id="invBack" class="shrink-0 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">Voltar</button>
+                        <button type="submit" id="invBtn" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">Enviar pedido</button>
+                    </div>
                 </div>
                 <div id="invDone" class="hidden space-y-3 text-center">
                     <p class="text-2xl">✅</p>
@@ -230,6 +242,12 @@
                 <h1 class="sr-only">My Trade Dash · Diário de Operações</h1>
                 <svg viewBox="0 0 269.7 80" role="img" aria-label="My Trade Dash, diário de operações" class="h-9 sm:h-11 w-auto"><use href="#logoMTD"/></svg>
             </div>
+            <span class="don-wrap hidden relative">
+                <button id="btnDon" type="button" onclick="openDonModal()" aria-describedby="donHint" class="inline-flex items-center gap-1.5 border border-gray-500 text-gray-200 hover:bg-gray-700 px-2 py-1 rounded-lg text-[10px] sm:text-xs font-semibold transition">
+                    <svg viewBox="0 0 24 28" width="20" height="23" aria-hidden="true" focusable="false"><defs><clipPath id="donClip"><path d="M4 3h16l-2 20a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z"/></clipPath></defs><g clip-path="url(#donClip)"><g id="donWater" transform="translate(0 25)"><path class="don-wave" d="M-24 0q6-3 12 0t12 0 12 0 12 0 12 0 12 0V30H-24z" fill="#38bdf8"/></g></g><path d="M4 3h16l-2 20a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+                    <span class="don-lbl leading-tight text-left">Ajude a manter o My Trade Dash</span></button>
+                <span id="donHint" role="tooltip" class="don-hint absolute left-0 top-full mt-1 z-[70] w-64 rounded-lg border border-gray-700 bg-cardBg p-2.5 text-[11px] font-normal text-gray-200 shadow-2xl">O My Trade Dash é gratuito e vai continuar sendo. Se ele te ajuda, você pode contribuir com o que achar justo: a ajuda contribui para amenizar alguns custos como domínio, servidores e as melhorias. Seu acesso ao My Trade Dash não está condicionado a sua colaboração!</span>
+            </span>
         </div>
         <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 justify-start sm:justify-end">
             <span id="userBadge" class="text-[11px] text-gray-400 mr-1"></span>
@@ -237,10 +255,10 @@
             <button onclick="openModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition flex items-center space-x-1">
                 <span>📈 Nova operação</span>
             </button>
+            <button id="btnNoteHdr" type="button" onclick="openNoteModal()" class="border border-blue-500 text-blue-300 hover:bg-blue-950 px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition">🧾 Nota do dia</button>
             <div class="relative">
                 <button id="btnMore" type="button" onclick="toggleMoreMenu()" aria-haspopup="true" aria-expanded="false" class="border border-blue-500 text-blue-300 hover:bg-blue-950 px-2.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition">📝 Mais lançamentos ▾</button>
                 <div id="moreMenu" role="menu" class="hidden fixed z-[60] w-56 bg-cardBg border border-gray-700 rounded-lg shadow-2xl py-1 text-xs">
-                    <button type="button" role="menuitem" onclick="moreAction(() => openNoteModal())" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🧾 Nota do dia</button>
                     <button type="button" role="menuitem" onclick="moreAction(() => openFlowModal())" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🏦 Financeiro (depósito ou saque)</button>
                 </div>
             </div>
@@ -256,7 +274,6 @@
                         <p id="menuUserEmail" class="text-[11px] text-gray-400 truncate"></p>
                     </div>
                     <div class="border-t border-gray-700 my-1"></div>
-                    <button id="btnDon" type="button" role="menuitem" onclick="optsAction(openDonModal)" class="hidden w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">💚 Ajude a manter o My Trade Dash</button>
                     <button type="button" role="menuitem" onclick="optsAction(exportData)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📥 Exportar backup</button>
                     <button type="button" role="menuitem" onclick="optsAction(openSetupsModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🧩 Gerenciar setups</button>
                     <button type="button" role="menuitem" onclick="optsAction(() => openGuide())" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🧭 Guia do My Trade Dash</button>
@@ -265,6 +282,7 @@
                     <button id="btnTheme" type="button" role="menuitem" onclick="optsAction(openThemeModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🌓 Tema</button>
                     <button type="button" role="menuitem" onclick="optsAction(() => openTermsModal())" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">📄 Termos e privacidade</button>
                     <button id="btnPwd" type="button" role="menuitem" onclick="optsAction(openPwdModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">🔑 Trocar senha</button>
+                    <button id="btnCor" type="button" role="menuitem" onclick="optsAction(openCorModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">✏ Corrigir meus dados</button>
                     <div id="sepLogout" class="border-t border-gray-700 my-1"></div>
                     <button id="btnRec" type="button" role="menuitem" onclick="optsAction(openRecModal)" class="hidden w-full text-left px-3 py-2 hover:bg-gray-700 text-gray-200">✉️ Falar com o My Trade Dash <span id="recCount" class="hidden ml-1 px-1.5 rounded-full bg-blue-500 text-white font-extrabold text-[10px]"></span></button>
                     <button id="btnExcl" type="button" role="menuitem" onclick="optsAction(openExclModal)" class="w-full text-left px-3 py-2 hover:bg-gray-700 text-red-300">🗑 Excluir minha conta</button>
@@ -451,7 +469,9 @@
 
     </main>
 
-    <footer class="w-full text-center py-6 px-3 text-[11px] text-gray-500">© 2026 My Trade Dash™ · Todos os direitos reservados.</footer>
+    <footer class="w-full py-6 px-3 text-[11px] text-gray-500 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center">
+        <a href="https://www.instagram.com/mytradedash/" target="_blank" rel="noopener" aria-label="Instagram do My Trade Dash (abre em nova aba)" class="inline-flex items-center gap-1.5 text-gray-400 hover:text-gray-200 underline"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1" fill="currentColor" stroke="none"/></svg>@mytradedash</a>
+        <span>© 2026 My Trade Dash™ · Todos os direitos reservados.</span></footer>
 
     <div id="bestTip" role="tooltip" class="hidden fixed z-[70] w-72 max-w-[calc(100vw-16px)] pointer-events-none bg-cardBg border border-gray-600 rounded-lg shadow-2xl px-3 py-2 text-xs">
         <p class="text-[10px] text-gray-500 uppercase tracking-wider">Best Setup</p>
@@ -470,10 +490,7 @@
                 <h3 id="modalTitle" class="text-lg font-bold text-gray-100">Registrar Nova Operação</h3>
                 <button onclick="closeModal()" class="text-gray-400 hover:text-gray-200 text-xl font-bold">&times;</button>
             </div>
-            <div id="tSwitch" class="grid grid-cols-2 gap-2">
-                <button type="button" id="tTabOp" onclick="entrySwitch('op')" class="px-3 py-2 rounded-lg text-xs font-semibold border"></button>
-                <button type="button" id="tTabNote" onclick="entrySwitch('note')" class="px-3 py-2 rounded-lg text-xs font-semibold border"></button>
-            </div>
+            <div id="tSwitch"><span class="block px-3 py-2 rounded-lg text-xs font-semibold border border-blue-400 bg-blue-950 text-white text-center">● 📈 Operação</span></div>
             <form id="tradeForm" class="space-y-4">
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
@@ -529,7 +546,7 @@
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-medium text-gray-400 mb-1" for="tCosts">Custos da corretora (R$)</label>
+                        <label class="flex items-center justify-between gap-2 text-xs font-medium text-gray-400 mb-1" for="tCosts"><span>Custos da corretora (R$)</span><button type="button" onclick="openCostCalc('tCosts')" class="shrink-0 px-2 py-0.5 rounded-lg border border-gray-600 text-[10px] font-semibold text-gray-300 hover:bg-gray-800">🧮 Somar taxas da nota</button></label>
                         <input type="text" inputmode="decimal" autocomplete="off" id="tCosts" value="" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200" placeholder="Opcional">
                         <p class="mt-1 text-[10px] leading-snug text-gray-500">Opcional. Preencha quando receber a nota da corretora.</p>
                     </div>
@@ -590,10 +607,6 @@
                 <h3 id="noteTitle" class="text-lg font-bold text-gray-100">Nota do dia</h3>
                 <button onclick="closeNoteModal()" class="text-gray-400 hover:text-gray-200 text-xl font-bold">&times;</button>
             </div>
-            <div id="nSwitch" class="grid grid-cols-2 gap-2">
-                <button type="button" id="nTabOp" onclick="entrySwitch('op')" class="px-3 py-2 rounded-lg text-xs font-semibold border"></button>
-                <button type="button" id="nTabNote" onclick="entrySwitch('note')" class="px-3 py-2 rounded-lg text-xs font-semibold border"></button>
-            </div>
             <form id="noteForm" class="space-y-4">
                 <div class="grid grid-cols-2 gap-3">
                     <div><label class="block text-xs font-medium text-gray-400 mb-1">Data do pregão</label>
@@ -602,19 +615,23 @@
                         <input type="text" id="nNo" autocomplete="off" placeholder="61774" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div>
                 </div>
                 <div class="grid grid-cols-3 gap-3">
-                    <div class="col-span-1"><label class="block text-xs font-medium text-gray-400 mb-1">Resultado</label>
+                    <div class="col-span-1"><label class="block text-xs font-medium text-gray-400 mb-1" for="nType">Resultado</label>
                         <select id="nType" class="w-full bg-darkBg border border-gray-700 rounded-lg px-2 py-2 text-xs text-gray-200"><option value="Ganho">+ Ganho</option><option value="Perda">− Perda</option></select></div>
-                    <div class="col-span-2"><label class="block text-xs font-medium text-gray-400 mb-1">Líquido da nota (R$)</label>
-                        <input type="text" inputmode="decimal" autocomplete="off" id="nNet" placeholder="0,00" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div>
+                    <div class="col-span-2"><label class="block text-xs font-medium text-gray-400 mb-1" for="nAdj">Ajuste de day trade (R$)</label>
+                        <input type="text" inputmode="decimal" autocomplete="off" id="nAdj" placeholder="0,00" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200">
+                        <p class="mt-1 text-[10px] leading-snug text-gray-500">Valor real da operação, como está na nota (sem sinal).</p></div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
-                    <div><label class="block text-xs font-medium text-gray-400 mb-1">IRRF day trade (R$)</label>
-                        <input type="text" inputmode="decimal" autocomplete="off" id="nIrrf" placeholder="estimado" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div>
-                    <div><label class="flex items-center justify-between gap-2 text-xs font-medium text-gray-400 mb-1"><span>Custos do dia (R$, opcional)</span><button type="button" onclick="openCostCalc()" class="shrink-0 px-2 py-0.5 rounded-lg border border-gray-600 text-[10px] font-semibold text-gray-300 hover:bg-gray-800">🧮 Somar taxas</button></label>
-                        <input type="text" inputmode="decimal" autocomplete="off" id="nCosts" placeholder="0,00" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div>
+                    <div><label class="block text-xs font-medium text-gray-400 mb-1" for="nDesp">Total das despesas (R$)</label>
+                        <input type="text" inputmode="decimal" autocomplete="off" id="nDesp" placeholder="0,00" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200">
+                        <button type="button" onclick="openCostCalc('nDesp')" class="mt-1.5 px-2 py-0.5 rounded-lg border border-gray-600 text-[10px] font-semibold text-gray-300 hover:bg-gray-800">🧮 Somar taxas da nota</button>
+                        <p class="mt-1 text-[10px] leading-snug text-gray-500">Taxa registro BM&amp;F + Taxas BM&amp;F (emol+f.gar).</p></div>
+                    <div><label class="block text-xs font-medium text-gray-400 mb-1" for="nLiq">Líquido da nota (R$)</label>
+                        <input type="text" id="nLiq" readonly tabindex="-1" class="w-full bg-gray-800/60 border border-gray-700 rounded-lg px-3 py-2 text-xs font-semibold text-gray-200 cursor-default" aria-live="polite">
+                        <p class="mt-1 text-[10px] leading-snug text-gray-500">Calculado sozinho: no ganho, ajuste menos despesas; na perda, ajuste mais despesas.</p></div>
                 </div>
                 <p id="nHint" class="text-[11px] text-gray-400 leading-relaxed"></p>
-                <p class="text-[11px] text-gray-500">Use o "Total líquido da nota" (já com o IRRF descontado). Se deixar o IRRF em branco, o app estima em 1% do lucro do dia. Custos: taxas, emolumentos e corretagem da nota.</p>
+                <p class="text-[11px] text-gray-500">O IRRF day trade é estimado pelo app (1% do líquido, só nos dias de ganho). Se a nota trouxer um IRRF diferente, fale pelo 💬 Recado.</p>
                 <p id="nError" class="text-xs text-red-400 min-h-[1rem]"></p>
                 <div class="flex justify-end space-x-3 pt-3 border-t border-gray-800">
                     <button type="button" onclick="closeNoteModal()" class="px-4 py-2 rounded-lg text-xs font-medium text-gray-400">Cancelar</button>
@@ -657,7 +674,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V166';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V167';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -948,7 +965,7 @@
         }
         // Ordem: alertas do administrador (Supabase, convites, aniversários), depois críticos, depois os demais
         function alertsBuild(c) {
-            const admin = fridayAlerts(c.ar).concat(recAdminAlerts(c.ar), invAlerts(c.ar), pwdAlerts(pwdAdminList), excAlerts(excAdminList), donAlerts(donAdminList), donAskAlert(c));
+            const admin = fridayAlerts(c.ar).concat(recAdminAlerts(c.ar), invAlerts(c.ar), pwdAlerts(pwdAdminList), corAlerts(corAdminList), excAlerts(excAdminList), donAlerts(donAdminList), donAskAlert(c));
             admToast(admin);
             const rest = recAlerts().concat(darfAlerts(), backupAlerts(c));
             return admin.concat(rest.filter(a => a.level === 'crit'), rest.filter(a => a.level !== 'crit'));
@@ -968,7 +985,8 @@
         async function bellLoad() {
             const [notes, st, as] = await Promise.all([newsLoad(), newsReadState(), alertState()]);
             try { await invLoadCache(); } catch (e) {}
-            try { donMineHas = await donMineHasAny(); } catch (e) {}
+            try { donLastOk = await donMineLastOk(); donMineHas = !!donLastOk; donGlassPaint(); } catch (e) {}
+            try { donMsgCfg = await cfgGet('doacao_msg', {}); } catch (e) {}
             return { notes, st, as, alerts: alertsBuild({ ar: as.ar, last: as.last, fail: as.fail, baseline: st.baseline }) };
         }
         function bellCounts(D) {
@@ -1024,6 +1042,7 @@
                 else if (a.action === 'inv') { bellClose(); openInvitesModal(); }
                 else if (a.action === 'exc') { bellClose(); openAdminModal('exc'); }
                 else if (a.action === 'pwd') { bellClose(); openAdminModal('pwd'); }
+                else if (a.action === 'cor') { bellClose(); openAdminModal('cor'); }
                 else if (a.action === 'apo') { bellClose(); openAdminModal('apo'); }
                 else if (a.action === 'don') { bellClose(); openDonModal(); }
                 else if (a.action === 'rec') { bellClose(); openRecModal(); }
@@ -1044,7 +1063,7 @@
                     if (k === 'go') { bellClose(); openDonModal(); return; }
                     if (k === 'apo') { bellClose(); openAdminModal('apo'); return; }
                     b.disabled = true;
-                    try { await alertSet(k === 'never' ? 'don:no' : 'don:later:' + new Date().toISOString().slice(0, 10), true); const i2 = alerts.indexOf(a); if (i2 >= 0) alerts.splice(i2, 1); updBell(); showAlerts(); showToast(k === 'never' ? 'Não falo mais nisso.' : 'Combinado, fica para depois.', 'ok'); }
+                    try { await alertSet(k === 'msgok' ? 'don:msgdone:' + a.msgId : 'don:later:' + donYM(), true); const i2 = alerts.indexOf(a); if (i2 >= 0) alerts.splice(i2, 1); updBell(); showAlerts(); showToast(k === 'msgok' ? 'Combinado.' : 'Combinado, só volto a falar nisso no mês que vem.', 'ok'); }
                     catch (e) { b.disabled = false; showToast('Não foi possível atualizar agora.', 'err'); }
                 });
                 body.querySelectorAll('[data-rd]').forEach(b => b.onclick = async ev => {
@@ -1424,7 +1443,7 @@
             ov.addEventListener('click', ev => { if (ev.target === ov) ov.remove(); });
             const body = ov.querySelector('#auBody');
             const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-            const AU = { delete: '🗑 Exclusão', password: '🔑 Troca de senha', setup_rename: '✏ Setup renomeado', setup_active: '☑ Setup ativado', setup_inactive: '☐ Setup inativado', setup_create: '➕ Setup criado', setup_delete: '🗑 Setup excluído', setup_kind: '🔁 Classificação alterada', darf_paid: '💳 DARF pago', darf_unpaid: '💳 DARF desmarcado', terms_accept: '📄 Aceite dos termos', terms_decline: '📄 Termos não aceitos', exc_user: '🗑 Exclusão da conta', don: '💚 Contribuição informada', don_ok: '💚 Contribuição confirmada', don_undo: '↩ Confirmação desfeita', don_desc: '✕ Contribuição descartada', cfg: '⚙ Ajustes do app', rel_admin: '📑 Relatório do painel', lgpd: '📄 Dados pessoais exportados' };
+            const AU = { don_msg: '📣 Mensagem de apoio', cor_user: '✏ Correção de dados (pedido)', cor_admin: '✏ Correção de dados (admin)', inativ_aviso: '⏳ Aviso de inatividade', inativ_deact: '🔒 Desativado por inatividade', delete: '🗑 Exclusão', password: '🔑 Troca de senha', setup_rename: '✏ Setup renomeado', setup_active: '☑ Setup ativado', setup_inactive: '☐ Setup inativado', setup_create: '➕ Setup criado', setup_delete: '🗑 Setup excluído', setup_kind: '🔁 Classificação alterada', darf_paid: '💳 DARF pago', darf_unpaid: '💳 DARF desmarcado', terms_accept: '📄 Aceite dos termos', terms_decline: '📄 Termos não aceitos', exc_user: '🗑 Exclusão da conta', don: '💚 Contribuição informada', don_ok: '💚 Contribuição confirmada', don_undo: '↩ Confirmação desfeita', don_desc: '✕ Contribuição descartada', cfg: '⚙ Ajustes do app', rel_admin: '📑 Relatório do painel', lgpd: '📄 Dados pessoais exportados' };
             const card = x => {
                 if (x.kind !== 'import' && x.kind !== 'export') return `<div class="border border-gray-700 rounded-lg p-3 mb-2 bg-gray-800/40">
                     <div class="flex flex-wrap justify-between gap-1"><span class="font-bold">H${x.seq ?? '?'} · ${AU[x.kind] || esc(x.kind)}</span><span class="text-gray-400">${fmtDateTimeBR(x.ts)}</span></div>
@@ -1532,7 +1551,7 @@
             dbCol = db.collection('trades'); flowCol = db.collection('cashflow');
             $('userBadge').textContent = '🧪 Ambiente HMO - ' + HMO_VERSION;
             $('lockUserLabel').textContent = 'Utilizador'; $('lockUser').type = 'text'; $('lockUser').autocomplete = 'off';
-            $('lockSub').textContent = 'Ambiente HMO (teste). Entre com as credenciais de teste.';
+            $('lockSub').textContent = ''; $('hmoPill').textContent = 'Ambiente HMO - ' + HMO_VERSION; $('hmoPill').classList.remove('hidden');
 hmoDb = db;
             hmoLoadCred().then(() => {
                 let ok = false;
@@ -1910,7 +1929,6 @@ hmoDb = db;
                 fillSetupSelect('');
                 document.getElementById('tSetup').value = '';
             }
-            paintEntryTabs('op', !!row);
             tradeNetUpdate();
             const m = document.getElementById('tradeModal');
             m.classList.remove('hidden'); m.classList.add('flex');
@@ -2294,6 +2312,10 @@ hmoDb = db;
         const invWhen = v => { const t = new Date(v); return isNaN(t) ? '' : t.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }); };
         const invBirthBR = s => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || '')); return m ? `${m[3]}/${m[2]}/${m[1]}` : ''; };
         const invNorm = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+        const adMatch = (q, ...vals) => { const t = invNorm(String(q || '').trim()), td = invDigits(q); if (!t) return true; return vals.some(v => { const n = invNorm(v); return n.includes(t) || (td.length >= 3 && invDigits(v).includes(td)); }); };
+        const adConv = em => (invCache || []).find(c => String(c.email || '').toLowerCase() === String(em || '').toLowerCase());
+        const emCopy = em => em ? ` <button type="button" data-copyem="${esc(em)}" title="Copiar e-mail" aria-label="Copiar e-mail" class="ml-1 px-1.5 py-0 rounded border border-gray-600 text-[10px] leading-4 text-gray-300 hover:bg-gray-800 align-middle">📋 copiar</button>` : '';
+        document.addEventListener('click', async e => { const b = e.target.closest('[data-copyem]'); if (!b) return; e.stopPropagation(); const v = b.dataset.copyem; try { await navigator.clipboard.writeText(v); showToast('E-mail copiado: ' + v, 'ok'); } catch (x) { showToast('Copie manualmente: ' + v, 'err'); } });
         async function invSubmit(rec) {
             if (MODE === 'claude') {
                 const all = (await hmoDb.collection('convites').get()).docs.map(d => d.data());
@@ -2302,7 +2324,7 @@ hmoDb = db;
                 await hmoDb.collection('convites').add({ ...rec, consent: true, consent_v: window.TERMS_VER || null, status: 'novo', archived: false, created_at: Date.now() });
                 return { dup: null };
             }
-            const { error } = await sb.from('tb_convites').insert({ name: rec.name, email: rec.email, whatsapp: rec.whatsapp, birth_date: rec.birth_date, how_known: rec.how_known, consent: true, consent_v: window.TERMS_VER || null });
+            const { error } = await sb.from('tb_convites').insert({ name: rec.name, email: rec.email, whatsapp: rec.whatsapp, birth_date: rec.birth_date, how_known: rec.how_known, opera_daytrade: rec.opera_daytrade, consent: true, consent_v: window.TERMS_VER || null });
             if (error) { if (error.code === '23505') return { dup: /email/i.test((error.message || '') + (error.details || '')) ? 'email' : 'whatsapp' }; throw error; }
             return { dup: null };
         }
@@ -2348,7 +2370,7 @@ hmoDb = db;
             invCache = (await invList()).filter(invLive); invCacheAt = Date.now();
         }
         function invSetAdmin(on) {
-            invIsAdmin = !!on;
+            invIsAdmin = !!on; try { featApply(); } catch (e) {}
             ['btnAdmin', 'fabInv'].forEach(i => { const b = $(i); if (b) b.classList.toggle('hidden', !invIsAdmin); });
             const bd = $('menuUserAdm'); if (bd) bd.classList.toggle('hidden', !invIsAdmin);
             const be = $('btnExcl'); if (be) be.classList.toggle('hidden', invIsAdmin);
@@ -2385,6 +2407,7 @@ hmoDb = db;
                 await invLoadCache(true);
                 try { excAdminList = await excList(); } catch (e) {}
                 try { pwdAdminList = await pwdList(); } catch (e) {}
+                try { corAdminList = await corList(); } catch (e) {}
                 try { donAdminList = await donList(); } catch (e) {}
                 await recAdminLoad();
                 const n = invCache.filter(x => x.status === 'novo' && !x.archived).length;
@@ -2396,6 +2419,7 @@ hmoDb = db;
         async function invAdminInit() {
             excRefreshBar(); donCfgLoad();
             chCfg = await cfgGet('canais', CH_DEF);
+            try { featCfg = { ...FEAT_DEF, ...(await cfgGet('recursos', FEAT_DEF)) }; } catch (e) { featCfg = { ...FEAT_DEF }; }
             amColab = await colabAmI();
             recRefreshUnread();
             if (MODE === 'claude') { invSetAdmin(true); invRefreshBadge(true); return; }
@@ -2460,7 +2484,7 @@ hmoDb = db;
                 </div>
                 <div id="ivCalBox" class="hidden p-4 overflow-y-auto"></div>
                 <p class="px-4 pb-3 text-[11px] text-gray-400">Arquivar tira da lista sem apagar. Excluir manda para a 🗑 Lixeira, onde o pedido fica 15 dias antes de sumir de vez. Nada desta tela vai para o histórico de auditoria.</p></div>
-                <div id="adUsers" class="hidden flex flex-col min-h-0 flex-1"><div class="px-4 pt-3"><input type="search" id="adSearch" placeholder="Pesquisar por e-mail" autocomplete="off" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div><div id="adUBody" class="p-4 space-y-2 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">Para apagar uma pessoa, o admin master usa “🗑 Excluir usuário” (definitivo: apaga o login e os dados). Admins não têm o botão: remova de Admins antes. Nada desta tela vai para o histórico de auditoria.</p></div>
+                <div id="adUsers" class="hidden flex flex-col min-h-0 flex-1"><div class="px-4 pt-3"><input type="search" id="adSearch" placeholder="🔎 Pesquisar por nome, telefone ou e-mail" autocomplete="off" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"><label id="adInatW" class="mt-2 flex items-center gap-2 text-xs text-gray-300"><input type="checkbox" id="adInat"> Sem lançar há 75+ dias</label></div><div id="adUBody" class="p-4 space-y-2 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">Para apagar uma pessoa, o admin master usa “🗑 Excluir usuário” (definitivo: apaga o login e os dados). Admins não têm o botão: remova de Admins antes. Nada desta tela vai para o histórico de auditoria.</p></div>
                 <div id="adRel" class="hidden flex flex-col min-h-0 flex-1 overflow-y-auto"><div class="p-4 space-y-3">
                     <p class="text-sm font-bold text-gray-100">📑 Relatórios</p>
                     <p class="text-[11px] text-gray-400">Exporta o que está nas outras abas. O arquivo leva dados pessoais de outras pessoas: guarde com cuidado e apague quando não precisar mais. Cada exportação entra no histórico de auditoria.</p>
@@ -2471,20 +2495,26 @@ hmoDb = db;
                     <p id="rlSum" class="text-[11px] text-gray-400"></p>
                     <div class="flex flex-wrap items-center gap-2"><button type="button" id="rlShow" class="px-3 py-1.5 rounded-lg border border-gray-600 text-xs font-semibold">Ver dados</button><button type="button" id="rlClear" class="px-3 py-1.5 rounded-lg border border-gray-600 text-xs font-semibold">Limpar filtro</button><span class="ml-auto flex flex-wrap items-center gap-2 text-xs text-gray-400">Baixar:<button type="button" data-rx="pdf" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold">PDF</button><button type="button" data-rx="docx" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold">Word</button><button type="button" data-rx="xlsx" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold">Excel</button></span></div>
                     <div id="rlBody" class="space-y-2"></div></div></div>
-                <div id="adApo" class="hidden flex flex-col min-h-0 flex-1"><p class="px-4 pt-3 text-[11px] text-gray-400">Contribuição é voluntária: ninguém fica sem o app por não contribuir, e o app nunca cobra. Confira o Pix no seu banco antes de confirmar; confirmar gera o número do recibo. O WhatsApp e o e-mail abrem com o texto pronto; para mandar o recibo em PDF, baixe e anexe.</p><div id="doNav" class="flex items-center gap-2 px-4 pt-2 text-xs"></div><div id="doCards" class="grid grid-cols-1 sm:grid-cols-4 gap-2 px-4 pt-3"></div><div class="flex flex-wrap gap-2 px-4 pt-3" id="doTabs"></div><div id="doBody" class="p-4 space-y-3 overflow-y-auto"></div></div>
-                <div id="adPwd" class="hidden flex flex-col min-h-0 flex-1"><div class="flex flex-wrap gap-2 px-4 pt-3" id="pwTabs"></div><div id="pwBody" class="p-4 space-y-3 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">"Gerar senha temporária" grava a senha no Supabase na hora e obriga a pessoa a criar a própria ao entrar. A senha aparece só nesta tela: envie por e-mail ou WhatsApp em seguida.</p></div>
-                <div id="adExc" class="hidden flex flex-col min-h-0 flex-1"><div class="flex flex-wrap gap-2 px-4 pt-3" id="exTabs"></div><div id="exBody" class="p-4 space-y-3 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">Desativar bloqueia o acesso no banco, mas mantém o login e os dados por ${EXC_DAYS} dias. Em qualquer momento, dentro ou fora da carência, o admin master pode usar 🗑 Excluir usuário (definitivo): apaga o login e os dados de uma vez.</p></div>
+                <div id="adCor" class="hidden flex flex-col min-h-0 flex-1"><div class="px-4 pt-3"><input type="search" data-q="cor" placeholder="🔎 Pesquisar por nome, telefone ou e-mail" autocomplete="off" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div><div class="flex flex-wrap gap-2 px-4 pt-3" id="coTabs"></div><div id="coBody" class="p-4 space-y-2 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">Pedidos de quem quer corrigir nome, celular ou e-mail (direito previsto no art. 18, III, da LGPD). Aplicar a correção troca o dado e guarda o valor antigo no pedido e no histórico de auditoria. A troca de e-mail é só do admin master e só depois de a pessoa confirmar o novo e-mail.</p></div>
+                <div id="adApo" class="hidden flex flex-col min-h-0 flex-1"><p class="px-4 pt-3 text-[11px] text-gray-400">Contribuição é voluntária: ninguém fica sem o app por não contribuir, e o app nunca cobra. Confira o Pix no seu banco antes de confirmar; confirmar gera o número do recibo. O WhatsApp e o e-mail abrem com o texto pronto; para mandar o recibo em PDF, baixe e anexe.</p><div class="px-4 pt-3"><input type="search" data-q="apo" placeholder="🔎 Pesquisar por nome, telefone ou e-mail" autocomplete="off" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div><div id="doNav" class="flex items-center gap-2 px-4 pt-2 text-xs"></div><div id="doCards" class="grid grid-cols-1 sm:grid-cols-4 gap-2 px-4 pt-3"></div><div id="doCards2" class="grid grid-cols-1 sm:grid-cols-3 gap-2 px-4 pt-2"></div>
+                    <details id="doNonD" class="mx-4 mt-3 rounded-lg border border-gray-700"><summary id="doNonSum" class="cursor-pointer px-3 py-2 text-xs font-semibold text-gray-100">Usuários que não doaram +60 dias</summary>
+                        <div class="p-3 space-y-2 text-xs"><p class="text-[11px] text-gray-400">Contas com mais de 30 dias e sem contribuição confirmada nos últimos 60 dias, sem contar admins. A mensagem aparece uma única vez no 🔔 de cada uma dessas pessoas. O app continua gratuito para todo mundo.</p>
+                            <label class="block text-xs font-medium text-gray-400" for="doMsgTxt">Texto da mensagem</label><textarea id="doMsgTxt" rows="5" maxlength="800" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></textarea>
+                            <div class="flex flex-wrap gap-2"><button type="button" id="doMsgRst" class="px-3 py-1.5 rounded-lg border border-gray-600 text-gray-100 font-semibold">Restaurar texto padrão</button><button type="button" id="doMsgSend" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold">📣 Enviar a MSG</button></div>
+                            <p id="doMsgInfo" class="text-[11px] text-gray-400 min-h-[1rem]" role="status"></p><div id="doNonList" class="space-y-2"></div></div></details><div class="flex flex-wrap gap-2 px-4 pt-3" id="doTabs"></div><div id="doBody" class="p-4 space-y-3 overflow-y-auto"></div></div>
+                <div id="adPwd" class="hidden flex flex-col min-h-0 flex-1"><div class="px-4 pt-3"><input type="search" data-q="pwd" placeholder="🔎 Pesquisar por nome, telefone ou e-mail" autocomplete="off" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div><div class="flex flex-wrap gap-2 px-4 pt-3" id="pwTabs"></div><div id="pwBody" class="p-4 space-y-3 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">"Gerar senha temporária" grava a senha no Supabase na hora e obriga a pessoa a criar a própria ao entrar. A senha aparece só nesta tela: envie por e-mail ou WhatsApp em seguida.</p></div>
+                <div id="adExc" class="hidden flex flex-col min-h-0 flex-1"><div class="px-4 pt-3"><input type="search" data-q="exc" placeholder="🔎 Pesquisar por nome, telefone ou e-mail" autocomplete="off" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200"></div><div class="flex flex-wrap gap-2 px-4 pt-3" id="exTabs"></div><div id="exBody" class="p-4 space-y-3 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">Desativar bloqueia o acesso no banco, mas mantém o login e os dados por ${EXC_DAYS} dias. Em qualquer momento, dentro ou fora da carência, o admin master pode usar 🗑 Excluir usuário (definitivo): apaga o login e os dados de uma vez.</p></div>
                 <div id="adRec" class="hidden flex flex-col min-h-0 flex-1"><div class="flex flex-wrap gap-2 px-4 pt-3" id="rcTabs"></div><div id="rcAdBody" class="p-4 space-y-3 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">Uma conversa por pessoa, não mensagens soltas. As não respondidas ficam em cima. Recado é dado pessoal: entra no 📄 Dados desta pessoa e é apagado junto com a conta.</p></div>
                 <div id="adColab" class="hidden flex flex-col min-h-0 flex-1"><div id="clBody" class="p-4 space-y-3 overflow-y-auto"></div><p class="px-4 pb-3 text-[11px] text-gray-400">Os admins entram automático e não têm Remover: tirar do canal seria deixar de ser admin, e isso se faz em 🛡 Admins. Só colaboradores cadastrados aqui podem ser removidos.</p></div>
                 <div id="adDesp" class="hidden flex flex-col min-h-0 flex-1 overflow-y-auto"><p class="px-4 pt-3 text-[11px] text-gray-400">Cadastre os custos de manter o My Trade Dash no ar. O app compara com as contribuições confirmadas do mês — isto não aparece para os usuários, só para os admins.</p><div id="dpNav" class="flex items-center gap-2 px-4 pt-2 text-xs"></div><div id="dpCards" class="grid grid-cols-1 sm:grid-cols-2 gap-2 px-4 pt-3"></div><div id="dpForm" class="px-4 pt-3 flex flex-wrap items-end gap-2 text-xs"></div><div id="dpBody" class="p-4 space-y-2"></div></div></div>`;
             document.body.appendChild(ov);
             const close = () => { ov.remove(); invRefreshBadge(false); };
-            let sec = 'inv', uList = { ativos: null, excl: null }, uq = '', exList = null, exF = 'novo', exArm = null, pwList = null, pwF = 'novo', doList = null, doF = 'nova', apoMonth = null, rcF = 'abertas', rcOpenEmail = null, clList = null, clArm = null, dpList = null, dpMonth = null;
+            let sec = 'inv', adQ = { apo: '', exc: '', pwd: '', cor: '' }, coList = null, coF = 'novo', uFil = false, uList = { ativos: null, excl: null }, uq = '', exList = null, exF = 'novo', exArm = null, pwList = null, pwF = 'novo', doList = null, doF = 'nova', apoMonth = null, rcF = 'abertas', rcOpenEmail = null, clList = null, clArm = null, dpList = null, dpMonth = null;
             const adTabs = ov.querySelector('#adTabs'), adInv = ov.querySelector('#adInv'), adUsers = ov.querySelector('#adUsers'), adUBody = ov.querySelector('#adUBody'), adSearch = ov.querySelector('#adSearch');
             const fmtDT = v => { if (!v) return '—'; const d = new Date(v); return isNaN(d) ? '—' : d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); };
             const drawSecTabs = () => {
                 const nNew = invCache.filter(x => x.status === 'novo' && !x.archived).length;
-                const tabs = [['apo', '🤝 Apoiadores' + (doList ? ' (' + doList.filter(x => x.status === 'nova').length + ')' : '')], ['inv', '📨 Pedidos de convite' + (nNew ? ' (' + nNew + ')' : '')], ['exc', '🗑 Pedidos de exclusão' + (exList ? ' (' + exList.filter(x => x.status === 'novo').length + ')' : '')], ['pwd', '🔑 Pedidos de senha' + (pwList ? ' (' + pwList.filter(x => x.status === 'novo').length + ')' : '')], ['ativos', '👥 Usuários ativos' + (uList.ativos ? ' (' + uList.ativos.length + ')' : '')], ['excl', '🚫 Usuários excluídos' + (uList.excl ? ' (' + uList.excl.length + ')' : '')]];
+                const tabs = [['apo', '🤝 Apoiadores' + (doList ? ' (' + doList.filter(x => x.status === 'nova').length + ')' : '')], ['inv', '📨 Pedidos de convite' + (nNew ? ' (' + nNew + ')' : '')], ['exc', '🗑 Pedidos de exclusão' + (exList ? ' (' + exList.filter(x => x.status === 'novo').length + ')' : '')], ['pwd', '🔑 Pedidos de senha' + (pwList ? ' (' + pwList.filter(x => x.status === 'novo').length + ')' : '')], ['cor', '✏ Correções de dados' + (coList ? ' (' + coList.filter(x => x.status === 'novo').length + ')' : '')], ['ativos', '👥 Usuários ativos' + (uList.ativos ? ' (' + uList.ativos.length + ')' : '')], ['excl', '🚫 Usuários excluídos' + (uList.excl ? ' (' + uList.excl.length + ')' : '')]];
                 if (invIsMaster()) {
                     const nAb = recAdminList ? recThreads().filter(t => t.aberta).length : 0;
                     tabs.push(['rec', '💬 Recados' + (nAb ? ' (' + nAb + ')' : '')]);
@@ -2492,28 +2522,38 @@ hmoDb = db;
                     tabs.push(['desp', '💰 Despesas']);
                 }
                 // ordem alfabética pelo nome da aba (sem contar o emoji), exceto Relatórios, que fica sempre fixo por último
-                const ABC_ORDER = ['apo', 'colab', 'desp', 'inv', 'exc', 'pwd', 'rec', 'ativos', 'excl'];
+                const ABC_ORDER = ['apo', 'colab', 'cor', 'desp', 'inv', 'exc', 'pwd', 'rec', 'ativos', 'excl'];
                 tabs.sort((a, b) => ABC_ORDER.indexOf(a[0]) - ABC_ORDER.indexOf(b[0]));
                 if (invIsMaster()) tabs.push(['rel', '📑 Relatórios']);
                 adTabs.innerHTML = tabs
                     .map(([k, t]) => `<button type="button" data-sec="${k}" class="px-3 py-1 rounded-lg text-xs font-semibold border ${sec === k ? 'border-amber-500 bg-gray-800 text-amber-200' : 'border-gray-700 text-gray-300'}">${t}</button>`).join('');
             };
+            const inatDias = u => { const ref = u.last_entry_at ? new Date(u.last_entry_at).getTime() : new Date(u.created_at).getTime(); return Math.max(0, Math.floor((Date.now() - ref) / 86400000)); };
+            const inatMsg = (u, d) => { const first = String(u.name || u.email || '').trim().split(/[\s@]+/)[0] || ''; return `Olá, ${first}! Faz ${d} dias que você não faz nenhum lançamento no My Trade Dash.\n\nPelos Termos de uso (item 8.1), contas sem nenhum lançamento por muito tempo podem ter o acesso desativado, depois de aviso. Este é o nosso aviso: se você quer continuar usando o app, é só entrar e fazer um lançamento que está tudo certo. Se preferir não continuar, não precisa fazer nada, e o acesso pode ser reativado depois, se você pedir.\n\nQualquer dúvida, é só responder esta mensagem.${SIGN}`; };
+            const inatBtns = (u, cv, wa) => {
+                if (sec !== 'ativos' || !rlAdmOk || rlAdm.has(String(u.email || '').toLowerCase())) return '';
+                const d = inatDias(u); if (d < 75) return '';
+                const tx = inatMsg({ ...u, name: (cv && cv.name) || u.email }, d);
+                return `<a href="${esc(invMailLink(u.email, 'Sua conta no My Trade Dash', tx))}" target="_blank" rel="noopener" data-ua="aviso" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">✉ Avisar</a>${wa ? `<a href="https://wa.me/${esc(wa)}?text=${encodeURIComponent(tx)}" target="_blank" rel="noopener" data-ua="aviso" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">💬 Avisar no WhatsApp</a>` : ''}${d >= 90 && invIsMaster() ? `<button type="button" data-ua="inat" class="px-3 py-1.5 rounded-lg bg-red-700 text-white font-semibold">🔒 Desativar por inatividade</button>` : ''}`;
+            };
             const drawUsers = () => {
+                ov.querySelector('#adInatW').classList.toggle('hidden', sec !== 'ativos');
                 const arr = uList[sec];
                 if (!arr) { adUBody.innerHTML = '<p class="text-xs text-gray-400 text-center py-6">Carregando…</p>'; return; }
-                const t = invNorm(uq.trim()), items = arr.filter(u => !t || invNorm(u.email).includes(t));
+                const items = arr.filter(u => { const cv0 = usrConv(u.email); return adMatch(uq, u.email, cv0 && cv0.name, cv0 && cv0.whatsapp) && (!uFil || sec !== 'ativos' || (inatDias(u) >= 75 && !(rlAdmOk && rlAdm.has(String(u.email || '').toLowerCase())))); });
                 adUBody.innerHTML = items.length ? items.map(u => { const cv = usrConv(u.email), wa = cv && cv.whatsapp;
                     return `<div class="rounded-lg border border-gray-700 p-3 text-xs" data-um="${esc(u.email)}">
                     <p class="font-bold text-gray-100 break-words text-sm">${esc((cv && cv.name) || u.email)}</p>
-                    <p class="text-gray-400 break-all">${esc(u.email)}${cv ? '' : ' · sem pedido de convite com este e-mail'}</p>
+                    <p class="text-gray-400 break-all">${esc(u.email)}${emCopy(u.email)}${cv ? '' : ' · sem pedido de convite com este e-mail'}</p>
+                    ${sec === 'ativos' ? (() => { const d = inatDias(u); return `<p class="text-gray-400 mt-1">Último lançamento: <span class="text-gray-200">${u.last_entry_at ? fmtDT(u.last_entry_at).split(' ')[0] : 'nenhum lançamento'}</span> · <span class="text-gray-200">${d} dia${d === 1 ? '' : 's'}${u.last_entry_at ? '' : ' desde o cadastro'}</span>${d >= 90 ? ' · ⚠ 90+ dias' : d >= 75 ? ' · ⚠ 75+ dias' : ''}</p>`; })() : ''}
                     <p class="text-gray-400 mt-1">Cadastro: <span class="text-gray-200">${fmtDT(u.created_at)}</span>${sec === 'ativos' ? ` · Último acesso: <span class="text-gray-200">${fmtDT(u.last_sign_in_at)}</span>` : ` · Excluído em: <span class="text-amber-300">${fmtDT(u.deleted_at)}</span>`}</p>
                     <div class="flex flex-wrap gap-2 mt-2"><button type="button" data-ua="ver" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold">📄 Dados desta pessoa</button>
                     <a href="${esc(invMailLink(u.email, 'Seus dados pessoais no My Trade Dash', usrMsgText(u, cv)))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">✉ Responder o pedido</a>
-                    ${wa ? `<a href="https://wa.me/${esc(wa)}?text=${encodeURIComponent(usrMsgText(u, cv))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">💬 WhatsApp</a>` : ''}${sec === 'ativos' && MODE !== 'claude' && invIsMaster() && rlAdmOk && !rlAdm.has(String(u.email || '').toLowerCase()) ? `<button type="button" data-ua="del" class="px-3 py-1.5 rounded-lg bg-red-700 text-white font-semibold">🗑 Excluir usuário</button>` : ''}</div></div>`; }).join('') : '<p class="text-xs text-gray-400 text-center py-6">Nenhum usuário nesta lista.</p>';
+                    ${wa ? `<a href="https://wa.me/${esc(wa)}?text=${encodeURIComponent(usrMsgText(u, cv))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">💬 WhatsApp</a>` : ''}${inatBtns(u, cv, wa)}${sec === 'ativos' && MODE !== 'claude' && invIsMaster() && rlAdmOk && !rlAdm.has(String(u.email || '').toLowerCase()) ? `<button type="button" data-ua="del" class="px-3 py-1.5 rounded-lg bg-red-700 text-white font-semibold">🗑 Excluir usuário</button>` : ''}</div></div>`; }).join('') : '<p class="text-xs text-gray-400 text-center py-6">Nenhum usuário nesta lista.</p>';
             };
             const loadUsers = async k => {
                 try { uList[k] = await adminUsersList(k); } catch (e) { adUBody.innerHTML = '<p class="text-xs text-red-400">Não foi possível carregar: ' + esc((e && e.message) || e) + '. Rode o SQL de estrutura (tabelas de usuários) no Supabase.</p>'; return; }
-                drawSecTabs(); if (sec === 'rel') drawRel(); if (sec === k) drawUsers();
+                drawSecTabs(); if (sec === 'rel') drawRel(); if (sec === k) drawUsers(); if (sec === 'apo' && k === 'ativos') drawDon();
             };
             ov.addEventListener('click', e => { const a = e.target.closest('[data-sbcopy]'); if (a) { try { navigator.clipboard.writeText(a.dataset.sbcopy); showToast('Copiado. Cole no Supabase.', 'ok'); } catch (x) {} } });
             const nb = ov.querySelector('#adNewAdmin'); if (nb && invIsMaster()) { nb.classList.remove('hidden'); nb.onclick = () => openAddAdmin(); }
@@ -2522,14 +2562,14 @@ hmoDb = db;
             const drawExc = () => {
                 if (!exList) { exBody.innerHTML = '<p class="text-xs text-gray-400 text-center py-6">Carregando…</p>'; return; }
                 exTabs.innerHTML = [['novo', 'Novos'], ['desativado', 'Desativados'], ['excluido', 'Excluídos'], ['desistiu', 'Desistiram']].map(([k, t]) => `<button type="button" data-f="${k}" class="px-3 py-1 rounded-lg text-xs font-semibold border ${exF === k ? 'border-blue-500 bg-blue-950 text-blue-200' : 'border-gray-700 text-gray-300'}">${t} (${exList.filter(x => exInF(x, k)).length})</button>`).join('');
-                const items = exList.filter(x => exInF(x, exF));
+                const items = exList.filter(x => exInF(x, exF) && adMatch(adQ.exc, x.name, x.email, (adConv(x.email) || {}).whatsapp));
                 exBody.innerHTML = items.length ? items.map(r => {
                     const cv = invCache.find(c => String(c.email || '').toLowerCase() === String(r.email || '').toLowerCase()) || list.find(c => String(c.email || '').toLowerCase() === String(r.email || '').toLowerCase());
                     const nm = r.name || (cv && cv.name) || r.email, wa = cv && cv.whatsapp, uf = wa ? invUfOf(wa) : '', rr = { ...r, name: nm };
                     const d30 = r.status === 'desativado' && excDaysDeact(r) >= EXC_DAYS;
                     return `<div class="rounded-lg border border-gray-700 p-3 text-xs" data-id="${esc(r.id)}">
                         <div class="flex items-start justify-between gap-2"><p class="font-bold text-gray-100 break-words text-sm">${esc(nm)}</p><span class="shrink-0 text-[10px] px-2 py-0.5 rounded-full border ${r.status === 'novo' ? 'border-red-500 text-red-300' : 'border-gray-600 text-gray-400'}">${EXC_ST[r.status] || r.status}${r.status === 'novo' ? ' · ' + excAge(r) + (excAge(r) === 1 ? ' dia' : ' dias') : ''}</span></div>
-                        <p class="text-gray-400 break-all">${esc(r.email)}${wa ? ' · ' + esc(invFmtPhone(wa)) : ''}${uf ? ' · ' + esc(uf) : ''}</p>
+                        <p class="text-gray-400 break-all">${esc(r.email)}${emCopy(r.email)}${wa ? ' · ' + esc(invFmtPhone(wa)) : ''}${uf ? ' · ' + esc(uf) : ''}</p>
                         <p class="text-gray-400">Pedido em ${excDay(r.created_at)}${r.deactivated_at ? ' · desativado em ' + excDay(r.deactivated_at) : ''}</p>
                         <div class="rounded-md bg-darkBg border border-gray-700 px-2 py-1.5 mt-2"><p><b class="text-gray-100">Motivo:</b> ${esc(r.reason || '—')}</p>${r.comment ? `<p class="text-gray-300 mt-0.5">“${esc(r.comment)}”</p>` : ''}</div>
                         ${r.status === 'excluido' ? '' : `<div class="flex flex-wrap gap-2 mt-2">
@@ -2558,6 +2598,7 @@ hmoDb = db;
             const cfgB = ov.querySelector('#adCfg'); if (cfgB && invIsMaster()) { cfgB.classList.remove('hidden'); cfgB.onclick = () => openAjustes(); }
             const drawDon = () => {
                 if (!doList) { doBody.innerHTML = '<p class="text-xs text-gray-400 text-center py-6">Carregando…</p>'; return; }
+                drawDonExtra();
                 const curYm = todayLocalISO().slice(0, 7);
                 if (!apoMonth) apoMonth = curYm;
                 const [ay, am] = apoMonth.split('-').map(Number);
@@ -2570,13 +2611,13 @@ hmoDb = db;
                     + card('Para conferir', String(doList.filter(x => x.status === 'nova').length), 'aguardando a sua conferência')
                     + card('Apoiadores', String(new Set(doList.filter(x => x.status === 'confirmada').map(x => x.user_id || x.email)).size), 'pessoas que já contribuíram');
                 doTabs.innerHTML = [['nova', 'Para conferir'], ['confirmada', 'Confirmadas'], ['descartada', 'Descartadas'], ['todas', 'Todas']].map(([k, t]) => `<button type="button" data-df="${k}" class="px-3 py-1 rounded-lg text-xs font-semibold border ${doF === k ? 'border-blue-500 bg-blue-950 text-blue-200' : 'border-gray-700 text-gray-300'}">${t} (${k === 'todas' ? doList.length : doList.filter(x => x.status === k).length})</button>`).join('');
-                const items = doList.filter(x => doF === 'todas' || x.status === doF);
+                const items = doList.filter(x => (doF === 'todas' || x.status === doF) && adMatch(adQ.apo, x.name, x.email, (adConv(x.email) || {}).whatsapp));
                 doBody.innerHTML = items.length ? items.map(r => {
                     const cv = invCache.find(c => String(c.email || '').toLowerCase() === String(r.email || '').toLowerCase());
                     const wa = cv && cv.whatsapp, ok = r.status === 'confirmada', des = r.status === 'descartada';
                     return `<div class="rounded-lg border border-gray-700 p-3 text-xs" data-id="${esc(String(r.id))}">
                         <div class="flex items-start justify-between gap-2"><p class="font-bold text-gray-100 break-words text-sm">${esc(r.name || r.email)}</p><span class="shrink-0 text-[10px] px-2 py-0.5 rounded-full border ${ok || des ? 'border-gray-600 bg-gray-800 text-gray-400' : 'border-amber-500 text-amber-300'}">${ok ? 'Confirmada' : des ? 'Descartada' : 'Para conferir'}</span></div>
-                        <p class="text-gray-400 break-all">${esc(r.email)}${wa ? ' · ' + esc(invFmtPhone(wa)) : ''}</p>
+                        <p class="text-gray-400 break-all">${esc(r.email)}${emCopy(r.email)}${wa ? ' · ' + esc(invFmtPhone(wa)) : ''}</p>
                         <p class="text-gray-300 mt-1"><b class="text-gray-100">R$ ${fmtMoneyBR(num(r.amount))}</b> · informada em ${fmtDT(r.created_at)}${ok ? ' · confirmada em ' + fmtDT(r.confirmed_at) + ' · recibo nº ' + donNo(r) : ''}${des ? ' · descartada em ' + fmtDT(r.descartado_em) : ''}</p>
                         <div class="flex flex-wrap gap-2 mt-2">
                             ${ok ? `<button type="button" data-da="pdf" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold">⬇ Baixar recibo (PDF)</button>
@@ -2587,6 +2628,40 @@ hmoDb = db;
                               : `<button type="button" data-da="ok" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold">✓ Confirmar e gerar recibo</button>
                                  <button type="button" data-da="dis" class="px-3 py-1.5 rounded-lg border border-gray-600 text-gray-200 font-semibold">✕ Descartar</button>`}
                         </div></div>`; }).join('') : '<p class="text-xs text-gray-400 text-center py-6">Nenhuma contribuição nesta lista.</p>';
+            };
+            const doCards2 = ov.querySelector('#doCards2'), doNonSum = ov.querySelector('#doNonSum'), doMsgTxt = ov.querySelector('#doMsgTxt'), doMsgInfo = ov.querySelector('#doMsgInfo'), doNonList = ov.querySelector('#doNonList');
+            let doMsgInit = false;
+            const donEmailLast = em => (doList || []).filter(x => x.status === 'confirmada' && x.confirmed_at && String(x.email || '').toLowerCase() === String(em || '').toLowerCase()).map(x => x.confirmed_at).sort().pop() || null;
+            const donNonDonors = () => (uList.ativos || []).filter(u => !(rlAdmOk && rlAdm.has(String(u.email || '').toLowerCase())) && Date.now() - new Date(u.created_at).getTime() > DON_ASK_DAYS * DAY_MS)
+                .map(u => ({ u, last: donEmailLast(u.email) })).filter(x => !x.last || Date.now() - new Date(x.last).getTime() >= DON_DAYS * DAY_MS)
+                .sort((a, b) => (a.last ? new Date(a.last).getTime() : 0) - (b.last ? new Date(b.last).getTime() : 0));
+            const drawDonNon = () => {
+                if (!uList.ativos || !doList) { doNonList.innerHTML = '<p class="text-gray-400">Carregando…</p>'; return; }
+                const arr = donNonDonors(), act = (uList.ativos || []).filter(u => !(rlAdmOk && rlAdm.has(String(u.email || '').toLowerCase()))), okN = act.filter(u => { const l = donEmailLast(u.email); return l && Date.now() - new Date(l).getTime() < DON_DAYS * DAY_MS; }).length;
+                const cd = (t, v, s2) => `<div class="rounded-lg border border-gray-700 p-3"><p class="text-[11px] text-gray-400">${t}</p><p class="text-base font-bold text-gray-100 mt-0.5">${v}</p><p class="text-[11px] text-gray-500">${s2}</p></div>`;
+                doCards2.innerHTML = cd('Usuários ativos', String(act.length), 'sem contar os admins') + cd('Contribuíram nos últimos 60 dias', String(okN), 'com contribuição confirmada') + cd('Sem contribuir há 60+ dias', String(act.length - okN), 'inclui quem nunca contribuiu');
+                doNonSum.textContent = 'Usuários que não doaram +60 dias (' + arr.length + ')';
+                const txt = doMsgTxt.value.trim() || DON_MSG_DEF;
+                doNonList.innerHTML = arr.length ? arr.map(({ u, last }) => {
+                    const cv = usrConv(u.email), wa = cv && cv.whatsapp, nm = (cv && cv.name) || u.email, first = String(nm).trim().split(/[\s@]+/)[0] || '', body = `Olá, ${first}!\n\n${txt}${SIGN}`;
+                    const dias = last ? Math.floor((Date.now() - new Date(last).getTime()) / 86400000) : null;
+                    return `<div class="rounded-lg border border-gray-700 p-2"><p class="font-bold text-gray-100 break-words">${esc(nm)}</p><p class="text-gray-400 break-all">${esc(u.email)}${emCopy(u.email)}${wa ? ' · ' + esc(invFmtPhone(wa)) : ''}</p>
+                        <p class="text-gray-300">${dias == null ? 'Nunca contribuiu' : 'Última contribuição há ' + dias + ' dia' + (dias === 1 ? '' : 's')}</p>
+                        <div class="flex flex-wrap gap-2 mt-1"><a href="${esc(invMailLink(u.email, 'Ajude a manter o My Trade Dash', body))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">✉ E-mail</a>${wa ? `<a href="https://wa.me/${esc(wa)}?text=${encodeURIComponent(body)}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">💬 WhatsApp</a>` : ''}</div></div>`; }).join('') : '<p class="text-gray-400">Ninguém nesta lista agora.</p>';
+            };
+            const drawDonExtra = () => {
+                if (!doMsgInit) { doMsgInit = true; doMsgTxt.value = (donMsgCfg && donMsgCfg.text) || DON_MSG_DEF; }
+                const m = invIsMaster(); doMsgTxt.readOnly = !m; ov.querySelector('#doMsgRst').classList.toggle('hidden', !m); ov.querySelector('#doMsgSend').classList.toggle('hidden', !m);
+                drawDonNon();
+            };
+            doMsgTxt.addEventListener('input', drawDonNon);
+            ov.querySelector('#doMsgRst').onclick = () => { doMsgTxt.value = DON_MSG_DEF; drawDonNon(); doMsgInfo.textContent = 'Texto padrão restaurado. Ele só vale para os usuários depois de 📣 Enviar a MSG.'; };
+            ov.querySelector('#doMsgSend').onclick = async () => {
+                const text = doMsgTxt.value.trim(), n = donNonDonors().length;
+                if (!text) { doMsgInfo.textContent = 'Escreva a mensagem antes de enviar.'; return; }
+                if (!await askBox('Confirmação', `Enviar esta mensagem no 🔔 sino de ${n} usuário${n === 1 ? '' : 's'} (quem usa o app há mais de ${DON_ASK_DAYS} dias e não contribuiu nos últimos 60)?\n\nCada pessoa vê uma única vez.`, 'Enviar a MSG', 'Cancelar')) return;
+                try { const v = { id: String(Date.now()), text }; await cfgSet('doacao_msg', v); donMsgCfg = v; auditAdd({ kind: 'don_msg', outcome: 'Concluída', detail: 'Mensagem de apoio liberada no sino para quem não contribuiu há 60+ dias' }); doMsgInfo.textContent = 'Mensagem enviada: aparece uma vez no 🔔 de quem se encaixa.'; showToast('Mensagem enviada', 'ok'); }
+                catch (ex) { showToast('Não foi possível enviar: ' + ((ex && ex.message) || ex), 'err'); }
             };
             const loadDon = async () => { try { await invLoadCache(); doList = await donList(); donAdminList = doList; } catch (e) { doBody.innerHTML = '<p class="text-xs text-red-400">Não foi possível carregar: ' + esc((e && e.message) || e) + '. Rode o SQL de estrutura (tb_contribuicoes) no Supabase.</p>'; return; } drawSecTabs(); if (sec === 'rel') drawRel(); if (sec === 'apo') drawDon(); };
             doTabs.addEventListener('click', e => { const b = e.target.closest('[data-df]'); if (b) { doF = b.dataset.df; drawDon(); } });
@@ -2730,14 +2805,14 @@ hmoDb = db;
             const drawPwd = () => {
                 if (!pwList) { pwBody.innerHTML = '<p class="text-xs text-gray-400 text-center py-6">Carregando…</p>'; return; }
                 pwTabs.innerHTML = [['novo', 'Novos'], ['atendido', 'Atendidos']].map(([k, t]) => `<button type="button" data-pf="${k}" class="px-3 py-1 rounded-lg text-xs font-semibold border ${pwF === k ? 'border-blue-500 bg-blue-950 text-blue-200' : 'border-gray-700 text-gray-300'}">${t} (${pwList.filter(x => x.status === k).length})</button>`).join('');
-                const items = pwList.filter(x => x.status === pwF);
+                const items = pwList.filter(x => x.status === pwF && adMatch(adQ.pwd, x.name, x.email, (adConv(x.email) || {}).whatsapp));
                 pwBody.innerHTML = items.length ? items.map(r => {
                     const cv = invCache.find(c => String(c.email || '').toLowerCase() === String(r.email || '').toLowerCase()) || list.find(c => String(c.email || '').toLowerCase() === String(r.email || '').toLowerCase());
                     const nm = (cv && cv.name) || r.email, wa = cv && cv.whatsapp, pw = pwdShown[r.id], rr = { ...r, name: nm };
                     const cmd = `update auth.users set encrypted_password = crypt('SENHA_NOVA', gen_salt('bf', 10)) where lower(email) = lower('${String(r.email).replace(/'/g, "''")}');\ninsert into public.tb_senha_troca (user_id, must_change) select id, true from auth.users where lower(email) = lower('${String(r.email).replace(/'/g, "''")}') on conflict (user_id) do update set must_change = true;`;
                     return `<div class="rounded-lg border border-gray-700 p-3 text-xs" data-id="${esc(r.id)}">
                         <div class="flex items-start justify-between gap-2"><p class="font-bold text-gray-100 break-all text-sm">${esc(nm)}</p><span class="shrink-0 text-[10px] px-2 py-0.5 rounded-full border ${r.status === 'novo' ? 'border-red-500 text-red-300' : 'border-gray-600 text-gray-400'}">${PWD_ST[r.status] || r.status}</span></div>
-                        <p class="text-gray-400 break-all">${esc(r.email)}${wa ? ' · ' + esc(invFmtPhone(wa)) : ''}</p>
+                        <p class="text-gray-400 break-all">${esc(r.email)}${emCopy(r.email)}${wa ? ' · ' + esc(invFmtPhone(wa)) : ''}</p>
                         <p class="text-gray-400">Pedido em ${fmtDT(r.created_at)}${r.handled_at ? ' · atendido em ' + fmtDT(r.handled_at) : ''}</p>
                         ${pw ? `<div class="rounded-md bg-darkBg border border-gray-700 px-2 py-1.5 mt-2"><p>🔑 Senha temporária: <b class="font-mono text-gray-100 select-all">${esc(pw)}</b> <button type="button" data-pa="copy" class="underline text-blue-300">Copiar</button></p><p class="text-gray-400 mt-0.5">Ela aparece só agora: envie em seguida.</p></div>` : (r.status === 'atendido' ? '<p class="text-gray-500 mt-2">A senha já foi gerada e não aparece mais aqui.</p>' : '')}
                         <div class="flex flex-wrap gap-2 mt-2">
@@ -2758,6 +2833,51 @@ hmoDb = db;
                     try { const pw = await pwdGerar(r); pwdShown[id] = pw; r.status = 'atendido'; r.handled_at = new Date().toISOString(); pwF = 'atendido'; drawSecTabs(); drawPwd(); if (bellInit) refreshBell(); }
                     catch (ex) { showToast('Não foi possível gerar: ' + ((ex && ex.message) || ex), 'err'); }
                 }
+            });
+            /* ---------- ✏ Correções de dados ---------- */
+            const coTabs = ov.querySelector('#coTabs'), coBody = ov.querySelector('#coBody');
+            const coShow = (r, v) => r.campo === 'celular' && v ? invFmtPhone(v) : (v || '—');
+            const drawCor = () => {
+                if (!coList) { coBody.innerHTML = '<p class="text-xs text-gray-400 text-center py-6">Carregando…</p>'; return; }
+                coTabs.innerHTML = [['novo', 'Novos'], ['atendido', 'Atendidos'], ['recusado', 'Recusados']].map(([k, t]) => `<button type="button" data-cf="${k}" class="px-3 py-1 rounded-lg text-xs font-semibold border ${coF === k ? 'border-blue-500 bg-blue-950 text-blue-200' : 'border-gray-700 text-gray-300'}">${t} (${coList.filter(x => x.status === k).length})</button>`).join('');
+                const items = coList.filter(x => x.status === coF && adMatch(adQ.cor, x.email, x.valor_atual, x.valor_novo, (adConv(x.email) || {}).name, (adConv(x.email) || {}).whatsapp));
+                coBody.innerHTML = items.length ? items.map(r => {
+                    const cv = adConv(r.email), nm = (cv && cv.name) || r.email, wa = cv && cv.whatsapp, rr = { ...r, name: nm };
+                    const canApply = r.status === 'novo' && (r.campo !== 'email' || invIsMaster());
+                    return `<div class="rounded-lg border border-gray-700 p-3 text-xs" data-id="${esc(r.id)}">
+                        <div class="flex items-start justify-between gap-2"><p class="font-bold text-gray-100 break-words text-sm">${esc(nm)}</p><span class="shrink-0 text-[10px] px-2 py-0.5 rounded-full border ${r.status === 'novo' ? 'border-red-500 text-red-300' : 'border-gray-600 text-gray-400'}">${COR_ST[r.status] || r.status}</span></div>
+                        <p class="text-gray-400 break-all">${esc(r.email)}${emCopy(r.email)}${wa ? ' · ' + esc(invFmtPhone(wa)) : ''}</p>
+                        <p class="text-gray-400">Pedido em ${fmtDT(r.created_at)}${r.handled_at ? ' · tratado em ' + fmtDT(r.handled_at) : ''}</p>
+                        <div class="rounded-md bg-darkBg border border-gray-700 px-2 py-1.5 mt-2 space-y-0.5"><p><b class="text-gray-100">Corrigir:</b> ${esc(COR_CAMPO[r.campo] || r.campo)}</p><p class="break-all"><b class="text-gray-100">De:</b> ${esc(coShow(r, r.valor_atual))}</p><p class="break-all"><b class="text-gray-100">Para:</b> ${esc(coShow(r, r.valor_novo))}${r.campo === 'email' ? emCopy(r.valor_novo) : ''}</p><p><b class="text-gray-100">Motivo:</b> “${esc(r.motivo || '—')}”</p></div>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            <a href="${esc(invMailLink(r.email, 'Sua correção de dados no My Trade Dash', corMsg(rr, 'resp')))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">✉ Responder por e-mail</a>
+                            ${wa ? `<a href="https://wa.me/${esc(wa)}?text=${encodeURIComponent(corMsg(rr, 'resp'))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">💬 Responder pelo WhatsApp</a>` : ''}
+                            ${r.status === 'novo' && r.campo === 'email' ? `<a href="${esc(invMailLink(r.valor_novo, 'Confirme o seu novo e-mail no My Trade Dash', corMsg(rr, 'conf')))}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold">✉ Pedir confirmação no novo e-mail</a>` : ''}
+                            ${canApply ? `<button type="button" data-ca="apply" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-semibold">✔ Aplicar correção</button>` : ''}
+                            ${r.status === 'novo' ? `<button type="button" data-ca="refuse" class="px-3 py-1.5 rounded-lg bg-red-700 text-white font-semibold">✖ Recusar</button>` : ''}
+                        </div>${r.status === 'novo' && r.campo === 'email' && !invIsMaster() ? '<p class="text-[11px] text-gray-500 mt-2">A troca de e-mail é só do admin master.</p>' : ''}</div>`; }).join('') : '<p class="text-xs text-gray-400 text-center py-6">Nenhum pedido nesta lista.</p>';
+            };
+            const loadCor = async () => { try { coList = await corList(); corAdminList = coList; } catch (e) { coBody.innerHTML = '<p class="text-xs text-red-400">Não foi possível carregar: ' + esc((e && e.message) || e) + '.</p>'; return; } drawSecTabs(); if (sec === 'cor') drawCor(); };
+            coTabs.addEventListener('click', e => { const b = e.target.closest('[data-cf]'); if (b) { coF = b.dataset.cf; drawCor(); } });
+            coBody.addEventListener('click', async e => {
+                const b = e.target.closest('[data-ca]'); if (!b) return;
+                const id = b.closest('[data-id]').dataset.id, a = b.dataset.ca, r = coList.find(x => x.id === id); if (!r) return;
+                try {
+                    if (a === 'apply') {
+                        if (r.campo === 'email' && !invIsMaster()) { showToast('Só o admin master troca e-mail', 'err'); return; }
+                        if (!await askBox('Confirmação', `Aplicar esta correção?\n\n${COR_CAMPO[r.campo]}\nDe: ${coShow(r, r.valor_atual)}\nPara: ${coShow(r, r.valor_novo)}${r.campo === 'email' ? '\n\nConfirme antes que a pessoa respondeu "confirmo" no novo e-mail. O login passa a ser o novo e-mail.' : ''}`, 'Aplicar correção', 'Cancelar')) return;
+                        await corApply(r); Object.assign(r, { status: 'atendido', handled_at: new Date().toISOString() });
+                        auditAdd({ kind: 'cor_admin', outcome: 'Concluída', detail: `Correção aplicada em ${r.email}: ${COR_CAMPO[r.campo]} de "${coShow(r, r.valor_atual)}" para "${coShow(r, r.valor_novo)}"` });
+                        showToast('Correção aplicada', 'ok'); coF = 'atendido';
+                        try { await invLoadCache(true); } catch (x) {} loadUsers('ativos');
+                    } else if (a === 'refuse') {
+                        if (!await askBox('Confirmação', `Recusar o pedido de ${r.email}? Os dados da pessoa continuam como estão.`, 'Recusar pedido', 'Cancelar')) return;
+                        await corRefuse(r); Object.assign(r, { status: 'recusado', handled_at: new Date().toISOString() });
+                        auditAdd({ kind: 'cor_admin', outcome: 'Recusada', detail: `Pedido de correção recusado de ${r.email}: ${COR_CAMPO[r.campo]}` });
+                        showToast('Pedido recusado', 'ok'); coF = 'recusado';
+                    }
+                    drawSecTabs(); drawCor(); if (bellInit) refreshBell();
+                } catch (ex) { showToast('Não foi possível concluir: ' + ((ex && ex.message) || ex), 'err'); }
             });
             /* ---------- 💬 Recados ---------- */
             const rcAdBody = ov.querySelector('#rcAdBody'), rcTabs = ov.querySelector('#rcTabs'), clBody = ov.querySelector('#clBody');
@@ -2832,7 +2952,7 @@ hmoDb = db;
                 clBody.innerHTML = `<p class="text-sm font-bold text-gray-100">👥 Colaboradores</p>
                     <p class="text-[11px] text-gray-400">Quem está aqui fala com você pelo canal dos colaboradores, em ⚙ Opções &gt; ✉️ Falar com o My Trade Dash. O canal liga e desliga em ⚙ Ajustes.</p>
                     <div class="space-y-2">${clList.map(c => `<div class="flex items-center justify-between gap-2 rounded-lg border border-gray-700 px-2 py-1.5" data-clid="${esc(String(c.id))}">
-                        <span class="text-xs break-all">${esc(c.email)} <span class="text-[10px] ${c.role === 'master' ? 'text-amber-300' : c.role === 'admin' ? 'text-blue-300' : 'text-gray-400'}">(${esc(COL_LAB[c.role])}${c.role === 'master' ? ', você' : ''})</span></span>
+                        <span class="text-xs break-all">${esc(c.email)}${emCopy(c.email)} <span class="text-[10px] ${c.role === 'master' ? 'text-amber-300' : c.role === 'admin' ? 'text-blue-300' : 'text-gray-400'}">(${esc(COL_LAB[c.role])}${c.role === 'master' ? ', você' : ''})</span></span>
                         ${c.fixed ? '' : '<button type="button" data-clrm class="shrink-0 px-2 py-1 rounded-lg border border-red-500 text-red-300 text-[11px] font-semibold">Remover</button>'}
                     </div>`).join('')}</div>
                     <p class="text-xs font-bold text-gray-100 mt-3">➕ Cadastrar colaborador</p>
@@ -2912,11 +3032,12 @@ hmoDb = db;
             });
 
             const setSec = k => {
-                sec = k; adInv.classList.toggle('hidden', k !== 'inv'); adUsers.classList.toggle('hidden', k !== 'ativos' && k !== 'excl'); adExc.classList.toggle('hidden', k !== 'exc'); adPwd.classList.toggle('hidden', k !== 'pwd'); adApo.classList.toggle('hidden', k !== 'apo'); adRel.classList.toggle('hidden', k !== 'rel');
+                sec = k; adInv.classList.toggle('hidden', k !== 'inv'); adUsers.classList.toggle('hidden', k !== 'ativos' && k !== 'excl'); adExc.classList.toggle('hidden', k !== 'exc'); adPwd.classList.toggle('hidden', k !== 'pwd'); ov.querySelector('#adCor').classList.toggle('hidden', k !== 'cor'); adApo.classList.toggle('hidden', k !== 'apo'); adRel.classList.toggle('hidden', k !== 'rel');
                 ov.querySelector('#adRec').classList.toggle('hidden', k !== 'rec'); ov.querySelector('#adColab').classList.toggle('hidden', k !== 'colab'); ov.querySelector('#adDesp').classList.toggle('hidden', k !== 'desp');
                 ov.querySelector('#ivMode').classList.toggle('hidden', k !== 'inv');
                 drawSecTabs();
                 if (k === 'rel') drawRel(); else if (k === 'exc') drawExc(); else if (k === 'apo') { drawDon(); if (!doList) loadDon(); } else if (k === 'pwd') { drawPwd(); if (!pwList) loadPwd(); }
+                else if (k === 'cor') { drawCor(); if (!coList) loadCor(); }
                 else if (k === 'rec') { rcOpenEmail = null; drawRec(); if (!recAdminList) loadRec(); }
                 else if (k === 'colab') { drawColab(); if (!clList) loadColab(); }
                 else if (k === 'desp') { drawDesp(); if (!dpList) loadDesp(); }
@@ -2924,6 +3045,7 @@ hmoDb = db;
             };
             adTabs.addEventListener('click', e => { const b = e.target.closest('[data-sec]'); if (b) setSec(b.dataset.sec); });
             adSearch.addEventListener('input', () => { uq = adSearch.value; drawUsers(); });
+            ov.addEventListener('input', e => { const q = e.target.closest('[data-q]'); if (!q) return; adQ[q.dataset.q] = q.value; ({ apo: drawDon, exc: drawExc, pwd: drawPwd, cor: drawCor })[q.dataset.q](); });
             const recThreads = () => {
                 const by = {};
                 (recAdminList || []).forEach(r => { const k = String(r.email || '').toLowerCase(); (by[k] = by[k] || []).push(r); });
@@ -2935,7 +3057,7 @@ hmoDb = db;
             const usrConv = em => (invCache || []).concat(list || []).find(c => String(c.email || '').toLowerCase() === String(em || '').toLowerCase());
             const usrSections = u => {
                 const em = String(u.email || '').toLowerCase(), cv = usrConv(em), out = [];
-                if (cv) out.push({ t: 'Pedido de convite', rows: [['Nome', cv.name || '—'], ['E-mail', cv.email], ['WhatsApp', cv.whatsapp ? invFmtPhone(cv.whatsapp) : '—'], ['UF', (cv.whatsapp && invUfOf(cv.whatsapp)) || '—'], ['Data de nascimento', cv.birth_date ? new Date(cv.birth_date + 'T12:00:00').toLocaleDateString('pt-BR') : '—'], ['Como soube do app', cv.how_known || '—'], ['Autorização LGPD', 'aceita em ' + fmtDT(cv.created_at) + ' · texto ' + (cv.consent_v || 'anterior a 13/11/2026')], ['Situação', INV_ST[cv.status] || cv.status], ['Pedido em', fmtDT(cv.created_at)]] });
+                if (cv) out.push({ t: 'Pedido de convite', rows: [['Nome', cv.name || '—'], ['E-mail', cv.email], ['WhatsApp', cv.whatsapp ? invFmtPhone(cv.whatsapp) : '—'], ['UF', (cv.whatsapp && invUfOf(cv.whatsapp)) || '—'], ['Data de nascimento', cv.birth_date ? new Date(cv.birth_date + 'T12:00:00').toLocaleDateString('pt-BR') : '—'], ['Como soube do app', cv.how_known || '—'], ['Opera day trade', cv.opera_daytrade === true ? 'Sim' : cv.opera_daytrade === false ? 'Não' : '—'], ['Autorização LGPD', 'aceita em ' + fmtDT(cv.created_at) + ' · texto ' + (cv.consent_v || 'anterior a 13/11/2026')], ['Situação', INV_ST[cv.status] || cv.status], ['Pedido em', fmtDT(cv.created_at)]] });
                 out.push({ t: 'Conta', rows: [['Nome no perfil', (cv && cv.name) || '—'], ['E-mail', u.email], ['Cadastro', fmtDT(u.created_at)], ['Último acesso', fmtDT(u.last_sign_in_at)], ['Administrador do app', rlAdm.has(em) ? 'Sim' : 'Não'], ['Conta excluída em', fmtDT(u.deleted_at)]] });
                 const dos = (doList || []).filter(x => String(x.email || '').toLowerCase() === em);
                 if (dos.length) out.push({ t: 'Contribuições voluntárias', note: 'O Pix é feito pelo banco da própria pessoa: nenhum dado de pagamento é guardado pelo app.', head: ['Valor', 'Situação', 'Informada em', 'Confirmada em', 'Comprov.'], rows: dos.map(x => ['R$ ' + fmtMoneyBR(num(x.amount)), x.status === 'confirmada' ? 'Confirmada' : x.status === 'descartada' ? 'Não localizada' : 'Aguardando conferência', fmtDT(x.created_at), fmtDT(x.confirmed_at), x.receipt_no ? donNo(x) : '—']) });
@@ -2958,7 +3080,7 @@ hmoDb = db;
                 const o = document.createElement('div'); o.className = 'fixed inset-0 z-[120] flex items-center justify-center p-3 bg-black/70'; o.dataset.keepBell = '1';
                 o.innerHTML = `<div class="w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl">
                     <h3 class="text-base font-bold">📄 Dados pessoais de ${esc(nome)}</h3>
-                    <p class="text-[11px] text-gray-400 mb-3">${esc(u.email)} · conferido em ${esc(fmtDT(new Date().toISOString()))}</p>
+                    <p class="text-[11px] text-gray-400 mb-3">${esc(u.email)}${emCopy(u.email)} · conferido em ${esc(fmtDT(new Date().toISOString()))}</p>
                     ${secs.map(sc => `<p class="text-xs font-bold text-gray-100 uppercase tracking-wide mt-3 mb-1">${esc(sc.t)}</p>
                         <div class="overflow-x-auto"><table class="w-full text-[11px]">${sc.head ? `<thead class="text-gray-400"><tr class="border-b border-gray-700 text-left">${sc.head.map(h => `<th class="py-1 pr-3 font-semibold">${esc(h)}</th>`).join('')}</tr></thead>` : ''}
                         <tbody>${sc.rows.map(r => sc.head ? `<tr class="border-b border-gray-800/60">${r.map(c => `<td class="py-1 pr-3 text-gray-200">${esc(c)}</td>`).join('')}</tr>` : `<tr class="border-b border-gray-800/60"><td class="py-1 pr-3 text-gray-400 w-1/2">${esc(r[0])}</td><td class="py-1 text-gray-200">${esc(r[1])}</td></tr>`).join('')}</tbody></table></div>${sc.note ? `<p class="text-[10px] text-gray-400 mt-1">${esc(sc.note)}</p>` : ''}`).join('')}
@@ -2975,8 +3097,16 @@ hmoDb = db;
                     catch (e) { showToast('Não foi possível gerar: ' + ((e && e.message) || e), 'err'); }
                     bp.disabled = false; bp.textContent = '📄 Baixar PDF'; };
             };
+            ov.querySelector('#adInat').onchange = e => { uFil = e.target.checked; drawUsers(); };
             adUBody.addEventListener('click', async e => { const b = e.target.closest('[data-ua]'); if (!b) return;
                 const em = b.closest('[data-um]').dataset.um, u = (uList[sec] || []).find(x => x.email === em); if (!u) return;
+                if (b.dataset.ua === 'aviso') { try { auditAdd({ kind: 'inativ_aviso', outcome: 'Concluída', detail: `Aviso de inatividade aberto para ${u.email} (${inatDias(u)} dias sem lançar)` }); } catch (x) {} return; }
+                if (b.dataset.ua === 'inat') {
+                    const d = inatDias(u), cv = usrConv(u.email), nm = (cv && cv.name) || u.email;
+                    if (!await askBox('Confirmação', `Desativar o acesso de ${nm} (${u.email}) por inatividade?\n\nA pessoa está há ${d} dias sem lançar. Ela deixa de entrar e os dados ficam guardados por ${EXC_DAYS} dias: nesse prazo você pode reativar em Pedidos de exclusão > Desativados. Depois disso, aparece o botão Excluir usuário.`, 'Desativar acesso', 'Cancelar')) return;
+                    try { await inatDesativar(u, d, nm); auditAdd({ kind: 'inativ_deact', outcome: 'Concluída', detail: `Acesso de ${u.email} desativado por inatividade (${d} dias sem lançar)` }); showToast('Acesso desativado por inatividade', 'ok'); loadUsers('ativos'); loadExc(); } catch (ex) { showToast('Não foi possível concluir: ' + ((ex && ex.message) || ex), 'err'); }
+                    return;
+                }
                 if (b.dataset.ua === 'del') {
                     const rq = (exList || []).find(x => String(x.email || '').toLowerCase() === String(u.email || '').toLowerCase() && (x.status === 'novo' || x.status === 'desativado'));
                     try { if (await excExcluirUsuario(u.user_id, u.email, rq)) { showToast('Usuário excluído', 'ok'); loadUsers('ativos'); loadUsers('excl'); loadExc(); } } catch (ex) { showToast('Não foi possível concluir: ' + ((ex && ex.message) || ex), 'err'); }
@@ -2984,7 +3114,7 @@ hmoDb = db;
                 }
                 if (invIsMaster() && !recAdminList) { try { recAdminList = await recAll(); } catch (ex) { recAdminList = []; } }
                 openUsrData(u); });
-            loadUsers('ativos'); loadUsers('excl'); loadExc(); loadPwd(); loadDon();
+            loadUsers('ativos'); loadUsers('excl'); loadExc(); loadPwd(); loadCor(); loadDon();
             if (invIsMaster()) loadRec();
             ov.querySelector('#ivClose').onclick = close;
             ov.addEventListener('click', ev => { if (ev.target === ov) close(); });
@@ -3000,9 +3130,10 @@ hmoDb = db;
                 const bulkHead = (!searching && filter === 'novo' && items.length) ? `<div class="rounded-lg border border-blue-800 bg-blue-950/40 p-3 text-xs text-gray-100"><p>${items.length} pedido(s) aguardando. Criar a conta leva segundos; avisar cada pessoa, não. Por isso o app cria todas de uma vez e deixa a lista de quem falta avisar na aba 📣 A avisar.</p><button type="button" data-bulk="criar" class="mt-2 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold">✓ Criar as contas dos ${items.length} novos</button></div>` : '';
                 const head = searching ? `<p class="text-[11px] text-gray-400">Resultado da pesquisa em todos os pedidos, inclusive arquivados: ${items.length}.</p>` : '';
                 body.innerHTML = head + trashHead + bulkHead + (items.length ? items.map(r => { const uf = invUfOf(r.whatsapp), bd = invBdayNear(r); return `<div class="rounded-lg border border-gray-700 p-3" data-id="${esc(r.id)}">
-                    <div class="flex items-start justify-between gap-2"><div class="min-w-0"><p class="font-bold text-gray-100 break-words">${esc(r.name)}</p><p class="text-xs text-gray-400 break-all">${esc(r.email)}</p>${r.deleted_at ? '' : `<a href="${SB_DASH}/auth/users" target="_blank" rel="noopener" data-sbcopy="${esc(r.email)}" class="inline-block mt-1 px-2 py-0.5 rounded border border-gray-600 text-[11px] text-blue-300 underline">↗ Abrir Supabase (Users)</a>`}<p class="text-xs text-gray-300">💬 ${esc(invFmtPhone(r.whatsapp))}${uf ? ' · ' + esc(uf) : ''}</p>${r.birth_date ? `<p class="text-xs text-gray-300">🎂 ${esc(invBirthBR(r.birth_date))}</p>` : ''}</div>
+                    <div class="flex items-start justify-between gap-2"><div class="min-w-0"><p class="font-bold text-gray-100 break-words">${esc(r.name)}</p><p class="text-xs text-gray-400 break-all">${esc(r.email)}${emCopy(r.email)}</p>${r.deleted_at ? '' : `<a href="${SB_DASH}/auth/users" target="_blank" rel="noopener" data-sbcopy="${esc(r.email)}" class="inline-block mt-1 px-2 py-0.5 rounded border border-gray-600 text-[11px] text-blue-300 underline">↗ Abrir Supabase (Users)</a>`}<p class="text-xs text-gray-300">💬 ${esc(invFmtPhone(r.whatsapp))}${uf ? ' · ' + esc(uf) : ''}</p>${r.birth_date ? `<p class="text-xs text-gray-300">🎂 ${esc(invBirthBR(r.birth_date))}</p>` : ''}</div>
                     <div class="shrink-0 flex flex-col items-end gap-1"><span class="text-[10px] px-2 py-0.5 rounded-full border ${r.status === 'novo' ? 'border-blue-500 text-blue-300' : 'border-gray-600 text-gray-400'}">${esc(r.status === 'convidado' ? (r.avisado ? 'Avisado' : 'A avisar') : (INV_ST[r.status] || r.status))}</span>${r.archived ? '<span class="text-[10px] px-2 py-0.5 rounded-full border border-gray-600 text-gray-400">🗄 Arquivado</span>' : ''}</div></div>
                     <p class="text-xs text-gray-400 mt-1">Como soube: <span class="text-gray-200">${esc(r.how_known)}</span></p>
+                    <p class="text-xs text-gray-400 mt-1">Opera day trade: <span class="text-gray-200">${r.opera_daytrade === true ? 'Sim' : r.opera_daytrade === false ? 'Não' : '—'}</span></p>
                     <p class="text-[11px] text-gray-500">${esc(invWhen(r.created_at))}</p>
                     <p class="text-[11px] text-gray-400 mt-0.5">${invConsent(r)}</p>
                     ${bd ? `<p class="text-xs text-amber-300 mt-1">🎂 ${bd.when === 'hoje' ? 'Hoje' : 'Amanhã'} é aniversário (faz ${bd.age} anos)</p>` : ''}
@@ -3102,17 +3233,25 @@ hmoDb = db;
                 } catch (ex) { showToast('Não foi possível concluir: ' + ((ex && ex.message) || ex), 'err'); }
             });
             await load();
-            drawSecTabs(); setSec(['ativos', 'excl', 'exc', 'pwd', 'apo', 'rel'].includes(startTab) ? startTab : 'inv');
+            drawSecTabs(); setSec(['ativos', 'excl', 'exc', 'pwd', 'cor', 'apo', 'rel'].includes(startTab) ? startTab : 'inv');
         }
         async function adminUsersList(k) {
             const hm = k === 'ativos' ? 'usuarios' : 'usuarios_excluidos', tb = k === 'ativos' ? 'tb_usuarios' : 'tb_usuarios_excluidos', ord = k === 'ativos' ? 'created_at' : 'deleted_at';
             if (MODE === 'claude') {
                 let docs = (await hmoDb.collection(hm).get()).docs.map(d => ({ id: d.id, ...d.data() }));
                 if (!docs.length && !adminSeeded[k]) { adminSeeded[k] = true; const seed = k === 'ativos' ? [['ana.silva@exemplo.com', 40, 1], ['carlos.souza@exemplo.com', 25, 0], ['diogo@exemplo.com', 120, 0]] : [['teste.antigo@exemplo.com', 60, 10]]; for (const [em, c, l] of seed) { const rec = k === 'ativos' ? { email: em, created_at: Date.now() - c * 86400000, last_sign_in_at: Date.now() - l * 86400000 } : { email: em, created_at: Date.now() - c * 86400000, deleted_at: Date.now() - l * 86400000 }; await hmoDb.collection(hm).add(rec); } docs = (await hmoDb.collection(hm).get()).docs.map(d => ({ id: d.id, ...d.data() })); }
+                if (k === 'ativos') {
+                    if (!docs.some(u => u.email === 'pedro.lima@exemplo.com') && !adminSeeded.pedro) { adminSeeded.pedro = true; await hmoDb.collection(hm).add({ email: 'pedro.lima@exemplo.com', created_at: Date.now() - 200 * 86400000, last_sign_in_at: Date.now() - 100 * 86400000 }); docs = (await hmoDb.collection(hm).get()).docs.map(d => ({ id: d.id, ...d.data() })); }
+                    const HL = { 'ana.silva@exemplo.com': 10, 'carlos.souza@exemplo.com': 40, 'diogo@exemplo.com': 80, 'pedro.lima@exemplo.com': 95 };
+                    docs.forEach(u => { if (HL[u.email] != null) u.last_entry_at = Date.now() - HL[u.email] * 86400000; });
+                }
                 return docs.sort((a, b) => new Date(b[ord]) - new Date(a[ord]));
             }
             const { data, error } = await sb.from(tb).select('*').order(ord, { ascending: false }).limit(2000);
-            if (error) throw error; return data || [];
+            if (error) throw error;
+            const rows = data || [];
+            if (k === 'ativos') { try { const { data: ul } = await sb.rpc('mtd_ultimos_lancamentos'); const m = {}; (ul || []).forEach(x => { m[x.user_id] = x.ultimo; }); rows.forEach(u => { u.last_entry_at = m[u.user_id] || null; }); } catch (e) {} }
+            return rows;
         }
         const adminSeeded = {};
 
@@ -3214,7 +3353,8 @@ hmoDb = db;
         }
 
         /* ---- Calculadora de custos da nota (liquidação, emolumentos, registro, corretagem, ISS…) ---- */
-        function openCostCalc() {
+        function openCostCalc(target) {
+            target = target || 'nDesp';
             if ($('costCalc')) return;
             const o = document.createElement('div'); o.id = 'costCalc'; o.dataset.keepBell = '1';
             o.className = 'fixed inset-0 z-[130] flex items-center justify-center p-3 bg-black/70';
@@ -3234,8 +3374,9 @@ hmoDb = db;
             const refresh = () => tot.textContent = 'R$ ' + fmtMoneyBR(sum());
             ta.addEventListener('input', refresh);
             o.querySelector('[data-cc="cancel"]').onclick = () => o.remove();
-            o.querySelector('[data-cc="add"]').onclick = () => { const f = $('nCosts'); f.value = fmtMoneyBR(parseMoney(f.value) + sum()); o.remove(); };
-            o.querySelector('[data-cc="use"]').onclick = () => { $('nCosts').value = fmtMoneyBR(sum()); o.remove(); };
+            const done = () => { const f = $(target); f.dispatchEvent(new Event('input', { bubbles: true })); f.dispatchEvent(new Event('change', { bubbles: true })); o.remove(); f.focus(); };
+            o.querySelector('[data-cc="add"]').onclick = () => { const f = $(target); f.value = fmtMoneyBR(parseMoney(f.value) + sum()); done(); };
+            o.querySelector('[data-cc="use"]').onclick = () => { $(target).value = fmtMoneyBR(sum()); done(); };
             ta.focus();
         }
 
@@ -3303,6 +3444,18 @@ hmoDb = db;
         const CH_DEF = { user: false, colab: true };                 // desligar esconde, não apaga
         const MNT_DEF = { on: false, msg: '', colab: true };         // placa de manutenção
         const REC_SLA = 'Respondemos em até 2 dias úteis.';
+        const FEAT_DEF = { relatorios: true, financeiro: true, nota: true };
+        let featCfg = { ...FEAT_DEF };
+        const featOn = k => featCfg[k] !== false || invIsAdmin || amColab;
+        function featApply() {
+            const show = (id, on) => { const e = $(id); if (e) e.classList.toggle('hidden', !on); };
+            show('tabFlow', featOn('financeiro')); show('tabReport', featOn('relatorios')); show('btnNoteHdr', featOn('nota')); show('btnMore', featOn('financeiro'));
+            document.querySelectorAll('[data-fab="flow"]').forEach(e => e.classList.toggle('hidden', !featOn('financeiro')));
+            document.querySelectorAll('[data-fab="rep"]').forEach(e => e.classList.toggle('hidden', !featOn('relatorios')));
+            document.querySelectorAll('[data-fab="note"]').forEach(e => e.classList.toggle('hidden', !featOn('nota')));
+            const cur = !$('panelFlow').classList.contains('hidden') ? 'flow' : !$('panelReport').classList.contains('hidden') ? 'report' : 'ops';
+            if ((cur === 'flow' && !featOn('financeiro')) || (cur === 'report' && !featOn('relatorios'))) switchTab('ops');
+        }
         let chCfg = { ...CH_DEF }, mntCfg = { ...MNT_DEF }, amColab = false, recUnread = 0, recMineCache = null, recAdminList = null;
 
         async function cfgGet(key, def) {
@@ -3560,15 +3713,29 @@ hmoDb = db;
 
         const DON_DEF = { on: true, bell: true, pix: 'mytradedash@gmail.com', vals: [10, 25, 50], def: 1 };
         const DON_ASK_DAYS = 30, DON_SNOOZE_DAYS = 180;
+        const DON_MSG_DEF = 'O My Trade Dash é gratuito e vai continuar sendo. Se ele tem te ajudado nos seus registros, você pode contribuir com o que achar justo: a ajuda contribui para amenizar alguns custos como domínio, servidores e as melhorias. Seu acesso ao My Trade Dash não está condicionado à sua colaboração. Obrigado por usar o app!';
         let donCfg = { ...DON_DEF }, donAdminList = null, donMineHas = false, donSeeded = false;
         const donNo = r => String(r.receipt_no || 0).padStart(3, '0');
-        function donApply() { const b = $('btnDon'); if (b) b.classList.toggle('hidden', !donCfg.on); }
+        let donLastOk = null, donMsgCfg = {};   // donLastOk: data da última contribuição confirmada da pessoa
+        const DON_FULL = 0.85, DON_DAYS = 60;
+        const donLevel = () => { if (!donLastOk) return 0; const d = (Date.now() - new Date(donLastOk).getTime()) / 86400000; return Math.max(0, DON_FULL * (1 - d / DON_DAYS)); };
+        function donGlassPaint() {
+            const w = $('donWater'); if (!w) return;
+            const lv = donLevel(); w.setAttribute('transform', 'translate(0 ' + (25 - 22 * lv).toFixed(2) + ')'); w.style.visibility = lv > 0.005 ? 'visible' : 'hidden';
+        }
+        function donApply() { const b = $('btnDon'); if (b && b.parentElement) b.parentElement.classList.toggle('hidden', !donCfg.on); donGlassPaint(); }
+        async function donMineLastOk() {
+            if (MODE === 'claude') { const l = (await hmoDb.collection('contribuicoes').get()).docs.map(d => d.data()).filter(x => x.mine && x.status === 'confirmada' && x.confirmed_at).map(x => x.confirmed_at).sort().pop(); return l || null; }
+            const { data } = await sb.from('tb_contribuicoes').select('confirmed_at').eq('user_id', currentUserId).eq('status', 'confirmada').not('confirmed_at', 'is', null).order('confirmed_at', { ascending: false }).limit(1);
+            return (data && data[0] && data[0].confirmed_at) || null;
+        }
         async function donCfgLoad() {
             try {
                 if (MODE === 'claude') { const d = await hmoDb.collection('ajustes').doc('doacao').get(); if (d && d.exists) donCfg = { ...DON_DEF, ...d.data() }; }
                 else { const { data } = await sb.from('tb_ajustes').select('value').eq('key', 'doacao').maybeSingle(); if (data && data.value) donCfg = { ...DON_DEF, ...data.value }; }
             } catch (e) { donCfg = { ...DON_DEF }; }
             donApply();
+            try { donLastOk = await donMineLastOk(); donGlassPaint(); } catch (e) {}
         }
         async function donCfgSave(c) {
             if (MODE === 'claude') await hmoDb.collection('ajustes').doc('doacao').set(c);
@@ -3666,16 +3833,30 @@ hmoDb = db;
                     note: 'Sinalizada em ' + fmtDT(x.created_at) + '. Confira o Pix no seu banco antes de confirmar.',
                     btns: [{ k: 'apo', t: 'Para conferir' }] }));
         }
-        // Convite para contribuir: uma vez só, para quem usa o app há mais de 30 dias e ainda não contribuiu
+        // 5º dia útil de cada mês (feriados nacionais considerados: Confraternização, Sexta-feira Santa, Tiradentes, Trabalho, Independência, Aparecida, Finados, República, Consciência Negra e Natal)
+        function donEaster(y) { const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451), mo = Math.floor((h + l - 7 * m + 114) / 31), da = ((h + l - 7 * m + 114) % 31) + 1; return new Date(y, mo - 1, da); }
+        function donHolidays(y) { const set = new Set(); const add = (m, d) => set.add(m * 100 + d); [[1, 1], [4, 21], [5, 1], [9, 7], [10, 12], [11, 2], [11, 15], [11, 20], [12, 25]].forEach(([m, d]) => add(m, d)); const p = donEaster(y), gf = new Date(p.getFullYear(), p.getMonth(), p.getDate() - 2); add(gf.getMonth() + 1, gf.getDate()); return set; }
+        function donBizDay(y, m0, n) { const hol = donHolidays(y); let c = 0; for (let d = 1; d <= 31; d++) { const dt = new Date(y, m0, d); if (dt.getMonth() !== m0) break; const wd = dt.getDay(); if (wd === 0 || wd === 6 || hol.has((m0 + 1) * 100 + d)) continue; if (++c === n) return dt; } return null; }
+        const donYM = d => { d = d || new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); };
+        // quem recebe os convites do sino: usuário comum (no HMO vale o admin, para testar), com mais de 30 dias de uso e sem contribuição confirmada nos últimos 60 dias
+        function donEligible(c) {
+            if (!donCfg.on || !c || c.fail || !c.ar) return false;
+            if (invIsAdmin && MODE !== 'claude') return false;
+            if (donLastOk && Date.now() - Date.parse(donLastOk) < DON_DAYS * DAY_MS) return false;
+            if (MODE !== 'claude' && (!c.baseline || Date.now() - c.baseline < DON_ASK_DAYS * DAY_MS)) return false;
+            return true;
+        }
         function donAskAlert(c) {
-            if (!donCfg.on || !donCfg.bell || donMineHas || !c || c.fail) return [];
-            if (!c.ar || c.ar.has('don:no')) return [];
-            const last = [...c.ar].filter(k => k.indexOf('don:later:') === 0).map(k => Date.parse(k.slice(10))).sort((a, b) => b - a)[0];
-            if (last && Date.now() - last < DON_SNOOZE_DAYS * DAY_MS) return [];
-            if (!c.baseline || Date.now() - c.baseline < DON_ASK_DAYS * DAY_MS) return [];
-            return [{ id: 'don:ask', level: 'a', action: 'don', title: '💚 Ajude a manter o My Trade Dash',
-                note: 'O app é gratuito e vai continuar. Se ele te ajuda, você pode contribuir com o que achar justo. Nada no app depende disso.',
-                btns: [{ k: 'go', t: '💚 Quero contribuir' }, { k: 'later', t: 'Agora não' }, { k: 'never', t: 'Não mostrar de novo' }] }];
+            if (!donEligible(c)) return [];
+            const out = [], now = new Date(), ym = donYM(now), t5 = donBizDay(now.getFullYear(), now.getMonth(), 5);
+            if (donCfg.bell && t5 && new Date(now.getFullYear(), now.getMonth(), now.getDate()) >= t5 && !c.ar.has('don:later:' + ym))
+                out.push({ id: 'don:ask:' + ym, level: 'a', action: 'don', title: '💚 Ajude a manter o My Trade Dash',
+                    note: 'O app é gratuito e vai continuar. Se ele te ajuda, você pode contribuir com o que achar justo. Nada no app depende disso.',
+                    btns: [{ k: 'go', t: '💚 Quero contribuir' }, { k: 'later', t: 'Agora não' }] });
+            if (donMsgCfg && donMsgCfg.id && donMsgCfg.text && !c.ar.has('don:msgdone:' + donMsgCfg.id))
+                out.push({ id: 'don:msg:' + donMsgCfg.id, level: 'a', action: 'don', msgId: donMsgCfg.id, title: '💚 Mensagem do My Trade Dash', note: donMsgCfg.text,
+                    btns: [{ k: 'go', t: '💚 Quero contribuir' }, { k: 'msgok', t: 'Entendi' }] });
+            return out;
         }
         function openDonModal() {
             const o = document.createElement('div'); o.className = 'fixed inset-0 z-[100] flex items-center justify-center p-3 bg-black/70'; o.dataset.keepBell = '1';
@@ -3745,14 +3926,24 @@ hmoDb = db;
             o.innerHTML = `<div class="w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl">
                 <p class="font-bold mb-1">⚙ Ajustes do app</p>
                 <p class="text-xs text-gray-400 mb-3">Valem para todo mundo, na hora. Não precisa subir versão nova.</p>
-                <label class="flex items-start gap-2 text-xs mb-2"><input type="checkbox" id="ajOn" class="mt-0.5" ${donCfg.on ? 'checked' : ''}> Mostrar <b class="text-gray-100">💚 Ajude a manter o My Trade Dash</b> no menu ⚙ Opções</label>
-                <label class="flex items-start gap-2 text-xs mb-3"><input type="checkbox" id="ajBell" class="mt-0.5" ${donCfg.bell ? 'checked' : ''}> Avisar no 🔔 sino, uma vez, para quem usa o app há mais de <b class="text-gray-100">${DON_ASK_DAYS} dias</b> e ainda não contribuiu</label>
+                <label class="flex items-start gap-2 text-xs mb-2"><input type="checkbox" id="ajOn" class="mt-0.5" ${donCfg.on ? 'checked' : ''}> Mostrar o copo <b class="text-gray-100">💚 Ajude a manter o My Trade Dash</b> ao lado do logo</label>
+                <label class="flex items-start gap-2 text-xs mb-3"><input type="checkbox" id="ajBell" class="mt-0.5" ${donCfg.bell ? 'checked' : ''}> Avisar no 🔔 sino, uma vez por mês (a partir do <b class="text-gray-100">5º dia útil</b>), quem usa o app há mais de <b class="text-gray-100">${DON_ASK_DAYS} dias</b> e não contribuiu nos últimos <b class="text-gray-100">60 dias</b></label>
                 <label class="block text-xs font-medium text-gray-400 mb-1" for="ajPix">Chave Pix</label>
                 <input type="text" id="ajPix" value="${esc(donCfg.pix)}" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200 mb-3">
                 <p class="block text-xs font-medium text-gray-400 mb-1">Valores sugeridos (R$)</p>
                 <div class="grid grid-cols-3 gap-2 mb-3">${vs.map((v, i) => `<input type="text" inputmode="decimal" data-av="${i}" value="${fmtMoneyBR(v)}" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200">`).join('')}</div>
                 <label class="block text-xs font-medium text-gray-400 mb-1" for="ajDef">Qual deles vem marcado</label>
                 <select id="ajDef" class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-200 mb-3">${vs.map((v, i) => `<option value="${i}" ${i === num(donCfg.def) ? 'selected' : ''}>R$ ${fmtMoneyBR(v)}</option>`).join('')}</select>
+                <div class="border-t border-gray-700 my-3"></div>
+                <p class="font-bold text-xs text-gray-100 mb-1">🎛 RECURSOS DO APP</p>
+                <p class="text-[11px] text-gray-400 mb-2">Desligar esconde a aba e os atalhos para os usuários comuns. Admins e colaboradores continuam vendo, e os dados de ninguém se perdem.</p>
+                <label class="flex items-start gap-2 text-xs mb-1"><input type="checkbox" id="ajFtRel" class="mt-0.5" ${featCfg.relatorios !== false ? 'checked' : ''}> <b class="text-gray-100">Relatórios</b> (inclui DARF e Notas do dia)</label>
+                <label class="flex items-start gap-2 text-xs mb-1"><input type="checkbox" id="ajFtFin" class="mt-0.5" ${featCfg.financeiro !== false ? 'checked' : ''}> <b class="text-gray-100">Gestão financeira</b> (Valor Investido, Capital Atual, depósitos e saques)</label>
+                <label class="flex items-start gap-2 text-xs mb-3"><input type="checkbox" id="ajFtNote" class="mt-0.5" ${featCfg.nota !== false ? 'checked' : ''}> <b class="text-gray-100">Nota do dia</b> (botão no cabeçalho e no ⚡ Atalhos)</label>
+                <div class="border-t border-gray-700 my-3"></div>
+                <p class="font-bold text-xs text-gray-100 mb-1">📄 TERMOS DE USO</p>
+                <p class="text-[11px] text-gray-400 mb-2">Quando os Termos mudam sem exigir novo aceite, cada pessoa vê um aviso uma única vez. Aqui você confere como ele aparece.</p>
+                <button type="button" id="ajTnPv" class="w-full px-3 py-2 rounded-lg border border-gray-600 text-xs font-semibold mb-3">👁 Ver o aviso de atualização dos Termos</button>
                 <div class="border-t border-gray-700 my-3"></div>
                 <p class="font-bold text-xs text-gray-100 mb-1">💬 CANAIS DE CONVERSA</p>
                 <p class="text-[11px] text-gray-400 mb-2">Desligar esconde o canal, não apaga nada: os recados já trocados continuam guardados.</p>
@@ -3786,10 +3977,11 @@ hmoDb = db;
                 const pv = $('mntScreen');
                 if (pv) pv.addEventListener('click', ev => { if (ev.target === pv) { mntHide(); back(); } });
             };
+            o.querySelector('#ajTnPv').onclick = () => { if (window.termsNoticeShow) window.termsNoticeShow(true); };
             /* fechar clicando fora segue a regra que já existe no app */
             const snapAj = () => JSON.stringify([o.querySelector('#ajOn').checked, o.querySelector('#ajBell').checked, o.querySelector('#ajPix').value,
                 [...o.querySelectorAll('[data-av]')].map(el => el.value), o.querySelector('#ajDef').value,
-                o.querySelector('#ajChColab').checked, o.querySelector('#ajChUser').checked, mnOn.checked, mnMsg.value, o.querySelector('#ajMnColab').checked]);
+                o.querySelector('#ajChColab').checked, o.querySelector('#ajChUser').checked, mnOn.checked, mnMsg.value, o.querySelector('#ajMnColab').checked, o.querySelector('#ajFtRel').checked, o.querySelector('#ajFtFin').checked, o.querySelector('#ajFtNote').checked]);
             const startAj = snapAj();
             const tryCloseAj = () => { if (snapAj() === startAj) o.remove(); else askLoss(() => o.remove()); };
             o.addEventListener('click', ev => { if (ev.target === o) tryCloseAj(); });
@@ -3808,6 +4000,10 @@ hmoDb = db;
                     const mn = { on: mnOn.checked, msg: mnText, colab: o.querySelector('#ajMnColab').checked };
                     const chMudou = JSON.stringify(ch) !== JSON.stringify({ colab: !!chCfg.colab, user: !!chCfg.user });
                     const mnMudou = JSON.stringify(mn) !== JSON.stringify({ on: !!mntCfg.on, msg: mntCfg.msg || '', colab: !!mntCfg.colab });
+                    const ft = { relatorios: o.querySelector('#ajFtRel').checked, financeiro: o.querySelector('#ajFtFin').checked, nota: o.querySelector('#ajFtNote').checked };
+                    const ftMudou = JSON.stringify(ft) !== JSON.stringify({ relatorios: featCfg.relatorios !== false, financeiro: featCfg.financeiro !== false, nota: featCfg.nota !== false });
+                    await cfgSet('recursos', ft); featCfg = { ...FEAT_DEF, ...ft }; featApply();
+                    if (ftMudou) auditAdd({ kind: 'cfg', outcome: 'Concluída', detail: 'Recursos do app: Relatórios ' + (ft.relatorios ? 'ligado' : 'desligado') + ', Gestão financeira ' + (ft.financeiro ? 'ligado' : 'desligado') + ', Nota do dia ' + (ft.nota ? 'ligado' : 'desligado') });
                     await cfgSet('canais', ch); chCfg = { ...CH_DEF, ...ch };
                     await cfgSet('manutencao', mn); mntCfg = { ...MNT_DEF, ...mn };
                     recMenuPaint(); if (recCanOpen()) recRefreshUnread();
@@ -3948,6 +4144,103 @@ hmoDb = db;
         }
         function excMailLink(r) { return invMailLink(r.email, 'Seu pedido de exclusão no My Trade Dash', excMsgText(r)); }
         function excWaLink(r, wa) { return 'https://wa.me/' + wa + '?text=' + encodeURIComponent(excMsgText(r)); }
+        /* ===== Corrigir meus dados (V167) ===== */
+        const COR_ST = { novo: 'Novo', atendido: 'Atendido', recusado: 'Recusado' };
+        const COR_CAMPO = { nome: 'Nome e sobrenome', celular: 'Celular (WhatsApp)', email: 'E-mail' };
+        let corAdminList = null;
+        async function corList() {
+            if (MODE === 'claude') return (await hmoDb.collection('correcoes').get()).docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            const { data, error } = await sb.from('tb_correcoes').select('*').order('created_at', { ascending: false }).limit(1000);
+            if (error) throw error; return data || [];
+        }
+        async function corAsk(campo, novo, motivo) {
+            if (MODE === 'claude') {
+                const em = ($('menuUserEmail').textContent || '').trim() || 'voce@exemplo.com', mine = await corList();
+                if (mine.some(x => x.campo === campo && x.status === 'novo')) throw new Error('Você já tem um pedido aberto para este campo');
+                let v = String(novo).trim(); if (campo === 'celular') { v = v.replace(/\D/g, ''); if (v.length === 11) v = '55' + v; } if (campo === 'email') v = v.toLowerCase();
+                const atual = campo === 'email' ? em : campo === 'nome' ? ($('menuUserName').textContent || '').trim() : '';
+                await hmoDb.collection('correcoes').add({ user_id: 'hmo', email: em, campo, valor_atual: atual, valor_novo: v, motivo: String(motivo).trim(), status: 'novo', created_at: new Date().toISOString(), handled_at: null });
+                return;
+            }
+            const { error } = await sb.rpc('mtd_pedir_correcao', { p_campo: campo, p_novo: novo, p_motivo: motivo }); if (error) throw error;
+        }
+        async function corApply(r) {
+            if (MODE === 'claude') {
+                const cs = (await hmoDb.collection('convites').get()).docs.filter(d => String((d.data() || {}).email || '').toLowerCase() === String(r.email || '').toLowerCase());
+                for (const d of cs) await hmoDb.collection('convites').doc(d.id).update(r.campo === 'nome' ? { name: r.valor_novo } : r.campo === 'celular' ? { whatsapp: r.valor_novo } : { email: r.valor_novo });
+                await hmoDb.collection('correcoes').doc(r.id).update({ status: 'atendido', handled_at: new Date().toISOString() }); return;
+            }
+            const { error } = await sb.rpc('mtd_aplicar_correcao', { p_id: r.id }); if (error) throw error;
+        }
+        async function corRefuse(r) {
+            if (MODE === 'claude') { await hmoDb.collection('correcoes').doc(r.id).update({ status: 'recusado', handled_at: new Date().toISOString() }); return; }
+            const { error } = await sb.from('tb_correcoes').update({ status: 'recusado', handled_at: new Date().toISOString() }).eq('id', r.id).eq('status', 'novo'); if (error) throw error;
+        }
+        function corMsg(r, kind) {
+            const first = String(r.name || r.email || '').trim().split(/[\s@]+/)[0] || '';
+            const nome = COR_CAMPO[r.campo] || r.campo, show = v => r.campo === 'celular' && v ? invFmtPhone(v) : (v || '—');
+            if (kind === 'conf') return `Olá, ${first}! Recebemos o seu pedido para trocar o e-mail da sua conta no My Trade Dash para este endereço.\n\nPara confirmar que este e-mail é seu, responda esta mensagem escrevendo "confirmo". Depois disso, fazemos a troca e o seu login passa a ser este e-mail.\n\nSe você não fez este pedido, é só ignorar esta mensagem.${SIGN}`;
+            const sit = r.status === 'atendido' ? `A correção foi feita: ${nome} agora é "${show(r.valor_novo)}".` : r.status === 'recusado' ? 'Analisamos o pedido e não conseguimos fazer a correção. Se quiser, responda esta mensagem para conversarmos.' : 'Estamos analisando e voltamos a falar com você em breve.';
+            return `Olá, ${first}! Recebemos o seu pedido para corrigir "${nome}" no My Trade Dash, de "${show(r.valor_atual)}" para "${show(r.valor_novo)}".\n\nEsse é um direito seu, previsto no art. 18, inciso III, da Lei Geral de Proteção de Dados (Lei nº 13.709/2018): a correção de dados incompletos, inexatos ou desatualizados.\n\n${sit}${SIGN}`;
+        }
+        function corAlerts(list) {
+            if (!invIsAdmin || !list) return [];
+            const n = list.filter(x => x.status === 'novo').length;
+            return n ? [{ id: 'cor:new', level: 'crit', action: 'cor', title: n === 1 ? '1 pedido de correção de dados aguardando' : n + ' pedidos de correção de dados aguardando', note: 'Abra Gestão Admin > Correções de dados. Sugestão: responder em até 15 dias (prazo da LGPD para pedidos do titular).' }] : [];
+        }
+        async function openCorModal() {
+            if ($('corOv')) return;
+            const o = document.createElement('div'); o.id = 'corOv'; o.className = 'fixed inset-0 z-[120] flex items-center justify-center p-3 bg-black/70';
+            const inp = 'class="w-full bg-darkBg border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100"';
+            o.innerHTML = `<div class="w-full max-w-md max-h-[92vh] overflow-y-auto rounded-2xl border border-gray-700 bg-gray-900 p-5 text-sm text-gray-200 shadow-2xl">
+                <h3 class="text-base font-bold mb-1">✏ Corrigir meus dados</h3>
+                <p class="text-xs text-gray-400 mb-3">Nome, celular ou e-mail errado ou desatualizado? Peça a correção aqui. Analisamos e respondemos pelo e-mail ou WhatsApp da sua conta.</p>
+                <label class="block text-xs font-medium text-gray-400 mb-1" for="coCampo">O que corrigir</label>
+                <select id="coCampo" ${inp}><option value="nome">Nome e sobrenome</option><option value="celular">Celular (WhatsApp)</option><option value="email">E-mail</option></select>
+                <label id="coLbl" class="block text-xs font-medium text-gray-400 mt-3 mb-1" for="coNovo">Novo nome e sobrenome</label>
+                <input id="coNovo" type="text" autocomplete="off" maxlength="120" ${inp}>
+                <p id="coHint" class="text-[11px] text-gray-400 mt-1 hidden"></p>
+                <label class="block text-xs font-medium text-gray-400 mt-3 mb-1" for="coMot">Motivo da correção (obrigatório)</label>
+                <textarea id="coMot" rows="2" maxlength="300" placeholder="Ex.: troquei de número, errei ao digitar" ${inp}></textarea>
+                <p id="coMsg" class="text-xs min-h-[1rem] mt-2" role="status"></p>
+                <div class="flex justify-end gap-2 mt-2"><button type="button" data-n class="px-3 py-2 rounded-lg border border-gray-600 text-xs font-semibold">Voltar</button><button type="button" data-y class="px-3 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold">Enviar pedido</button></div>
+                <div id="coMine" class="mt-4"></div></div>`;
+            document.body.appendChild(o);
+            const $o = q => o.querySelector(q), msg = $o('#coMsg');
+            const say = (t, bad) => { msg.textContent = t; msg.className = 'text-xs min-h-[1rem] mt-2 ' + (bad ? 'text-red-400' : 'text-emerald-300'); };
+            const cfg = { nome: ['Novo nome e sobrenome', 'text', 'Nome Sobrenome', ''], celular: ['Novo celular (com DDD)', 'tel', '61999999999', 'Só números, com DDD.'], email: ['Novo e-mail', 'email', 'novo@email.com', 'A troca de e-mail só é feita depois que você confirmar o novo endereço, respondendo a nossa mensagem com "confirmo".'] };
+            const sync = () => { const c = cfg[$o('#coCampo').value]; $o('#coLbl').textContent = c[0]; const i = $o('#coNovo'); i.type = c[1]; i.placeholder = c[2]; i.value = ''; i.setAttribute('inputmode', c[1] === 'tel' ? 'tel' : c[1] === 'email' ? 'email' : 'text'); const h = $o('#coHint'); h.textContent = c[3]; h.classList.toggle('hidden', !c[3]); say('', false); };
+            $o('#coCampo').onchange = sync; sync();
+            const close = () => o.remove();
+            o.addEventListener('click', e => { if (e.target === o) close(); });
+            $o('[data-n]').onclick = close;
+            const drawMine = async () => {
+                let mine = []; try { mine = await corList(); } catch (e) {}
+                $o('#coMine').innerHTML = mine.length ? `<p class="text-xs font-bold text-gray-100 mb-1">Seus pedidos</p>` + mine.slice(0, 8).map(r => `<p class="text-[11px] text-gray-300 py-0.5">${esc(COR_CAMPO[r.campo] || r.campo)} · ${excDay(r.created_at)} · <b>${esc(COR_ST[r.status] || r.status)}</b></p>`).join('') : '';
+                return mine;
+            };
+            let mine0 = await drawMine();
+            const go = $o('[data-y]');
+            go.onclick = async () => {
+                const campo = $o('#coCampo').value, v = $o('#coNovo').value.trim(), mot = $o('#coMot').value.trim();
+                if (campo === 'nome' && v.split(/\s+/).filter(Boolean).length < 2) return say('Informe nome e sobrenome.', true);
+                if (campo === 'celular') { let d = v.replace(/\D/g, ''); if (d.length === 13 && d.startsWith('55')) d = d.slice(2); if (d.length !== 11 || d[2] !== '9') return say('Informe o celular com DDD e 9 dígitos (o número do WhatsApp), só números.', true); }
+                if (campo === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return say('Informe um e-mail válido.', true);
+                if (mot.length < 3) return say('Conte o motivo da correção.', true);
+                if ((mine0 || []).some(x => x.campo === campo && x.status === 'novo')) return say('Você já tem um pedido aberto para este campo. Aguarde a resposta.', true);
+                go.disabled = true;
+                try { await corAsk(campo, v, mot); } catch (ex) { say((ex && ex.message) || 'Não foi possível enviar agora. Tente de novo.', true); go.disabled = false; return; }
+                try { auditAdd({ kind: 'cor_user', outcome: 'Concluída', detail: `Pedido de correção enviado: ${COR_CAMPO[campo]}` }); } catch (e) {}
+                showToast('Pedido enviado. Vamos responder em breve.', 'ok');
+                $o('#coNovo').value = ''; $o('#coMot').value = ''; go.disabled = false; say('Pedido enviado. Vamos responder pelo e-mail ou WhatsApp da sua conta.', false);
+                mine0 = await drawMine(); if (invIsAdmin) { try { invRefreshBadge(false); } catch (e) {} }
+            };
+        }
+        window.openCorModal = openCorModal;
+        async function inatDesativar(u, dias, nome) {
+            if (MODE === 'claude') { const now = new Date().toISOString(); await hmoDb.collection('exclusoes').add({ user_id: u.id, email: u.email, name: nome || u.email, reason: 'Inatividade', comment: 'Desativado por inatividade: sem lançamentos há ' + dias + ' dias', status: 'desativado', created_at: now, deactivated_at: now }); return; }
+            const { error } = await sb.rpc('mtd_desativar_inatividade', { p_user: u.user_id }); if (error) throw error;
+        }
         function excAlerts(list) {
             if (!invIsAdmin || !list) return [];
             const out = [], nw = list.filter(x => x.status === 'novo');
@@ -3969,7 +4262,7 @@ hmoDb = db;
             } else bar.classList.add('hidden');
             if (m && m.status === 'desativado') {
                 const ov = document.createElement('div'); ov.id = 'excBlock'; ov.className = 'fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/90';
-                ov.innerHTML = `<div class="w-full max-w-sm rounded-xl border border-gray-600 bg-gray-900 p-5 text-sm text-gray-200 text-center"><p class="text-3xl mb-2" aria-hidden="true">🔒</p><p class="font-bold mb-2">Conta desativada</p><p class="text-gray-300 mb-4">Sua conta está desativada conforme sua solicitação. Fale com ${INV_FROM}.</p><button type="button" class="px-4 py-2 rounded-lg bg-gray-700 text-white text-xs font-semibold">Sair</button></div>`;
+                ov.innerHTML = `<div class="w-full max-w-sm rounded-xl border border-gray-600 bg-gray-900 p-5 text-sm text-gray-200 text-center"><p class="text-3xl mb-2" aria-hidden="true">🔒</p><p class="font-bold mb-2">Conta desativada</p><p class="text-gray-300 mb-4">${m.reason === 'Inatividade' ? 'Sua conta foi desativada porque ficou muito tempo sem nenhum lançamento (item 8.1 dos Termos de uso). Seus dados continuam guardados. Para voltar a usar, fale com ' + INV_FROM + '.' : 'Sua conta está desativada conforme sua solicitação. Fale com ' + INV_FROM + '.'}</p><button type="button" class="px-4 py-2 rounded-lg bg-gray-700 text-white text-xs font-semibold">Sair</button></div>`;
                 ov.querySelector('button').onclick = () => { ov.remove(); lockNow(); };
                 document.body.appendChild(ov);
             }
@@ -4009,13 +4302,17 @@ hmoDb = db;
         (function () {
             const link = $('invOpen'), form = $('invForm'), lf = $('lockForm'), sub = $('lockSub'), msg = $('invMsg');
             if (!link) return;
-            const subOld = sub.textContent, SUB_FORM = 'Peça um convite. Entraremos em contato pelo WhatsApp.';
+            const subOld = sub.textContent, SUB_FORM = '';
             const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
             const info = (t, bad) => { msg.className = 'text-xs min-h-[1rem] ' + (bad === false ? 'text-amber-300' : 'text-red-400'); msg.textContent = t; };
             const isMinor = b => { const lim = new Date(); lim.setFullYear(lim.getFullYear() - 18); return /^\d{4}-\d{2}-\d{2}$/.test(b) && b > ymd(lim); };
-            const checkMinor = () => { const m = isMinor($('invBirth').value); if (m) msg.textContent = ''; $('invMinor').classList.toggle('hidden', !m); $('invBtn').classList.toggle('hidden', m); $('invClose').classList.toggle('hidden', !m); return m; };
+            const checkMinor = () => { const m = isMinor($('invBirth').value); if (m) msg.textContent = ''; $('invMinor').classList.toggle('hidden', !m); $('invBtn').classList.toggle('hidden', m); return m; };
+            const dirty = () => ['invName', 'invEmail', 'invEmail2', 'invBirth', 'invDdd', 'invPhone', 'invHow'].some(i => $(i).value.trim() !== '') || $('invDTsim').checked || $('invDTnao').checked || $('invOk').checked;
             const view = on => {
                 form.classList.toggle('hidden', !on); lf.classList.toggle('hidden', on); link.parentElement.classList.toggle('hidden', on);
+                const fg = $('pwdForgot'); if (fg) fg.parentElement.classList.toggle('hidden', on);
+                const lg = $('lockLegal'); if (lg) lg.classList.toggle('hidden', on);
+                sub.classList.toggle('hidden', on && !SUB_FORM);
                 sub.textContent = on ? SUB_FORM : subOld;
                 info(''); if (!on) { form.reset(); $('invUf').textContent = ''; }
                 if (on) { $('invDone').classList.add('hidden'); $('invFields').classList.remove('hidden'); checkMinor(); setTimeout(() => $('invName').focus(), 50); }
@@ -4031,22 +4328,25 @@ hmoDb = db;
             $('invPhone').addEventListener('input', () => { const i = $('invPhone'); let d = invDigits(i.value).slice(0, 9); i.value = d.length > 5 ? d.slice(0, 5) + '-' + d.slice(5) : d; });
             ['input', 'change'].forEach(ev => $('invBirth').addEventListener(ev, checkMinor));
             link.addEventListener('click', () => view(true));
-            $('invClose').addEventListener('click', () => view(false));
+            $('invBack').addEventListener('click', async () => { if ($('invDone').classList.contains('hidden') && dirty() && !(await askBox('Voltar para o login?', 'O que você preencheu neste pedido será perdido.', 'Voltar e perder', 'Continuar preenchendo'))) return; view(false); });
             $('invDoneBack').addEventListener('click', () => view(false));
             const DUP = { email: 'Já recebemos um pedido com este e-mail. Em breve entraremos em contato pelo e-mail ou WhatsApp informado.', whatsapp: 'Já recebemos um pedido com este WhatsApp. Em breve entraremos em contato pelo e-mail ou WhatsApp informado.', again: 'Seu pedido já foi enviado. Em breve entraremos em contato pelo e-mail ou WhatsApp informado.' };
             form.addEventListener('submit', async e => {
                 e.preventDefault();
                 if ($('invWeb').value) { sub.textContent = ''; $('invFields').classList.add('hidden'); $('invDone').classList.remove('hidden'); return; }
                 const ddd = invDigits($('invDdd').value), num = invDigits($('invPhone').value), birth = $('invBirth').value;
-                const rec = { name: $('invName').value.trim().replace(/\s+/g, ' '), email: $('invEmail').value.trim(), whatsapp: '55' + ddd + num, birth_date: birth, how_known: $('invHow').value.trim().replace(/\s+/g, ' ') };
+                const dt = $('invDTsim').checked ? true : $('invDTnao').checked ? false : null;
+                const rec = { name: $('invName').value.trim().replace(/\s+/g, ' '), email: $('invEmail').value.trim(), whatsapp: '55' + ddd + num, birth_date: birth, how_known: $('invHow').value.trim().replace(/\s+/g, ' '), opera_daytrade: dt };
                 const parts = rec.name.split(' ');
                 if (checkMinor()) return info('Menores de 18 anos não podem pedir convite.');
                 if (parts.length < 2 || parts[0].length < 2 || parts[1].length < 1) return info('Informe nome e sobrenome.');
                 if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rec.email) || rec.email.length > 120) return info('Informe um e-mail válido.');
+                if ($('invEmail2').value.trim().toLowerCase() !== rec.email.toLowerCase()) return info('O e-mail de confirmação precisa ser igual ao e-mail informado.');
                 if (!/^\d{4}-\d{2}-\d{2}$/.test(birth) || birth < '1900-01-01') return info('Informe a data de nascimento.');
                 if (!DDD_UF[ddd]) return info('Informe um DDD válido.');
                 if (!/^9\d{8}$/.test(num)) return info('Informe o número do WhatsApp com 9 dígitos (começa com 9).');
                 if (rec.how_known.length < 2) return info('Conte como soube do app.');
+                if (dt === null) return info('Informe se você opera day trade.');
                 if (!$('invOk').checked) return info('Marque a autorização para continuar.');
                 let last = 0; try { last = +localStorage.getItem('mtd_inv_last') || 0; } catch (x) {}
                 if (Date.now() - last < 60000) return info(DUP.again, false);
@@ -4798,40 +5098,28 @@ hmoDb = db;
         let bellT = null;
         function bellSoon() { clearTimeout(bellT); bellT = setTimeout(() => { if (bellInit) refreshBell(); }, 1200); }
 
-        // Abas "Operação | Nota do dia\": a mesma tela de lançamento, com a data levada de uma aba para a outra
-        const ENT_ON = 'px-3 py-2 rounded-lg text-xs font-semibold border border-blue-400 bg-blue-950 text-white', ENT_OFF = 'px-3 py-2 rounded-lg text-xs font-semibold border border-gray-700 text-gray-400 hover:bg-gray-800';
-        function paintEntryTabs(active, editing) {
-            ['t', 'n'].forEach(p => {
-                $(p + 'Switch').classList.toggle('hidden', !!editing);
-                $(p + 'TabOp').className = active === 'op' ? ENT_ON : ENT_OFF; $(p + 'TabOp').textContent = (active === 'op' ? '● ' : '') + '📈 Operação';
-                $(p + 'TabNote').className = active === 'note' ? ENT_ON : ENT_OFF; $(p + 'TabNote').textContent = (active === 'note' ? '● ' : '') + '🧾 Nota do dia';
-                $(p + 'TabOp').setAttribute('aria-pressed', String(active === 'op')); $(p + 'TabNote').setAttribute('aria-pressed', String(active === 'note'));
-            });
-        }
-        function entrySwitch(to) {
-            if (to === 'note') { const iso = $('tDate').value; closeModal(); openNoteModal(undefined, iso); }
-            else { const iso = $('nDate').value; closeNoteModal(); openModal(); if (iso) setField('tDate', iso); }
-        }
         let pendingNoteDeleteId = null, editingNoteId = null, noteNetTouched = false, taxOpen = {}, notesListOpen = false;
         const dayOpsSum = iso => rows.filter(r => isoOf(r.date) === iso).reduce((t, r) => t + num(r.gross != null ? r.gross : r.result), 0);
         const dayOpsCount = iso => rows.filter(r => isoOf(r.date) === iso).length;
+        function noteCalc() {
+            const neg = $('nType').value === 'Perda', adj = Math.abs(parseMoney($('nAdj').value)) || 0, desp = $('nDesp').value.trim() !== '' ? Math.abs(parseMoney($('nDesp').value)) : 0;
+            const signed = r2(neg ? -(adj + desp) : (adj - desp));
+            return { neg, adj, desp, signed };
+        }
         function noteHint() {
-            const iso = $('nDate').value, n = parseMoney($('nNet').value) * ($('nType').value === 'Perda' ? -1 : 1);
-            const hasIrrf = $('nIrrf').value.trim() !== '', costs = $('nCosts').value.trim() !== '' ? parseMoney($('nCosts').value) : null;
-            const irrf = hasIrrf ? parseMoney($('nIrrf').value) : (n > 0 ? r2(n / 99) : 0);
-            $('nIrrf').placeholder = n > 0 ? `estimado ${fmtMoneyBR(r2(n / 99))}` : 'estimado';
+            const iso = $('nDate').value, c = noteCalc(), irrf = c.signed > 0 ? r2(c.signed * 0.01) : 0;
+            $('nLiq').value = $('nAdj').value.trim() === '' ? '' : (c.signed < 0 ? '−' : '') + fmtMoneyBR(Math.abs(c.signed));
             const cnt = iso ? dayOpsCount(iso) : 0;
             let t = cnt ? `Suas ${cnt} operação(ões) do dia somam ${money(dayOpsSum(iso))}. ` : 'Sem operações lançadas neste dia. ';
-            t += `Base do imposto (líquido + IRRF): R$ ${brl(Math.abs(r2(n + irrf)))}${n + irrf < 0 ? ' (perda)' : ''}.`;
-            if (costs != null) t += ` Bruto (base + custos): R$ ${brl(Math.abs(r2(n + irrf + costs)))}.`;
+            t += `Base do imposto: R$ ${brl(Math.abs(c.signed))}${c.signed < 0 ? ' (perda)' : ''}. IRRF estimado: R$ ${brl(irrf)}.`;
             $('nHint').textContent = t;
         }
         function noteFillFromOps() {
             const iso = $('nDate').value;
             if (!iso || editingNoteId || noteNetTouched) return;
             const cnt = dayOpsCount(iso), sum = dayOpsSum(iso);
-            if (cnt) { $('nType').value = sum < 0 ? 'Perda' : 'Ganho'; $('nNet').value = fmtMoneyBR(Math.abs(sum)); }
-            else $('nNet').value = '';
+            if (cnt) { $('nType').value = sum < 0 ? 'Perda' : 'Ganho'; $('nAdj').value = fmtMoneyBR(Math.abs(sum)); }
+            else $('nAdj').value = '';
         }
         function openNoteModal(editId, isoDate) {
             const n = typeof editId === 'string' ? notes.find(x => x.id === editId) : null;
@@ -4840,20 +5128,21 @@ hmoDb = db;
             $('nSubmit').textContent = n ? 'Salvar alterações' : 'Salvar nota';
             $('nDate').max = todayLocalISO(); $('nError').textContent = '';
             if (n) {
+                const irrf = n.irrf == null ? (n.net > 0 ? r2(n.net / 99) : 0) : n.irrf, costs = n.costs || 0, adjS = r2(n.net + irrf + costs);
                 $('nDate').value = isoOf(n.date); $('nNo').value = n.no || '';
-                $('nType').value = n.net < 0 ? 'Perda' : 'Ganho'; $('nNet').value = fmtMoneyBR(Math.abs(n.net));
-                $('nIrrf').value = n.irrf == null ? '' : fmtMoneyBR(n.irrf); $('nCosts').value = n.costs == null ? '' : fmtMoneyBR(n.costs);
+                $('nType').value = adjS < 0 ? 'Perda' : 'Ganho'; $('nAdj').value = fmtMoneyBR(Math.abs(adjS));
+                $('nDesp').value = n.costs == null ? '' : fmtMoneyBR(n.costs);
             } else {
-                $('nDate').value = (isoDate && isoDate <= todayLocalISO()) ? isoDate : todayLocalISO(); $('nNo').value = ''; $('nIrrf').value = ''; $('nCosts').value = ''; $('nNet').value = ''; $('nType').value = 'Ganho';
+                $('nDate').value = (isoDate && isoDate <= todayLocalISO()) ? isoDate : todayLocalISO(); $('nNo').value = ''; $('nDesp').value = ''; $('nAdj').value = ''; $('nType').value = 'Ganho';
                 noteFillFromOps();
             }
-            noteHint(); paintEntryTabs('note', !!n);
+            noteHint();
             $('noteModal').classList.remove('hidden'); $('noteModal').classList.add('flex');
         }
         function closeNoteModal() { $('noteModal').classList.remove('flex'); $('noteModal').classList.add('hidden'); }
-        ['nNet', 'nIrrf', 'nCosts'].forEach(id => {
+        ['nAdj', 'nDesp'].forEach(id => {
             const el = $(id);
-            el.addEventListener('input', ev => { maskMoney(el, ev); if (id === 'nNet') noteNetTouched = true; noteHint(); });
+            el.addEventListener('input', ev => { maskMoney(el, ev); if (id === 'nAdj') noteNetTouched = true; noteHint(); });
             el.addEventListener('blur', () => { if (el.value.trim() !== '') el.value = fmtMoneyBR(parseMoney(el.value)); noteHint(); });
         });
         $('nType').addEventListener('change', () => { noteNetTouched = true; noteHint(); });
@@ -4862,15 +5151,14 @@ hmoDb = db;
             e.preventDefault();
             const err = $('nError'); err.textContent = '';
             const iso = $('nDate').value || todayLocalISO();
-            if ($('nNet').value.trim() === '') { err.textContent = 'Informe o líquido da nota.'; return; }
+            if ($('nAdj').value.trim() === '') { err.textContent = 'Informe o ajuste de day trade.'; return; }
             if (iso > todayLocalISO()) { err.textContent = 'A data não pode ser futura.'; return; }
             const date = fmtBR(iso);
             if (notes.some(x => x.date === date && x.id !== editingNoteId)) { err.textContent = 'Já existe uma nota deste dia. Edite a existente na lista de notas.'; return; }
-            const net = r2(parseMoney($('nNet').value) * ($('nType').value === 'Perda' ? -1 : 1));
+            const c = noteCalc(), irrf = c.signed > 0 ? r2(c.signed * 0.01) : 0, net = r2(c.signed - irrf);
             const data = {
-                date, no: $('nNo').value.trim(), net,
-                irrf: $('nIrrf').value.trim() === '' ? null : r2(Math.abs(parseMoney($('nIrrf').value))),
-                costs: $('nCosts').value.trim() === '' ? null : r2(Math.abs(parseMoney($('nCosts').value))),
+                date, no: $('nNo').value.trim(), net, irrf,
+                costs: $('nDesp').value.trim() === '' ? null : r2(Math.abs(parseMoney($('nDesp').value))),
                 ts: computeTs(date, '00:00')
             };
             const btn = $('nSubmit'); btn.disabled = true;
@@ -5309,6 +5597,7 @@ hmoDb = db;
             <button type="button" role="menuitem" data-fab="aud" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">📋 Histórico de auditoria</button>
             <button type="button" role="menuitem" data-fab="flow" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">➕ Nova movimentação</button>
             <button type="button" role="menuitem" data-fab="op" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">📈 Nova operação</button>
+            <button type="button" role="menuitem" data-fab="note" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">🧾 Nota do dia</button>
             <button type="button" role="menuitem" data-fab="rep" class="w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">📊 Relatórios</button>
             <div class="border-t border-gray-600 my-1"></div>
             <button id="fabInv" type="button" role="menuitem" data-fab="inv" class="hidden w-full text-left px-3 py-2.5 hover:bg-gray-700 text-gray-100">🛡 Gestão Admin <span id="fabInvBadge" class="hidden ml-1 px-1.5 py-0.5 rounded-full bg-amber-600 text-white text-[10px] font-bold"></span></button>
@@ -5359,7 +5648,7 @@ hmoDb = db;
         menu.addEventListener('click', e => {
             const b = e.target.closest('[data-fab]'); if (!b) return; close();
             const k = b.dataset.fab;
-            if (k === 'op') openModal(); else if (k === 'flow') openFlowModal(); else if (k === 'rep') switchTab('report');
+            if (k === 'op') openModal(); else if (k === 'note') openNoteModal(); else if (k === 'flow') openFlowModal(); else if (k === 'rep') switchTab('report');
             else if (k === 'aud') openAuditModal(); else if (k === 'set') openSetupsModal(); else if (k === 'theme') openThemeModal(); else if (k === 'exit') lockNow(); else if (k === 'inv') openInvitesModal();
         });
     })();
@@ -5368,7 +5657,7 @@ hmoDb = db;
     /* ===== Termos de uso, Política de privacidade e Primeiro acesso guiado (V112) ===== */
     (function () {
         const $ = id => document.getElementById(id);
-        const TERMS_VER = '2026-11-15', TERMS_DATE = '15/11/2026', TERMS_DOC = 'termos_privacidade';
+        const TERMS_VER = '2026-11-15', TERMS_DATE = '17/11/2026', TERMS_DOC = 'termos_privacidade';
         window.TERMS_VER = TERMS_VER;
         const LEGAL_EMAIL = 'mytradedash@gmail.com';
         const TERMS_HTML = `<h4 class="font-bold text-sm mb-1">Termos de uso do My Trade Dash</h4><p class="text-gray-400 mb-3">Versão de ${TERMS_DATE}</p>
@@ -5376,11 +5665,12 @@ hmoDb = db;
 <p class="mb-2"><b>1.1. Onde o My Trade Dash se aplica.</b> O My Trade Dash é destinado ao uso no Brasil. Os cálculos, prazos e referências legais do aplicativo seguem a legislação brasileira — inclusive a apuração de day trade, o IRRF e o DARF — e os valores são em reais. Nada impede o acesso de fora do país, mas o aplicativo não foi feito para outras moedas, outros fusos horários nem a legislação de outros países.</p>
 <p class="mb-2"><b>2. Quem pode usar.</b> Somente maiores de 18 anos (Código Civil, art. 5º), com acesso liberado por convite. A conta é pessoal: login e senha não devem ser compartilhados.</p>
 <p class="mb-2"><b>3. Responsabilidade pelas informações.</b> O My Trade Dash não se integra à sua corretora, à B3 nem à Receita Federal: os valores mostrados vêm do que você mesmo lança. Os cálculos de resultado, DARF e indicadores são estimativas de apoio e não substituem a orientação de um Contador nem os sistemas oficiais da Receita Federal (como o Sicalc). O My Trade Dash não é corretora, não executa ordens e não faz recomendação de investimento.</p>
-<p class="mb-2"><b>4. Contribuição voluntária.</b> O My Trade Dash é gratuito e vai continuar sendo. Em ⚙ Opções &gt; 💚 Ajude a manter o My Trade Dash você pode, se quiser, contribuir com o valor que achar justo, por Pix, para ajudar a amenizar custos como domínio, servidores e as melhorias do app. A contribuição é opcional e não dá nenhum direito, vantagem ou recurso extra: o seu acesso não está condicionado a ela. O app não processa pagamentos — o Pix é feito pelo seu banco e nenhum dado de pagamento passa pelo My Trade Dash. Você avisa pelo app que contribuiu, o responsável confere no extrato e confirma; se o pagamento não for localizado, o registro é descartado e passa a aparecer para você como "não localizada". O comprovante enviado após a confirmação é um arquivo simples, emitido por pessoa física, e não é documento fiscal.</p>
+<p class="mb-2"><b>4. Contribuição voluntária.</b> O My Trade Dash é gratuito e vai continuar sendo. No botão 💚 Ajude a manter o My Trade Dash (ao lado do logo) você pode, se quiser, contribuir com o valor que achar justo, por Pix, para ajudar a amenizar custos como domínio, servidores e as melhorias do app. A contribuição é opcional e não dá nenhum direito, vantagem ou recurso extra: o seu acesso não está condicionado a ela. O app não processa pagamentos — o Pix é feito pelo seu banco e nenhum dado de pagamento passa pelo My Trade Dash. Você avisa pelo app que contribuiu, o responsável confere no extrato e confirma; se o pagamento não for localizado, o registro é descartado e passa a aparecer para você como "não localizada". O comprovante enviado após a confirmação é um arquivo simples, emitido por pessoa física, e não é documento fiscal.</p>
 <p class="mb-2"><b>5. Disponibilidade.</b> Seus dados ficam guardados em um banco de dados na nuvem: não se perdem se você trocar de celular ou se o app ficar fora do ar por um tempo. O app pode ter pausas rápidas para manutenção. O backup (⚙ Opções &gt; Exportar backup) é uma cópia extra, útil para guardar um retrato dos seus dados ou recuperar algo excluído por engano.</p>
 <p class="mb-2"><b>6. Segurança dos dados.</b> O My Trade Dash adota medidas técnicas para proteger seus dados contra acessos não autorizados, como conexão criptografada e acesso restrito a cada conta, conforme a LGPD (Lei nº 13.709/2018, art. 46).</p>
 <p class="mb-2"><b>7. Propriedade.</b> A marca, o nome, a identidade visual e o código do My Trade Dash pertencem ao seu responsável. Os dados que você lança são seus.</p>
 <p class="mb-2"><b>8. Encerramento da sua conta.</b> Você pode pedir a exclusão da conta e dos dados a qualquer momento em ⚙ Opções &gt; Excluir minha conta. O acesso é desativado e, após 30 dias, os dados são apagados de vez (veja o item "Como excluir sua conta" da Política de privacidade). O pedido de exclusão só pode ser feito pelo app.</p>
+<p class="mb-2"><b>8.1. Contas sem uso.</b> Contas sem nenhum lançamento por muito tempo podem ter o acesso desativado, depois de aviso. Antes de qualquer desativação, avisamos você pelos contatos do seu cadastro. Os dados continuam guardados pelos mesmos 30 dias do item 8 e o acesso pode ser reativado nesse prazo, se você pedir pelo e-mail ${LEGAL_EMAIL}.</p>
 <p class="mb-2"><b>9. Encerramento do aplicativo.</b> Assim como você pode encerrar a sua conta quando quiser, o My Trade Dash também pode ser descontinuado a qualquer momento. Se isso acontecer, todos os usuários serão avisados pelo app com, no mínimo, 30 dias de antecedência, contados a partir do aviso, para que haja tempo de exportar os dados em ⚙ Opções &gt; Exportar backup. Encerrado esse prazo, o acesso é desativado e os dados são apagados. Por se tratar de contribuição voluntária, e não de pagamento por um serviço contratado, não há devolução de valores já contribuídos.</p>
 <p class="mb-2"><b>10. Mudanças.</b> Estes termos podem ser atualizados. Quando isso acontecer, o app pedirá um novo aceite.</p>
 <p class="mb-2"><b>11. Lei aplicável.</b> Legislação brasileira. Contato: ${LEGAL_EMAIL}.</p>`;
@@ -5431,6 +5721,31 @@ hmoDb = db;
             const { data, error } = await sb.from('tb_aceites').select('version').eq('doc', TERMS_DOC).eq('version', TERMS_VER);
             if (error) throw error; return data.length > 0;
         }
+        const TN_DOC = 'aviso_termos', TN_VER = '8.1';
+        async function tnSeen() {
+            if (MODE === 'claude') { const d = await hmoDb.collection('aceites').doc(TN_DOC + '_' + TN_VER).get(); return !!(d && d.exists); }
+            const { data, error } = await sb.from('tb_aceites').select('version').eq('doc', TN_DOC).eq('version', TN_VER);
+            if (error) throw error; return data.length > 0;
+        }
+        async function tnSave() {
+            if (MODE === 'claude') { await hmoDb.collection('aceites').doc(TN_DOC + '_' + TN_VER).set({ accepted_at: Date.now() }); return; }
+            const { error } = await sb.from('tb_aceites').upsert({ doc: TN_DOC, version: TN_VER }, { onConflict: 'user_id,doc,version', ignoreDuplicates: true });
+            if (error) throw error;
+        }
+        window.termsNoticeShow = preview => new Promise(res => {
+            if ($('tnOv')) return res();
+            const o = document.createElement('div'); o.id = 'tnOv'; o.dataset.keepBell = '1';
+            o.className = 'fixed inset-0 z-[125] flex items-center justify-center p-3 bg-black/80';
+            o.innerHTML = `<div role="dialog" aria-modal="true" aria-labelledby="tnTtl" class="w-full max-w-sm rounded-xl border border-gray-600 bg-gray-900 p-5 text-sm text-gray-200 shadow-2xl">
+                <h3 id="tnTtl" class="text-base font-bold mb-2">📄 Atualizamos os Termos de uso</h3>
+                <p class="text-gray-300 mb-3">Incluímos o item 8.1: contas sem nenhum lançamento por muito tempo podem ter o acesso desativado, depois de aviso. Antes de qualquer desativação, avisamos você. Você continua usando o app normalmente, e qualquer dúvida é só falar com a gente pelo e-mail ${LEGAL_EMAIL}.</p>
+                ${preview ? '<p class="text-[11px] text-gray-400 mb-3">Pré-visualização: é assim que o aviso aparece, uma única vez, para cada pessoa.</p>' : ''}
+                <div class="flex justify-end gap-2"><button type="button" data-r class="px-3 py-2 rounded-lg border border-gray-600 text-xs font-semibold">Ler os Termos</button><button type="button" data-ok class="px-3 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold">Entendi</button></div></div>`;
+            document.body.appendChild(o);
+            o.querySelector('[data-r]').onclick = () => openTermsModal('t');
+            o.querySelector('[data-ok]').onclick = async () => { if (!preview) { try { await tnSave(); } catch (e) {} } o.remove(); res(); };
+            setTimeout(() => { const b = o.querySelector('[data-ok]'); if (b) b.focus(); }, 50);
+        });
         async function termsSave() {
             if (MODE === 'claude') { await hmoDb.collection('aceites').doc(TERMS_DOC + '_' + TERMS_VER).set({ accepted_at: Date.now() }); return; }
             const { error } = await sb.from('tb_aceites').upsert({ doc: TERMS_DOC, version: TERMS_VER }, { onConflict: 'user_id,doc,version', ignoreDuplicates: true });
@@ -5459,7 +5774,7 @@ hmoDb = db;
         const gKey = () => 'mtd_guide_done_' + uidNow();
         const gDone = () => { try { return localStorage.getItem(gKey()) === '1'; } catch (e) { return false; } };
         const gMark = () => { try { localStorage.setItem(gKey(), '1'); } catch (e) {} };
-        const G_TOT = 10;
+        const G_TOT = 12;
         function openGuide(auto) {
             if ($('guideOv')) return;
             const o = document.createElement('div'); o.id = 'guideOv';
@@ -5494,7 +5809,7 @@ hmoDb = db;
                     b: B('data-next', 'Continuar', P) },
                 5: { t: 'Suas operações', h: () => lead('Cada operação vai em <b class="text-gray-200">📈 Nova operação</b> (ou no ⚡ Atalhos): data, horários, ativo, contratos, setup (obrigatório), tipo (Gain ou Loss), pontos e <b class=\"text-gray-200\">resultado bruto</b> em R$. Se quiser, informe também os <b class=\"text-gray-200\">custos da corretora</b>: o app calcula o <b class=\"text-gray-200\">líquido</b>, que alimenta o Capital atual e os relatórios (o Gain/Loss segue o bruto). No histórico, abra o mês para ver, editar ou excluir cada linha.') + panel('Total Net Profit, Capital Atual, Gain/Loss, Win Rate, Best Setup, Capital Curve e o bloco Mês atual × mês anterior.'),
                     b: B('data-act="op"', '📈 Lançar minha primeira operação') + B('data-next', 'Continuar', P) },
-                6: { t: 'Notas do dia', h: () => lead('A <b class="text-gray-200">nota do dia</b> traz o valor líquido, o IRRF e os custos do dia, como na nota de corretagem. Com ela o DARF fica exato; sem ela, o app estima a partir das operações. Fica em <b class="text-gray-200">Mais lançamentos &gt; 🧾 Nota do dia</b>.') + panel('o card DARF do bloco do mês e os alertas de vencimento.'),
+                6: { t: 'Notas do dia', h: () => lead('A <b class="text-gray-200">nota do dia</b> segue a nota de corretagem: você informa o <b class="text-gray-200">Ajuste de day trade</b> (ganho ou perda) e o <b class="text-gray-200">Total das despesas</b> (a 🧮 Somar taxas da nota ajuda a somar), e o app calcula o <b class="text-gray-200">Líquido da nota</b> e o IRRF (1% do líquido nos dias de ganho). Com ela o DARF fica exato; sem ela, o app estima a partir das operações. Fica no botão <b class="text-gray-200">🧾 Nota do dia</b>, no cabeçalho (e no ⚡ Atalhos).') + panel('o card DARF do bloco do mês e os alertas de vencimento.'),
                     b: B('data-act="note"', '🧾 Lançar nota do dia') + B('data-next', 'Continuar', P) },
                 7: { t: 'DARF e impostos', h: () => lead('Em <b class="text-gray-200">Relatórios &gt; 2. Custos e imposto (DARF)</b> o app apura o IR de 20% do day trade mês a mês, compensa prejuízos e abate o IRRF. O DARF (código 6015) vence no último dia útil do mês seguinte. Quando faltam 7 dias úteis, o sino 🔔 avisa. Marque como pago quando pagar. O app não se integra à sua corretora, à B3 nem à Receita Federal. Os valores são <b class=\"text-gray-200\">estimativas</b> feitas com as regras da Receita Federal e não substituem a apuração oficial: consulte um Contador e use as referências abaixo para gerar a guia:')
                     + `<div class="mt-3 rounded-lg border border-gray-700 bg-gray-800/40 px-3 py-2.5 text-[11px] leading-relaxed text-gray-300"><p class="font-bold text-gray-100 mb-1">📚 Referências oficiais (com o Sicalc)</p><ul class="list-disc pl-4 space-y-0.5">
@@ -5509,7 +5824,13 @@ hmoDb = db;
                     b: B('data-act="rep"', '📊 Abrir Relatórios') + B('data-next', 'Continuar', P) },
                 9: { t: 'Mês atual × mês anterior', h: () => lead('Abaixo da Visão Geral, o bloco compara o mês atual (até hoje) com o mês anterior fechado: <b class="text-gray-200">Gain</b>, <b class="text-gray-200">Loss</b> e a <b class="text-gray-200">DARF</b> estimada. Use ◀ ▶ para ver outros meses e Hoje para voltar. Em Loss e DARF, a seta para baixo é melhora.'),
                     b: B('data-act="mc"', '📆 Ver o bloco') + B('data-next', 'Continuar', P) },
-                10: { t: 'Para acompanhar', h: () => `<ul class="list-disc pl-5 text-xs text-gray-400 space-y-1"><li><b class="text-gray-200">🔔 Sino:</b> abas Alertas e Novidades. Alertas urgentes vêm primeiro, como o vencimento do DARF, e há um lembrete de backup depois de 30 dias.</li><li><b class="text-gray-200">⚡ Atalhos:</b> lançar e navegar rápido; arraste o botão para onde preferir.</li><li><b class="text-gray-200">⚙ Opções:</b> trocar senha (se esquecer, use <b class="text-gray-200">Esqueci minha senha</b> na tela de entrada; a senha provisória deve ser trocada no primeiro acesso), exportar e importar backup, histórico de auditoria, tema e termos. Se o app te ajuda, em <b class="text-gray-200">💚 Ajude a manter o My Trade Dash</b> você pode contribuir com o que achar justo, por Pix: é opcional, e o seu acesso não depende disso. Lá mesmo você acompanha as suas contribuições e a situação de cada uma. Também é lá que fica <b class="text-gray-200">🗑 Excluir minha conta</b>, se um dia quiser encerrar (exporte o backup antes).</li><li><b class="text-gray-200">✉️ Falar com o My Trade Dash:</b> quando estiver disponível para você, abre uma conversa direta com quem cuida do app, em ⚙ Opções. Serve para dúvida, sugestão ou para contar o que aconteceu, e a resposta chega ali mesmo, com aviso no 🔔 sino. Se for um problema, o botão <b class="text-gray-200">⚠ Reportar problema</b> manda junto o estado do app (versão, tela, navegador e último erro) — você vê antes o que vai e pode recusar. Não escreva CPF, senha nem dados bancários por ali.</li><li><b class="text-gray-200">Celular:</b> o gesto de voltar fecha janelas e volta as abas.</li></ul><p class="mt-2 text-xs text-gray-400">Para reabrir este guia: ⚙ Opções &gt; 🧭 Guia do My Trade Dash.</p>`,
+                10: { t: 'Instale no seu aparelho', h: () => lead('O My Trade Dash é um app que você instala direto do navegador, sem loja: ele ganha um ícone, abre em tela cheia e fica a um toque de distância. É opcional e grátis. Abra <b class="text-gray-200">mytradedash.com.br</b> e siga o seu caso:')
+                        + `<ul class="mt-2 list-disc pl-5 text-xs text-gray-400 space-y-1.5"><li><b class="text-gray-200">Computador (Chrome ou Edge):</b> clique no ícone de instalar, no fim da barra de endereços (um monitor com uma seta), e em <b class="text-gray-200">Instalar</b>. Se não aparecer, abra o menu ⋮ do navegador e procure <b class="text-gray-200">Instalar My Trade Dash</b>.</li><li><b class="text-gray-200">Android (Chrome):</b> abra o menu ⋮ e toque em <b class="text-gray-200">Instalar app</b> (em alguns aparelhos, <b class="text-gray-200">Adicionar à tela inicial</b>).</li><li><b class="text-gray-200">iPhone ou iPad (Safari):</b> toque em <b class="text-gray-200">Compartilhar</b> (o quadrado com uma seta para cima) e depois em <b class="text-gray-200">Adicionar à Tela de Início</b>. No iPhone, só o Safari instala.</li></ul><p class="mt-2 text-xs text-gray-400">Depois de instalado, é só abrir pelo ícone e entrar com o seu e-mail e senha de sempre.</p>`,
+                    b: B('data-next', 'Continuar', P) },
+                11: { t: 'O copo de apoio 💚', h: () => lead('O My Trade Dash é gratuito e vai continuar sendo. Se ele te ajuda, o botão <b class="text-gray-200">💚 Ajude a manter o My Trade Dash</b>, ao lado do logo, abre a contribuição por Pix, com o valor que você achar justo, e você acompanha ali as suas contribuições.')
+                        + `<p class="mt-2 text-xs text-gray-400">O desenho do copo é só um lembrete visual: quando uma contribuição sua é confirmada, ele enche (sem nunca chegar ao topo) e vai esvaziando devagar ao longo de 60 dias. Passando o mouse (ou focando no botão) aparece a explicação. O seu acesso ao app não depende disso.</p>`,
+                    b: B('data-next', 'Continuar', P) },
+                12: { t: 'Para acompanhar', h: () => `<ul class="list-disc pl-5 text-xs text-gray-400 space-y-1"><li><b class="text-gray-200">🔔 Sino:</b> abas Alertas e Novidades. Alertas urgentes vêm primeiro, como o vencimento do DARF, e há um lembrete de backup depois de 30 dias.</li><li><b class="text-gray-200">⚡ Atalhos:</b> lançar e navegar rápido; arraste o botão para onde preferir.</li><li><b class="text-gray-200">⚙ Opções:</b> trocar senha (se esquecer, use <b class="text-gray-200">Esqueci minha senha</b> na tela de entrada; a senha provisória deve ser trocada no primeiro acesso), exportar e importar backup, histórico de auditoria, tema e termos. Dados errados? Use <b class="text-gray-200">✏ Corrigir meus dados</b> para pedir a correção de nome, celular ou e-mail. Também ali fica <b class="text-gray-200">🗑 Excluir minha conta</b>, se um dia quiser encerrar (exporte o backup antes).</li><li><b class="text-gray-200">✉️ Falar com o My Trade Dash:</b> quando estiver disponível para você, abre uma conversa direta com quem cuida do app, em ⚙ Opções. Serve para dúvida, sugestão ou para contar o que aconteceu, e a resposta chega ali mesmo, com aviso no 🔔 sino. Se for um problema, o botão <b class="text-gray-200">⚠ Reportar problema</b> manda junto o estado do app (versão, tela, navegador e último erro) — você vê antes o que vai e pode recusar. Não escreva CPF, senha nem dados bancários por ali.</li><li><b class="text-gray-200">Celular:</b> o gesto de voltar fecha janelas e volta as abas.</li></ul><p class="mt-2 text-xs text-gray-400">Para reabrir este guia: ⚙ Opções &gt; 🧭 Guia do My Trade Dash.</p>`,
                     b: B('data-flow', '➕ Registrar movimentação') + B('data-skipall', 'Concluir', P) }
             };
             const frame = (inner, btns) => `<div role="dialog" aria-modal="true" class="w-full max-w-md max-h-[92vh] overflow-y-auto rounded-xl border border-gray-600 bg-gray-900 p-4 text-sm text-gray-200 shadow-2xl">
@@ -5608,7 +5929,8 @@ hmoDb = db;
             try {
                 let ok = false;
                 try { ok = await termsAccepted(); } catch (e) { ok = false; }
-                if (!ok) { ok = await termsGate(); if (!ok) return; }
+                if (!ok) { ok = await termsGate(); if (!ok) return; try { await tnSave(); } catch (e) {} }
+                else { try { if (!(await tnSeen())) await window.termsNoticeShow(false); } catch (e) {} }
                 await new Promise(r => setTimeout(r, 1800));   // espera os dados carregarem
                 if ($('lockScreen').classList.contains('hidden') && !gDone() && typeof rows !== 'undefined' && !rows.length && !flows.length) openGuide(true);
             } finally { running = false; }
@@ -5617,7 +5939,7 @@ hmoDb = db;
         if ($('lockScreen').classList.contains('hidden')) setTimeout(afterLogin, 600);
 
         /* ---- links na tela de acesso ---- */
-        const lk = document.createElement('div'); lk.className = 'text-center text-[11px] text-gray-400';
+        const lk = document.createElement('div'); lk.className = 'text-center text-[11px] text-gray-400'; lk.id = 'lockLegal';
         lk.innerHTML = '<button type="button" data-l="t" class="underline hover:text-gray-200">Termos de uso</button> · <button type="button" data-l="p" class="underline hover:text-gray-200">Política de privacidade</button>';
         $('invOpen').parentElement.insertAdjacentElement('afterend', lk);
         lk.querySelectorAll('[data-l]').forEach(b => b.onclick = () => openTermsModal(b.dataset.l));
@@ -5641,7 +5963,7 @@ hmoDb = db;
         const dirtySetups = () => { const o = setupsOv(); if (!o) return false; const n = o.querySelector('#suNewName'); if (n && n.value.trim()) return true; return [...o.querySelectorAll('.su-name')].some(i => i.value.trim().replace(/\s+/g, ' ') !== (i.dataset.orig || i.defaultValue || '').trim()); };
         const locked = () => !$('lockScreen').classList.contains('hidden');
         const invOpen = () => !$('invForm').classList.contains('hidden');
-        const invDirty = () => ['invName', 'invEmail', 'invBirth', 'invDdd', 'invPhone', 'invHow'].some(i => $(i) && $(i).value.trim()) || ($('invOk') && $('invOk').checked);
+        const invDirty = () => ['invName', 'invEmail', 'invEmail2', 'invBirth', 'invDdd', 'invPhone', 'invHow'].some(i => $(i) && $(i).value.trim()) || ($('invOk') && $('invOk').checked) || ($('invDTsim') && ($('invDTsim').checked || $('invDTnao').checked));
 
         function prompt(title, btnA, btnB, onB) {
             const o = document.createElement('div'); o.id = 'backPrompt'; o.dataset.backCancel = '1';
@@ -5699,9 +6021,7 @@ hmoDb = db;
             if (L.kind === 'static') return requestClose(L.id);
             if (L.kind === 'inv') {
                 if (!$('invDone').classList.contains('hidden')) return $('invDoneBack').click();
-                const minor = !$('invMinor').classList.contains('hidden');
-                if (!minor && invDirty()) return lossPrompt(() => $('invClose').click());
-                return $('invClose').click();
+                return $('invBack').click();
             }
             const el = L.el;
             if (el.dataset.noBack) return;
