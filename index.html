@@ -5739,7 +5739,7 @@ hmoDb = db;
                 ${preview ? '<p class="text-[11px] text-gray-400 mb-3">Pré-visualização: é assim que o aviso aparece, uma única vez, para cada pessoa.</p>' : ''}
                 <div class="flex justify-end gap-2"><button type="button" data-r class="px-3 py-2 rounded-lg border border-gray-600 text-xs font-semibold">Ler os Termos</button><button type="button" data-ok class="px-3 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold">Entendi</button></div></div>`;
             document.body.appendChild(o);
-            o.querySelector('[data-r]').onclick = () => openTermsModal('t');
+            o.querySelector('[data-r]').onclick = async () => { if (!preview) { try { await tnSave(); } catch (e) {} } o.remove(); res(); openTermsModal('t'); };
             o.querySelector('[data-ok]').onclick = async () => { if (!preview) { try { await tnSave(); } catch (e) {} } o.remove(); res(); };
             setTimeout(() => { const b = o.querySelector('[data-ok]'); if (b) b.focus(); }, 50);
         });
