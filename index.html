@@ -176,6 +176,12 @@
             #admPage .text-\[11px\]{font-size:.8125rem;line-height:1.15rem}
             #admPage .text-\[10px\]{font-size:.75rem}
         }
+        /* Histórico de Operações: cabe na largura de 1176px sem rolagem horizontal (colunas mais justas e cabeçalhos que quebram linha) */
+        @media (min-width:768px){
+            #panelOps th,#panelOps td{padding-left:.375rem;padding-right:.375rem}
+            #panelOps th{white-space:normal;line-height:1.1rem;vertical-align:bottom}
+            #panelOps td.truncate{max-width:10rem}
+        }
         @media (min-width:640px){#appHeader{padding-left:max(1.5rem,calc((100% - 1176px)/2));padding-right:max(1.5rem,calc((100% - 1176px)/2))}}
         .usAv{display:inline-flex;align-items:center;justify-content:center;flex:none;width:34px;height:34px;border-radius:50%;background:rgba(30,58,138,.35);border:1px solid rgba(96,165,250,.35);color:#93c5fd;font-size:11px;font-weight:700}
         :root[data-theme="light"] .usAv{background:#dbeafe;border-color:#93c5fd;color:#1e3a8a}
