@@ -166,6 +166,9 @@
         body:has(#admPage) #fabWrap{z-index:97!important}
         body:has(#admPage) #fabInv{display:none!important}
         .fixed.inset-0 .overflow-y-auto{overscroll-behavior:contain}
+        /* largura do conteúdo: centralizado, como no Rodaliq (cabeçalho com a mesma largura do conteúdo) */
+        #appMain{max-width:1224px}
+        @media (min-width:640px){#appHeader{padding-left:max(1.5rem,calc((100% - 1176px)/2));padding-right:max(1.5rem,calc((100% - 1176px)/2))}}
         .usAv{display:inline-flex;align-items:center;justify-content:center;flex:none;width:34px;height:34px;border-radius:50%;background:rgba(30,58,138,.35);border:1px solid rgba(96,165,250,.35);color:#93c5fd;font-size:11px;font-weight:700}
         :root[data-theme="light"] .usAv{background:#dbeafe;border-color:#93c5fd;color:#1e3a8a}
         .ajSec>summary{list-style:none;cursor:pointer}.ajSec>summary::-webkit-details-marker{display:none}
@@ -302,7 +305,7 @@
     </div>
 
     <!-- Main Container -->
-    <main class="flex-1 p-3 sm:p-6 pb-24 sm:pb-28 max-w-[1680px] mx-auto w-full space-y-4 sm:space-y-6">
+    <main id="appMain" class="flex-1 p-3 sm:p-6 pb-24 sm:pb-28 mx-auto w-full space-y-4 sm:space-y-6">
         <div id="excBar" class="hidden rounded-lg border border-amber-500 bg-amber-950/40 px-3 py-2 text-xs text-amber-100 flex flex-wrap items-center gap-2"></div>
 
         <!-- Metrics Cards Dinâmicos -->
@@ -681,7 +684,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V168';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V169';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
