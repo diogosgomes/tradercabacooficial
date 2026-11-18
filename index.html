@@ -168,6 +168,14 @@
         .fixed.inset-0 .overflow-y-auto{overscroll-behavior:contain}
         /* largura do conteúdo: centralizado, como no Rodaliq (cabeçalho com a mesma largura do conteúdo) */
         #appMain{max-width:1224px}
+        /* Gestão Admin: mesma largura do conteúdo do app e letras um pouco maiores (telas a partir de 768px) */
+        @media (min-width:768px){
+            #admPage > div{max-width:1176px}
+            #admPage .text-xs{font-size:.875rem;line-height:1.25rem}
+            #admPage .text-sm{font-size:1rem;line-height:1.5rem}
+            #admPage .text-\[11px\]{font-size:.8125rem;line-height:1.15rem}
+            #admPage .text-\[10px\]{font-size:.75rem}
+        }
         @media (min-width:640px){#appHeader{padding-left:max(1.5rem,calc((100% - 1176px)/2));padding-right:max(1.5rem,calc((100% - 1176px)/2))}}
         .usAv{display:inline-flex;align-items:center;justify-content:center;flex:none;width:34px;height:34px;border-radius:50%;background:rgba(30,58,138,.35);border:1px solid rgba(96,165,250,.35);color:#93c5fd;font-size:11px;font-weight:700}
         :root[data-theme="light"] .usAv{background:#dbeafe;border-color:#93c5fd;color:#1e3a8a}
@@ -684,7 +692,7 @@
         const BANKS_TOP = ['Nubank', 'Itaú', 'Bradesco', 'Banco do Brasil', 'Caixa Econômica Federal', 'Santander', 'Banco Inter', 'C6 Bank', 'XP Investimentos', 'BTG Pactual'];
         // Ambiente HMO: as credenciais de teste ficam guardadas (somente como hash) no banco do próprio HMO, em config/hmo.
         // Nenhuma senha fica escrita no código.
-        const HMO_VERSION = 'V169';   // atualizar a cada publicação no HMO (número da versão do artifact)
+        const HMO_VERSION = 'V170';   // atualizar a cada publicação no HMO (número da versão do artifact)
         let hmoDb = null, hmoCred = null, hmoState = 'init';
         const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
